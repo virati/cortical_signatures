@@ -18,7 +18,7 @@ import pdb
 
 import scipy.stats as stats
 
-from EEG_Viz import plot_3d_scalp
+#from EEG_Viz import plot_3d_scalp
 
 plt.close('all')
 #%%
@@ -42,6 +42,18 @@ def plot_PSD_Stats(BONT_result,BOFT_result,sup_add=''):
     plt.ylabel('Power change from PreStim (dB)')
     plt.title('OffTarget EEG PSDs')
     plt.suptitle(pt + sup_add)
+
+    
+def plot_6mo_correlation(on_corr,off_corr):
+    plt.figure()
+    plt.plot(on_corr)
+    plt.plot(off_corr)
+
+    plt.xticks([0,1,2,3,4,5],['Delta','Theta','Alpha','Beta*','Beta+','Gamma*'])
+    plt.xlabel('Band')
+    plt.ylabel('correlation coeff')
+    plt.title(pt + ' 6mo correlation')
+    plt.legend(['OnStim','OffStim'])
 
 
 def plot_chann_bandpow(BONT_aggr,BOFT_aggr):
@@ -95,7 +107,7 @@ def scalp_plotting(BONT_bands,suplabel='',preplot='unity',plot_band=['Alpha']):
         for ch in range(BONT_bands[band].shape[0]):
             #ax.scatter(etrodes[ch,0],etrodes[ch,1],2*etrodes[ch,2],c=m.to_rgba(BONT_bands[band][ch]),s=50)
             pass
-        plot_3d_scalp(BONT_bands[band])
+        #plot_3d_scalp(BONT_bands[band])
         #plot_3d_scalp(BOFT_bands[band])
         
         
@@ -153,7 +165,7 @@ def topo_plotting(BONT_bands,BOFT_bands,suplabel='',preplot='unity',plot_band=['
         #plt.subplot(3,len(do_bands),bb+2*len(do_bands)+1)
         #mne.viz.plot_topomap(preplot_f(BONT_bands[band]),pos=egipos.pos[:,[0,1]],vmin=set_c_min,vmax=set_c_max)
         #plot the 3d version of the BONT
-        scalp_plotting(preplot_f(BONT_bands),suplabel='Mean')
+        #scalp_plotting(preplot_f(BONT_bands),suplabel='Mean')
         #plt.title(band + '\nOnT')
         
         BONT_aggr.append(BONT_bands[band].T)
@@ -249,7 +261,125 @@ for pp,pt in enumerate(pts):
     #Plot the stats for the PSDs
     plot_PSD_Stats(BONT_mean,BOFT_mean,sup_add = 'MEAN')
     #plot_PSD_Stats(BONT_var,BOFT_var,sup_add=' STD')
+
     
+#%%
+# shuffle data in the channel space, comment this out when using 6mo data     
+    new_idx = list(range(0,1025))
+
+    shuffle(new_idx)
+    
+    BONT_mean_6mo = BONT_mean
+    BOFT_mean_6mo = BOFT_mean
+
+    for ii, sublist in enumerate(BONT_mean): 
+        BONT_mean_6mo[ii] = BONT_mean[ii][new_idx]
+    
+    for ii, sublist in enumerate(BOFT_mean): 
+        BOFT_mean_6mo[ii] = BOFT_mean[ii][new_idx]
+        
+# create dictionary for band power for 6mo data 
+    
+    f_idx = []
+    
+    band_dict = DBSOsc.BandDict()
+    
+    BONT_bands_mean_6mo = defaultdict(dict)
+    BOFT_bands_mean_6mo = defaultdict(dict)
+    BONT_bands_var_6mo = defaultdict(dict)
+    BOFT_bands_var_6mo = defaultdict(dict)
+
+    
+    do_bands = ['Delta','Theta','Alpha','Beta*','Beta+','Gamma*']
+    #do_bands = ['Delta','Theta','Alpha','Beta*']
+    #do_bands = ['Beta+']
+    
+    for band in do_bands:
+        band_lim = band_dict.returnDict()
+        
+        f_idx = np.where(np.logical_and(F >= band_lim[band][0], F <= band_lim[band][1]))
+    
+        #Take the mean power in a band
+        BONT_bands_mean_6mo[band] = np.mean(np.squeeze(BONT_mean[:,f_idx]),1)
+        BOFT_bands_mean_6mo[band] = np.mean(np.squeeze(BOFT_mean[:,f_idx]),1)
+
+        #What we actually wanthere is a measure of how "Variance" the channel's power is across PATIENTS
+        #This only makes sense in the group average context
+        if pt == 'GROUP':
+            BONT_bands_var_6mo[band] = np.mean(np.squeeze(BONT_var[:,f_idx]),1)
+            BOFT_bands_var_6mo[band] = np.mean(np.squeeze(BOFT_var[:,f_idx]),1)
+
+#%%
+    plot_PSD_Stats(BONT_mean_6mo,BOFT_mean_6mo,sup_add = 'MEAN')
+
+#%%
+            
+# Compare initial time point and 6mo data
+# Compare each of the 256 channels and add to obtain single value correlation coeff
+
+# On target comparison dircetion only
+    on_correlation = []
+    
+    for band in do_bands:
+    
+        band_correlation = 0
+        
+        for ch,power in enumerate(BONT_bands_mean[band]):
+            if BONT_bands_mean[band][ch] > 0 and BONT_bands_mean_6mo[band][ch] > 0:
+                band_correlation += 1
+            elif BONT_bands_mean[band][ch] < 0 and BONT_bands_mean_6mo[band][ch] < 0:
+                band_correlation += 1
+            else:
+                band_correlation = band_correlation
+                
+        on_correlation.append(band_correlation)
+                
+    # Of target comparison dircetion only
+    off_correlation = []
+    
+    for band in do_bands:
+        
+        band_correlation = 0
+    
+        for ch,power in enumerate(BOFT_bands_mean[band]):
+            if BOFT_bands_mean[band][ch] > 0 and BOFT_bands_mean_6mo[band][ch] > 0:
+                band_correlation += 1
+            elif BOFT_bands_mean[band][ch] < 0 and BOFT_bands_mean_6mo[band][ch] < 0:
+                band_correlation += 1
+            else:
+                band_correlation = band_correlation
+        
+        off_correlation.append(band_correlation)
+#%%
+    plot_6mo_correlation(on_correlation,off_correlation)
+
+#%%
+# Comparing initial and 6 mo time points
+# In this compartison, magnitude of the change will matter
+# Subtract across all channels and add to get single correlation value
+
+# Comparison of on target data
+    on_correlation = []
+       
+    for band in do_bands:
+        
+        band_diff = BONT_bands_mean[band] - BONT_bands_mean_6mo[band]
+        band_diff = abs(band_diff)
+        band_corr = sum(band_diff)
+        on_correlation.append(band_corr)
+    
+    off_correlation = []
+       
+    for band in do_bands:
+        
+        band_diff = BOFT_bands_mean[band] - BOFT_bands_mean_6mo[band]
+        band_diff = abs(band_diff)
+        band_corr = sum(band_diff)
+        off_correlation.append(band_corr)
+
+#%%
+    plot_6mo_correlation(on_correlation,off_correlation)    
+ 
     #%%
     egipos = mne.channels.read_montage('/tmp/GSN-HydroCel-257.sfp')
     
