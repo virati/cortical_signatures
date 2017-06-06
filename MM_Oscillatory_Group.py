@@ -262,21 +262,23 @@ for pp,pt in enumerate(pts):
     plot_PSD_Stats(BONT_mean,BOFT_mean,sup_add = 'MEAN')
     #plot_PSD_Stats(BONT_var,BOFT_var,sup_add=' STD')
 
-    
 #%%
 # shuffle data in the channel space, comment this out when using 6mo data     
-    new_idx = list(range(0,1025))
+    new_idx = list(range(0,257))
 
     shuffle(new_idx)
     
-    BONT_mean_6mo = BONT_mean
-    BOFT_mean_6mo = BOFT_mean
+    BONT_mean_6mo = BONT_mean.T
+    BOFT_mean_6mo = BOFT_mean.T
 
-    for ii, sublist in enumerate(BONT_mean): 
-        BONT_mean_6mo[ii] = BONT_mean[ii][new_idx]
+    for ii, sublist in enumerate(BONT_mean_6mo): 
+        BONT_mean_6mo[ii] = BONT_mean.T[ii][new_idx]
     
-    for ii, sublist in enumerate(BOFT_mean): 
-        BOFT_mean_6mo[ii] = BOFT_mean[ii][new_idx]
+    for ii, sublist in enumerate(BOFT_mean_6mo): 
+        BOFT_mean_6mo[ii] = BOFT_mean.T[ii][new_idx]
+        
+    BONT_mean_6mo = BONT_mean_6mo.T
+    BOFT_mean_6mo = BOFT_mean_6mo.T   
         
 # create dictionary for band power for 6mo data 
     
@@ -311,76 +313,8 @@ for pp,pt in enumerate(pts):
 
 #%%
     plot_PSD_Stats(BONT_mean_6mo,BOFT_mean_6mo,sup_add = 'MEAN')
-
-#%%
-            
-# Compare initial time point and 6mo data
-# Compare each of the 256 channels and add to obtain single value correlation coeff
-
-# On target comparison dircetion only
-    on_correlation = []
-    
-    for band in do_bands:
-    
-        band_correlation = 0
-        
-        for ch,power in enumerate(BONT_bands_mean[band]):
-            if BONT_bands_mean[band][ch] > 0 and BONT_bands_mean_6mo[band][ch] > 0:
-                band_correlation += 1
-            elif BONT_bands_mean[band][ch] < 0 and BONT_bands_mean_6mo[band][ch] < 0:
-                band_correlation += 1
-            else:
-                band_correlation = band_correlation
-                
-        on_correlation.append(band_correlation)
-                
-    # Of target comparison dircetion only
-    off_correlation = []
-    
-    for band in do_bands:
-        
-        band_correlation = 0
-    
-        for ch,power in enumerate(BOFT_bands_mean[band]):
-            if BOFT_bands_mean[band][ch] > 0 and BOFT_bands_mean_6mo[band][ch] > 0:
-                band_correlation += 1
-            elif BOFT_bands_mean[band][ch] < 0 and BOFT_bands_mean_6mo[band][ch] < 0:
-                band_correlation += 1
-            else:
-                band_correlation = band_correlation
-        
-        off_correlation.append(band_correlation)
-#%%
-    plot_6mo_correlation(on_correlation,off_correlation)
-
-#%%
-# Comparing initial and 6 mo time points
-# In this compartison, magnitude of the change will matter
-# Subtract across all channels and add to get single correlation value
-
-# Comparison of on target data
-    on_correlation = []
-       
-    for band in do_bands:
-        
-        band_diff = BONT_bands_mean[band] - BONT_bands_mean_6mo[band]
-        band_diff = abs(band_diff)
-        band_corr = sum(band_diff)
-        on_correlation.append(band_corr)
-    
-    off_correlation = []
-       
-    for band in do_bands:
-        
-        band_diff = BOFT_bands_mean[band] - BOFT_bands_mean_6mo[band]
-        band_diff = abs(band_diff)
-        band_corr = sum(band_diff)
-        off_correlation.append(band_corr)
-
-#%%
-    plot_6mo_correlation(on_correlation,off_correlation)    
  
-    #%%
+#%%
     egipos = mne.channels.read_montage('/tmp/GSN-HydroCel-257.sfp')
     
     #This plots the topomap
@@ -393,7 +327,86 @@ for pp,pt in enumerate(pts):
         #try something that seems right!
         #I want to mask the mean changes with the variance across patients; to see "what's most consistent" across the patients
         #topo_plotting(BONT_bands_consist,BOFT_bands_consist,suplabel='Mean masked with reliability')
+
+#%%
+    # Take dot produt to correlate initial data and 6 mo data
+    
+    band_corr_on = []
+    
+    for band in do_bands:
         
+        a = BONT_bands_mean[band] - np.mean(BONT_bands_mean[band])
+        b = BONT_bands_mean_6mo[band] - np.mean(BONT_bands_mean_6mo[band])
+        
+        dot_product = sum(a*b)
+        corrcoeff = dot_product/(np.linalg.norm(b)*np.linalg.norm(b))
+        band_corr_on.append(corrcoeff)
+    
+    band_corr_off = []
+    
+    for band in do_bands:
+        
+        a = BOFT_bands_mean[band] - np.mean(BOFT_bands_mean[band])
+        b = BOFT_bands_mean_6mo[band] - np.mean(BOFT_bands_mean_6mo[band])
+        
+        dot_product = sum(a*b)
+        corrcoeff = dot_product/(np.linalg.norm(b)*np.linalg.norm(b))
+        band_corr_off.append(corrcoeff)    
+        
+#%%
+    plot_6mo_correlation(band_corr_on,band_corr_off)        
+
+#%% 
+# Create a histogram for surrogate data testing for Alpha only
+
+    #calculate number of bins
+
+    data_range = np.max(BONT_bands_mean['Alpha']) - np.min(BONT_bands_mean['Alpha'])
+    q25,q75 = np.percentile(BONT_bands_mean['Alpha'], [25,75])
+    Q = q75 - q25
+    
+    nbins = data_range/(2*Q*(len(BONT_bands_mean['Alpha']))**(-1/3))
+    nbins = int(np.ceil(nbins))
+    bin_size = data_range/nbins
+    
+    #compute x values (bins) and y values (probabilty of each bin)
+    
+    xvals = []
+    count = []
+    
+    for i in range(nbins):
+        low_end = np.min(BONT_bands_mean['Alpha']) + (bin_size*(i))
+        high_end = np.min(BONT_bands_mean['Alpha']) + (bin_size*(i+1))
+        xvals.append(high_end)
+        y = sum(np.logical_and(BONT_bands_mean['Alpha'] > low_end, BONT_bands_mean['Alpha'] < high_end))
+        count.append(y)
+    
+    xvals = np.array(xvals)
+    count = np.array(count)
+    
+    p = count/len(BONT_bands_mean['Alpha'])
+        
+    #entropy of the system
+    
+    entropy = 0
+    
+    for i in range(nbins):
+        if p[i] > 0:
+            val = p[i]*np.log2(p[i])
+            entropy += val
+        else:
+           entropy = entropy
+        
+    entropy = -entropy
+    
+    print(entropy, ' bits')
+    
+    plt.figure()
+    plt.plot(xvals,p)
+    plt.xlim(np.min(BONT_bands_mean['Alpha']),np.max(BONT_bands_mean['Alpha']))
+    plt.xlabel('Value')
+    plt.ylabel('Probability')    
+    
 #%%    
 scalp_plotting(BONT_bands_mean,suplabel='Mean')
 
