@@ -319,6 +319,8 @@ for pp,pt in enumerate(pts):
     
     #This plots the topomap
     topo_plotting(BONT_bands_mean,BOFT_bands_mean,suplabel='Mean',plot_band=['Theta'])
+    topo_plotting(BONT_bands_mean_6mo,BOFT_bands_mean_6mo,suplabel='6mo Mean',plot_band=['Alpha'])
+
     #topo_plotting(BONT_bands_mea,BONT_bands_mean-BOFT_bands_mean,suplabel='Mean')
 
     #this plots the group topomap
@@ -339,7 +341,7 @@ for pp,pt in enumerate(pts):
         b = BONT_bands_mean_6mo[band] - np.mean(BONT_bands_mean_6mo[band])
         
         dot_product = sum(a*b)
-        corrcoeff = dot_product/(np.linalg.norm(b)*np.linalg.norm(b))
+        corrcoeff = dot_product/(np.linalg.norm(a)*np.linalg.norm(b))
         band_corr_on.append(corrcoeff)
     
     band_corr_off = []
@@ -350,8 +352,19 @@ for pp,pt in enumerate(pts):
         b = BOFT_bands_mean_6mo[band] - np.mean(BOFT_bands_mean_6mo[band])
         
         dot_product = sum(a*b)
-        corrcoeff = dot_product/(np.linalg.norm(b)*np.linalg.norm(b))
-        band_corr_off.append(corrcoeff)    
+        corrcoeff = dot_product/(np.linalg.norm(a)*np.linalg.norm(b))
+        band_corr_off.append(corrcoeff)
+        
+    print('Band correlation coefficients = ', band_corr_on)
+
+    #calulate t-statistic and p-values from correlation coefficients
+    
+    tvals = np.array(band_corr_on)*(np.sqrt(254/(1-(np.array(band_corr_on)**2))))
+    
+    pval = stats.t.sf(np.abs(tvals), 254)*2
+    
+    print('\n')
+    print('T-values = ', tvals, ' p-values = ', pval)
         
 #%%
     plot_6mo_correlation(band_corr_on,band_corr_off)        
@@ -366,27 +379,21 @@ for pp,pt in enumerate(pts):
     Q = q75 - q25
     
     nbins = data_range/(2*Q*(len(BONT_bands_mean['Alpha']))**(-1/3))
-    nbins = int(np.ceil(nbins))
-    bin_size = data_range/nbins
+    nbins = int(np.ceil(nbins))    
     
     #compute x values (bins) and y values (probabilty of each bin)
     
-    xvals = []
-    count = []
+    hist, bin_edges = np.histogram(BONT_bands_mean['Alpha'],nbins)
+
+    plt.figure()
+    plt.bar(bin_edges[:-1],hist,width=.2,edgecolor='black',align='edge')
+    plt.xlabel('Value')
+    plt.ylabel('Count')
+    plt.title('Histogram')
     
-    for i in range(nbins):
-        low_end = np.min(BONT_bands_mean['Alpha']) + (bin_size*(i))
-        high_end = np.min(BONT_bands_mean['Alpha']) + (bin_size*(i+1))
-        xvals.append(high_end)
-        y = sum(np.logical_and(BONT_bands_mean['Alpha'] > low_end, BONT_bands_mean['Alpha'] < high_end))
-        count.append(y)
-    
-    xvals = np.array(xvals)
-    count = np.array(count)
-    
-    p = count/len(BONT_bands_mean['Alpha'])
-        
     #entropy of the system
+    
+    p = hist/sum(hist)
     
     entropy = 0
     
@@ -395,18 +402,12 @@ for pp,pt in enumerate(pts):
             val = p[i]*np.log2(p[i])
             entropy += val
         else:
-           entropy = entropy
+            entropy = entropy
         
     entropy = -entropy
     
     print(entropy, ' bits')
-    
-    plt.figure()
-    plt.plot(xvals,p)
-    plt.xlim(np.min(BONT_bands_mean['Alpha']),np.max(BONT_bands_mean['Alpha']))
-    plt.xlabel('Value')
-    plt.ylabel('Probability')    
-    
+
 #%%    
 scalp_plotting(BONT_bands_mean,suplabel='Mean')
 
