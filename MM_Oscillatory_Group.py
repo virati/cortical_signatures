@@ -371,23 +371,49 @@ for pp,pt in enumerate(pts):
 
 #%% 
 # Create a histogram for surrogate data testing for Alpha only
+#ultimately we will shuffle initial and 6 mo data, create two random subsets and calculate corr coeff
+#this will be done 1000 to test statistical significance of correlation of actual data
 
-    #calculate number of bins
+    combined = np.hstack([BONT_bands_mean['Alpha'],BONT_bands_mean_6mo['Alpha']])
+    test_stats_hist = []
+    
+    # we will iterate over 1000 permutations of random subsets to create a histogram of test statistics
+    for i in range(0,1000):
+        shuffle(combined)
+        subset1 = combined[:257]
+        subset2 = combined[257:]
+        
+        #take the dot product of the subsets
+        a = subset1 - np.mean(subset1)
+        b = subset2 - np.mean(subset2)
+        
+        dot_product = sum(a*b)
+        corrcoeff = dot_product/(np.linalg.norm(a)*np.linalg.norm(b))
+        test_stat = corrcoeff*(np.sqrt(254/(1-(corrcoeff**2))))
+        
+        test_stats_hist.append(test_stat)
+        
+    #calculate p-value based on distribution of test statistics
+    alpha_band_test_stat = tvals[2]
+    pval = sum(float(num) >= alpha_band_test_stat for num in test_stats_hist) / len(test_stats_hist)
+    print('p = ', pval)
+        
+    #calculate number of bins for histogram of test stats
 
-    data_range = np.max(BONT_bands_mean['Alpha']) - np.min(BONT_bands_mean['Alpha'])
-    q25,q75 = np.percentile(BONT_bands_mean['Alpha'], [25,75])
+    data_range = np.max(test_stats_hist) - np.min(test_stats_hist)
+    q25,q75 = np.percentile(test_stats_hist, [25,75])
     Q = q75 - q25
     
-    nbins = data_range/(2*Q*(len(BONT_bands_mean['Alpha']))**(-1/3))
+    nbins = data_range/(2*Q*(len(test_stats_hist))**(-1/3))
     nbins = int(np.ceil(nbins))    
     
     #compute x values (bins) and y values (probabilty of each bin)
     
-    hist, bin_edges = np.histogram(BONT_bands_mean['Alpha'],nbins)
+    hist, bin_edges = np.histogram(test_stats_hist,nbins)
 
     plt.figure()
     plt.bar(bin_edges[:-1],hist,width=.2,edgecolor='black',align='edge')
-    plt.xlabel('Value')
+    plt.xlabel('T-values')
     plt.ylabel('Count')
     plt.title('Histogram')
     
@@ -402,7 +428,7 @@ for pp,pt in enumerate(pts):
             val = p[i]*np.log2(p[i])
             entropy += val
         else:
-            entropy = entropy
+           entropy = entropy
         
     entropy = -entropy
     
