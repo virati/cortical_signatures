@@ -18,7 +18,7 @@ import pdb
 
 import scipy.stats as stats
 
-from EEG_Viz import plot_3d_scalp
+#from EEG_Viz import plot_3d_scalp
 
 plt.close('all')
 #%%
