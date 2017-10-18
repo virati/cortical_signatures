@@ -84,8 +84,8 @@ def load_raw_mat(fname):
     return signal['EXPORT']['chann'][0][0]
 
 #for condit in ['OnTarget','OffTarget']:
-for condit in ['OffTarget']:
-    pt = 'DBS907'
+for condit in ['OnTarget']:
+    pt = 'DBS906'
     #condit = 'OffTarget'
     
     file = '/home/virati/MDD_Data/proc_hdEEG/' + pt + '/' + pt + '_Sample_Chirp_template/' + pt + '_' + condit + '_all.mat'
@@ -109,18 +109,24 @@ for condit in ['OffTarget']:
     for ch in range(257):
         data[ch] = data[ch] - mean_sig
     
+    #Decimate down all the data
     test_dec = sig.decimate(data,10,zero_phase=True)
     plt.plot(test_dec.T)
+    plt.title('Plotting the decimated Data')
     #%%
     
     ds_fact = 1
     fs = 500
     epoch = defaultdict(dict)
+    alpha_t = defaultdict(dict)
     nfft=512
     #calculate PSD of each channel
     snippets = {'Baseline':(0,21000),'EarlyStim':(27362,27362+21000)}
     for elabel,ebos in snippets.items():
-        P = np.zeros((257,513))
+        
+        #channel x NFFT below
+        P = np.zeros((257,257))
+        alpha_pow = np.zeros((257,85))
         for ch in range(257):
             sig_filt = sig.decimate(data[ch][ebos[0]:ebos[1]],ds_fact,zero_phase=True)
             #just do a welch estimate
@@ -130,18 +136,27 @@ for condit in ['OffTarget']:
             
             
             #do a spectrogram and then find median
-            F,T,SG = sig.spectrogram(sig_filt,nperseg=1024,noverlap=256,window=sig.get_window('blackmanharris',1024),fs=fs/ds_fact)
+            F,T,SG = sig.spectrogram(sig_filt,nperseg=256,noverlap=10,window=sig.get_window('blackmanharris',256),fs=fs/ds_fact,nfft=512)
+            #Take the median along the time axis of the SG to find the median PSD for the epoch label
             Pxx = np.median(SG,axis=1)
+            #find timeseries of alpha oscillatory power
+            falpha = np.where(np.logical_and(F > 8,F < 14))
+            #Frequency is what dimension?? probably 1
+            alpha_tcourse = np.median(SG[falpha,:],1)
             
             P[ch,:] = Pxx
+            alpha_pow[ch,:] = alpha_tcourse
+            
         epoch[elabel] = P
+        alpha_t[elabel] = alpha_pow
              
     #Compute diff PSD
     diff_PSD = 10*np.log10(epoch['EarlyStim']) - 10*np.log10(epoch['Baseline'])
     #%%
     plt.figure()
-    _ = plt.plot(f,diff_PSD.T,alpha=0.2)
+    _ = plt.plot(F,diff_PSD.T,alpha=0.2)
     plt.axhline(y=0,linewidth=5)
+    plt.title('Plotting the change in PSD from Baseline to Early Stim')
     #%%
     def plot_ts_chann(data,ch,ds_fact=1):
         plt.figure()
@@ -152,16 +167,28 @@ for condit in ['OffTarget']:
     plt.figure()
     P = epoch['EarlyStim']
     plt.axhline(y=0)
-    plt.plot(f,10*np.log10(P.T))
+    plt.plot(F,10*np.log10(P.T))
+    plt.title('Plotting the Early Stim Epoch Alone')
     
     #%%
     #Do a spectrogram of one of the channels
-    ch = 5
-    sel_sig = sig.decimate(data[ch][:],ds_fact,zero_phase=True)
+    ch = [(32,37)]
+    for ch1,ch2 in ch:
+        if ch1 == ch2:
+            sel_sig = sig.decimate(data[ch1][:],ds_fact,zero_phase=True)
+        else:
+            sel_sig = sig.decimate(data[ch1][:] - data[ch2][:],ds_fact,zero_phase=True)
+            #sel_sig = sig.decimate(data[19][:] - np.mean(data[[25,18,11,12,20,26]][:],0),ds_fact,zero_phase=True)
+    
     plt.figure()
     F,T,SG = sig.spectrogram(sel_sig,nperseg=512,noverlap=256,window=sig.get_window('blackmanharris',512),fs=fs/ds_fact)
     plt.pcolormesh(T,F,10*np.log10(SG))
+    plt.title('TimeFrequency Signal of Channel ' + str(ch))
     
+    #take out sel_sig and sweep the chirp through it
+    
+    
+    #%%
     #take out the alpha band in each channel
     
     alpha = np.zeros((257))
@@ -185,17 +212,16 @@ for condit in ['OffTarget']:
     #Just do a scatter plot
         
     plot_3d_scalp(alpha)
-    plt.title(pt + ' ' + condit)
+    plt.title(pt + ' ' + condit + ' alpha change')
     plt.show()
+    
     plot_3d_scalp(theta)
-    plt.title(pt + ' ' + condit)
+    plt.title(pt + ' ' + condit + ' theta change')
     plt.show()
+    
     #%%
     snip = (26400,27600)
 
-    
-    
-    
 
 #%%
 #ch = 7

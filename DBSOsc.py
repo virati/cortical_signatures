@@ -13,7 +13,7 @@ import pandas as pd
 from collections import defaultdict
 from scipy.stats.stats import pearsonr
 
-from sklearn import linear_model
+#from sklearn import linear_model
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -26,6 +26,10 @@ import pickle
 
 from math import *
 
+import sys
+sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/SigProc/CFC-Testing/Python CFC/')
+
+
 font = {'family' : 'normal',
         'weight' : 'bold',
         'size'   : 20}
@@ -35,6 +39,7 @@ matplotlib.rc('font', **font)
 import pdb
 
 patient_list = ['DBS901','DBS903','DBS905','DBS906','DBS907','DBS908']
+band_dict = {'Delta':(1,4), 'Theta':(4,8), 'Alpha':(8,14), 'Beta*':(14,20), 'Beta+':(25,30), 'Gamma*':(30,50), 'Gamma+':(70,90), 'Stim':(128,132)}
 
 def epochify(Container,sigtype='Y',epochlims=(0,-1)):
     if epochlims[1] == -1:
@@ -84,32 +89,25 @@ def load_BR(file,Fs=422,snippet=True):
     raise ValueError('This is OBSOLETE, fix the code')
     pass
 
-#This function imports the raw data, sets up a return dictionary with all the features wanted
-def load_BR_feats(file,Fs=422,snippet=True,shift=0):
+def Extract_Osc_Feats(rawdata,start_t=0,end_t=1,chann_idxs=[0,2],Fs=422):
+    #start t and end_t are fractions of the total time
+    channels = rawdata.shape[1]
+    
     TS = defaultdict(dict)
     PSD = defaultdict(dict)
     Recording = defaultdict(dict)
-    stimflag = 0
-    if snippet:
-        seconds_to_take = 10
-        start_el = -Fs * (seconds_to_take + shift)
-        end_el = start_el + (Fs * seconds_to_take)  - 1
-
-    else:
-        seconds_to_take = -1
-        start_el = 0
-        end_el = -1
     
-    rawdata = np.array(pd.read_csv(file,sep=',',header=None))
-    #Generate the TimeSeries
-    #Shifts should be done here:
+    max_t = rawdata.shape[0]/Fs
+    max_n = rawdata.shape[0]
     
-    TS['Y'] = rawdata[start_el:end_el,[0,2]] * 1e-3 #voltage data; this is in millivolts
-    if not snippet:
-        seconds_to_take = TS['Y'].shape[0] / Fs
+    start_el = int(start_t * max_n)
+    end_el = int(end_t * max_n)
+    
+    TS['Y'] = rawdata[start_el:end_el,chann_idxs] * 1e-3 #voltage data; this is in millivolts
         
-        
-    TS['T'] = np.linspace(0,seconds_to_take,TS['Y'].shape[0]) #time vector
+    TS['T'] = np.linspace(start_t*max_t,end_t*max_t,TS['Y'].shape[0]) #time vector
+    
+    
     #Generate the PSD estimate of the TimeSeries    
     PSD['F'], PSD['LOGPxx'], PSD['P'] = comp_PSD(TS['Y'])
 
@@ -125,36 +123,75 @@ def load_BR_feats(file,Fs=422,snippet=True,shift=0):
     
     #Return the slope for the segment
     #If we're doing snippets of data, just do the computation of the slope on the input vector
-    if 0:
-        if snippet:
-            M,b  = comp_slope(TS['Y'])
-        elif not snippet:
-            M = sliding_wind(TS['Y'])
-        Recording['Slope'] = [M,b]
-        
+    
+    #Simple oscillatory state vector added to dictionary
+    OscState = defaultdict(dict)
+    OVect,OBands = get_osc_state(PSD['P'],PSD['F'])
+    OscState['BandVect'] = OVect
+    #OscState['BandVect']['Bands'] = OBands
+    #Add RMS voltage so we can
+    OscState['RMS'] = np.max(np.sqrt(TS['Y']**2),axis=0)
+    OscState['Pow'] = np.sum(TS['Y']**2)
+    
+    OscState['StimPow'] = raw_pow(PSD['P'],PSD['F'],(128,132))
+    OscState['HarmPow'] = raw_pow(PSD['P'],PSD['F'],(30,34))
+    OscState['TBands'] = raw_pow(PSD['P'],PSD['F'],(1,20))
+    
     #return a single dictionary variable
     #Every new features will be a dictionary element, which doesn't cause issues down the line
         
     Recording['PSD'] = PSD
     Recording['TS'] = TS
+    Recording['OscState'] = OscState
     #Recording['Coh'] = COH
     
     #place all flags here
-    Recording['StimFlag'] = stimflag
+    
+    #THERE IS A PROBLEM HERE WHEN THERE IS ONLY ONE CHANNEL?!
+    if OscState['StimPow'][0] > 0.1:
+        Recording['StimFlag'] = True
+    else:
+        Recording['StimFlag'] = False
     #Recording['Flags'] = {'StimFlag':stimflag,'TimeFlag':timeflag}    
     
     return Recording
 
+#This function imports the raw data, sets up a return dictionary with all the features wanted
+def load_BR_feats(file,Fs=422,snippet=True,shift=0,seconds_to_take=10):
+    stimflag = 0
+    if snippet:
+        #Snippets are always from the END
+        #start_el = (-Fs * (seconds_to_take + shift))
+        #We will always take to the last element
+        #end_el = start_el + (Fs * 10)  - 1
+        
+        #for now let's just take the last half
+        start_el = 0.5
+        end_el = 1
+        
+
+    else:
+        start_el = 0
+        end_el = 1
+    
+    rawdata = np.array(pd.read_csv(file,sep=',',header=None))
+    #Generate the TimeSeries
+    #Shifts should be done here:
+    return Extract_Osc_Feats(rawdata,start_el,end_el,chann_idxs=[0,2])
+    
+    #above should give us what we want to return; below is obsolete
+    
+
 def sliding_wind(lfp_in,nfft=2**11,fs=422,ws=5908,ss=2954):
-	lfp_in=lfp_in[np.size(lfp_in/2):,[0,2]]
-	slpidx=[]
-	for ii in range(np.size(lfp_in)//ss):
-		lfp_in=lfp_in[ii*ss:(ws+(ii*ss)),[0,2]]
-		M,b=comp_slope(lfp_in)
-		slpidx.append(M)
-	medslp=np.median(slpidx)
-	
-	return medM
+    lfp_in=lfp_in[np.size(lfp_in/2):,[0,2]]
+    slpidx=[]
+    for ii in range(np.size(lfp_in)//ss):
+        lfp_in=lfp_in[ii*ss:(ws+(ii*ss)),[0,2]]
+        M,b=comp_slope(lfp_in)
+        slpidx.append(M)
+    medslp=np.median(slpidx)
+    
+    return medM
 
 def comp_slope(x_in,nfft=2**11,fs=422):
     #code to compute the slope from the PSD
@@ -253,12 +290,12 @@ def Phase_to_Matrix(ph_list,pt_list,dataF,mean_subtr=False,del_nan = False):
             #print('Extracting from pt ' + patient)
             #print(patient + ' '  + phase + ' testing')
             
-            if len(dataF[patient][phase]['GoldPSD']['LOGPxx']) > 0:
+            if len(dataF[patient][phase]['MeanPSD']['LOGPxx']) > 0:
             #    EPHYS_out[:,:,phh,pp] = dataF[patient][phase]['Recordings'][0]['PSD']['Y']
                 #append the recording itself                
                 #X.append(dataF[patient][phase]['Recordings'][0]['PSD']['Y'])
                 #append the Gold PSD
-                X.append(dataF[patient][phase]['GoldPSD']['LOGPxx'])
+                X.append(dataF[patient][phase]['MeanPSD']['LOGPxx'])
                 Y.append(dataF[patient][phase]['HDRS17'])
                 #Append the HDRS scores
                 #Y.append(dataF[patient][phase]['HDRS17'])
@@ -267,7 +304,7 @@ def Phase_to_Matrix(ph_list,pt_list,dataF,mean_subtr=False,del_nan = False):
             else:
                 print(patient + ' ' + phase + ' does not have a recording')
                 if not del_nan:
-                    X.append(np.nan * np.zeros_like(dataF['DBS901']['C01']['GoldPSD']['LOGPxx']))
+                    X.append(np.nan * np.zeros_like(dataF['DBS901']['C01']['MeanPSD']['LOGPxx']))
                     Y.append(dataF[patient][phase]['HDRS17'])
                 else:
                     pass
@@ -319,100 +356,8 @@ def Flatten_Features(X):
     return np.hstack((X[:,:,0],X[:,:,1]))
     
 
-def ENetR(Xin,Yin,feat_side,f_trunc,feat_axis,exp,alpha=0.5,CV=False):
-    from sklearn.linear_model import ElasticNet, ElasticNetCV
-    from sklearn.linear_model import LinearRegression, Lasso
-    X = np.array(Xin)
-    Y = np.array(Yin)
-    
-    if feat_side == 'B':
-        Input_X = np.hstack((X[:,f_trunc,0],X[:,f_trunc,1]))
-    elif feat_side == 'L':
-        Input_X = X[:,f_trunc,0]
-    elif feat_side == 'R':
-        Input_X = X[:,f_trunc,1]
-    elif feat_side == 'BFull':
-        Input_X = np.hstack((X[:,:,0],X[:,:,1]))
-        
-    EN_alpha = alpha
-    n_obs = Input_X.shape
-    
-    if not CV:
-        print('Doing vanilla Elastic Net Regression...')
-        ENet = ElasticNet(alpha=EN_alpha,tol=0.001,normalize=True,positive=False)
-        ENet.fit(Input_X,Y)
-        ENet_error = ENet.score(Input_X,Y)
 
-    elif CV:
-        print('Doing cross-validation Elastic Net Regression...')
-        k_fold = 5
-        print('With k-fold value of:' + str(k_fold))    
-        l_ratio = np.linspace(0.7,0.8,20)
-        alpha_list = np.linspace(0.25,0.3,20)
-        
-        ENet = ElasticNetCV(l1_ratio=l_ratio,alphas=alpha_list,tol=0.01,normalize=True,positive=False,cv=k_fold)
-        print('Input_X shape' + str(Input_X.shape))
-        
-        ENet.fit(Input_X,Y)
-        ENet_error = ENet.score(Input_X,Y)
-        print('ENet Alpha: ' + str(ENet.alpha_) + ' and L1_Ratio: ' + str(ENet.l1_ratio_))
-    
-    print('ENet Performance: ' + str(ENet_error))
-
-    ENetRM = defaultdict(dict)
-    ENetRM['Coefficients'] = ENet.coef_
-    ENetRM['CoeffAxis'] = feat_axis
-    ENetRM['Score'] = ENet_error
-    ENetRM['FChannels'] = feat_side  
-    ENetRM['Model'] = ENet
-    ENetRM['Experiment'] = exp
-    
-    return ENetRM
-  
-def ENetPredict(ENetO,X,YActual,feat_side,f_trunc):
-    #from sklearn.linear_model import ElasticNet, LinearRegression, Lasso
-    if feat_side == 'B':
-        Input_X = np.hstack((X[:,f_trunc,0],X[:,f_trunc,1]))
-    elif feat_side == 'L':
-        Input_X = X[:,f_trunc,0]
-    elif feat_side == 'R':
-        Input_X = X[:,f_trunc,1]    
-    
-    pdb.set_trace()
-    YPred = ENetO['Model'].predict(Input_X)
-    #Determine score from internal function; need to better understand that score
-    PredScore = ENetO['Model'].score(Input_X,YActual)
-    
-    #plt.figure()
-    #plt.plot(ENetO['Model'].coef_)
-    #plt.title('Prediction model coefficients')
-    #plt.show()
-    
-    return YPred, PredScore
-    
-def ENetPlot(ENetO,doplotting=False):
-    #plt.figure()
-    coeff_size = ENetO['Coefficients'].shape[0]
-    print('Coeff size is ' + str(coeff_size))
-    DSV = defaultdict(dict)
-    
-    if ENetO['FChannels'] == 'B':
-        DSV['Left'] = ENetO['Coefficients'][:floor(coeff_size/2)]
-        DSV['Right'] = ENetO['Coefficients'][floor(coeff_size/2):]
-
-    if doplotting:
-        plt.plot(ENetO['CoeffAxis'],DSV['Left'],color='blue',linewidth=3,label='Left LFP')
-        plt.plot(ENetO['CoeffAxis'],DSV['Right'],color='red',linewidth=3,label = 'Right LFP')
-        
-        plt.legend(loc='best')
-        plt.xlabel('Frequency (Hz)')
-        plt.ylabel('Coefficient Magnitude')
-        plt.title(ENetO['Experiment'] + ' Prediction Score: ' + str(ENetO['Score']))
-        plt.suptitle('Depression Biometric (compound)')
-    
-    return DSV
-
-def band_pow(PSD_in,band,btype='raw'):
+def band_pow_OBS(PSD_in,band,btype='raw'):
     band_idxs = np.where(np.logical_and(PSD_in['F'] >= band['Range'][0],PSD_in['F'] <= band['Range'][1]))
     norm_idxs = np.where(np.logical_and(PSD_in['F'] >= 4,PSD_in['F'] <= 30))
     clock_idxs = np.where(np.logical_and(PSD_in['F'] >= 105,PSD_in['F'] <= 106))
@@ -430,16 +375,62 @@ def band_pow(PSD_in,band,btype='raw'):
     except:
         #print('Problem with PSD Calculation')
         return np.NaN
+
+#This is meant to be a multidimensional/multichannel "get osc state" function
+#So, coming into it, is Pxx which is a (nFFTxnChann) matrix
+def get_osc_state(Pxx,F):
+    band_order = ['Delta','Theta','Alpha','Beta*','Gamma*','Stim']
+    #NUMBER OF CHANNELS IN Pxx
+    nchann = Pxx.shape[1]
+    #State is a vector
+    state = np.zeros((len(band_order),nchann))
+    #state is a dictionary; this is preferred
+    statedict = defaultdict(dict)
+    
+    for bb,band in enumerate(band_order):
+        bpowret = band_pow_raw(Pxx,F,band)
+        assert bpowret.shape == (nchann,1)
         
-def band_pow_raw(Pxx,F,band,btype='raw'):
-    band_idxs = np.where(np.logical_and(F >= band['Range'][0],F <= band['Range'][1]))
+        state[bb,:,None] = bpowret
+        statedict[band] = state[bb]
+        
+    
+    return statedict, band_order
+
+#A VERY simple container that calls the real function to find the power within a particular range of frequencies
+def band_pow_raw(Pxx,F,band_name,btype='raw'):
+    #Get the band dictionary we are proceeding with
+    #band_name is given; if the band name is not a part of the current class/library's band dictionary this will return a dict key error
+    band = band_dict[band_name]
+    #Actually extract the power for the given band
+    #NOTE: Pxx here is STILL (nFFTxnChann)
+    
+    band_power = raw_pow(Pxx,F,band)
+        
+    return band_power
+
+def raw_pow(Pxx,F,band):
+    band_idxs = np.where(np.logical_and(F >= band[0],F <= band[1]))
     norm_idxs = np.where(np.logical_and(F >= 0,F <= 30))
     clock_idxs = np.where(np.logical_and(F >= 105,F <= 106))
     
-    base_PSD = np.squeeze(10**(Pxx/10)) #should be 2 channels
-    band_power = np.sum(np.squeeze(base_PSD[band_idxs,:]),0)
+    base_PSD = Pxx #np.squeeze(10**(Pxx/10)) #should be 2 channels
     
+    #Here, we want to get a single scalar value for the power in the specified band FOR ALL nChann number of channels!
+    band_power = np.sum(np.squeeze(base_PSD[band_idxs,:],axis=0),0)
+    
+    #If the input Pxx was actually just for one channel then we get funky behavior, like returning a (1,) array
+    #which I hate, but whatever, we'll add a new axis in that instance
+    
+    if band_power.ndim < 2:
+        band_power = band_power[:,np.newaxis]
+
+    #So, we should get a (1 band x nChann MATRIX)    JUST SETTLE ON MATRIX
+    
+    #Let's assert that band-power is the shape we want it to be    
     return band_power
+
+
         
 #inner product between banded power timecourse with HAMD
 def pow_HDRS_sim(pow_tc,HDRS_tc):
@@ -465,7 +456,7 @@ class PSD_Collection():
         
         plt.figure()
         bcmap = matplotlib.cm.get_cmap('jet')
-        freq = data['DBS901']['C01']['GoldPSD']['F']
+        freq = data['DBS901']['C01']['MeanPSD']['F']
         self.Freq_vector = freq
         
         mean_PSD = np.nanmean(np.sqrt(10**(X/10))/1e-6)
@@ -511,6 +502,162 @@ class PSD_Collection():
     def plot_HDRSs(self,data,pt):
         pass
 
+#a datastructure for the band dict
+#band_labels = ['Delta','Theta','Alpha','Beta*','Beta+','Gamma*','Gamma+']
+#band_lims = [(1,4),(4,8),(8,14),(14,20),(25,30),(30,50),(70,90)]
+
+#A c;ass for the band dict, but this may be massive overkill
+class BandDict_obsolete():
+    band_labels = ['Delta','Theta','Alpha','Beta*','Beta+','Gamma*','Gamma+']
+    band_lims = [(1,4),(4,8),(8,14),(14,20),(25,30),(30,50),(70,90)]
+    
+    def __init__(self):
+        pass
+    
+    def returnDict(self):
+        band_dict = defaultdict(dict)        
+        for bb,bname in enumerate(self.band_labels):
+            band_dict[bname] = self.band_lims[bb]
+            
+        return band_dict
+        
+    def Osc_feats_SG(self,Input_SG):
+        return Banded_Matrix
+    def Osc_feats_TS(self,Input_TS):
+        pass
+
+#%%
+#For a given date and patient, return the phase it is from
+def ret_phase(date,PhaseStruct):
+    #List of phases to populate
+    phase_list = Phase_list(exprs='ephys')
+    #Need a map for each patient from their own timeline to the above phase-list
+    
+#%%
+#Stim matrix
+#This should be moved into the JSON file
+def write_Stim_changes():
+    stim_matr = 3.5*np.ones((6,32))
+    
+    stim_matr[0,16+8:] = 4.0
+    stim_matr[1,10+8:] = 4.0
+    stim_matr[2,8+1:] = 3.0
+    stim_matr[2,8+17:] = 3.5
+    stim_matr[2,8+19:] = 4.0
+    stim_matr[2,8+22:] = 4.5
+    stim_matr[3,8+4:] = 4.0
+    stim_matr[4,8+15:] = 4.0
+    stim_matr[5,8+22:] = 4.0
+    
+    stim_matr[:,0:8] = 0
+    
+    import scipy
+    import scipy.io
+    
+    save_array = {'StimMatrix':stim_matr}
+    scipy.io.savemat('/tmp/stim_changes',save_array)
+    
+#%%
+#plot windows real quick
+def plot_FFT_win(wintype='blackmanharris'):
+    import scipy.signal as sig
+    plt.figure()
+    plt.plot(sig.get_window(wintype,512))
+
+
+#%% Elastic Net Stuff
+    
+def ENetR(Xin,Yin,feat_side,f_trunc,feat_axis,exp,l_ratio,alpha_list,alpha=0.5,CV=False):
+    from sklearn.linear_model import ElasticNet, ElasticNetCV
+    from sklearn.linear_model import LinearRegression, Lasso
+    X = np.array(Xin)
+    Y = np.array(Yin)
+    
+    if feat_side == 'B':
+        Input_X = np.hstack((X[:,f_trunc,0],X[:,f_trunc,1]))
+    elif feat_side == 'L':
+        Input_X = X[:,f_trunc,0]
+    elif feat_side == 'R':
+        Input_X = X[:,f_trunc,1]
+    elif feat_side == 'BFull':
+        Input_X = np.hstack((X[:,:,0],X[:,:,1]))
+        
+    EN_alpha = alpha
+    n_obs = Input_X.shape
+    
+    if not CV:
+        print('Doing vanilla Elastic Net Regression...')
+        ENet = ElasticNet(alpha=EN_alpha,tol=0.001,normalize=True,positive=False)
+        ENet.fit(Input_X,Y)
+        ENet_error = ENet.score(Input_X,Y)
+
+    elif CV:
+        print('Doing cross-validation Elastic Net Regression...')
+        k_fold = 5
+        print('With k-fold value of:' + str(k_fold))    
+        
+        ENet = ElasticNetCV(l1_ratio=l_ratio,alphas=alpha_list,tol=0.01,normalize=True,positive=False,cv=k_fold)
+        print('Input_X shape' + str(Input_X.shape))
+        
+        ENet.fit(Input_X,Y)
+        ENet_error = ENet.score(Input_X,Y)
+        print('ENet Alpha: ' + str(ENet.alpha_) + ' and L1_Ratio: ' + str(ENet.l1_ratio_))
+    
+    print('ENet Performance: ' + str(ENet_error))
+
+    ENetRM = defaultdict(dict)
+    ENetRM['Coefficients'] = ENet.coef_
+    ENetRM['CoeffAxis'] = feat_axis
+    ENetRM['Score'] = ENet_error
+    ENetRM['FChannels'] = feat_side  
+    ENetRM['Model'] = ENet
+    ENetRM['Experiment'] = exp
+    
+    return ENetRM
+  
+def ENetPredict(ENetO,X,YActual,feat_side,f_trunc):
+    #from sklearn.linear_model import ElasticNet, LinearRegression, Lasso
+    if feat_side == 'B':
+        Input_X = np.hstack((X[:,f_trunc,0],X[:,f_trunc,1]))
+    elif feat_side == 'L':
+        Input_X = X[:,f_trunc,0]
+    elif feat_side == 'R':
+        Input_X = X[:,f_trunc,1]    
+    
+    #pdb.set_trace()
+    YPred = ENetO['Model'].predict(Input_X)
+    #Determine score from internal function; need to better understand that score
+    PredScore = ENetO['Model'].score(Input_X,YActual)
+    
+    #plt.figure()
+    #plt.plot(ENetO['Model'].coef_)
+    #plt.title('Prediction model coefficients')
+    #plt.show()
+    
+    return YPred, PredScore
+    
+def ENetPlot(ENetO,doplotting=False):
+    #plt.figure()
+    coeff_size = ENetO['Coefficients'].shape[0]
+    print('Coeff size is ' + str(coeff_size))
+    DSV = defaultdict(dict)
+    
+    if ENetO['FChannels'] == 'B':
+        DSV['Left'] = ENetO['Coefficients'][:floor(coeff_size/2)]
+        DSV['Right'] = ENetO['Coefficients'][floor(coeff_size/2):]
+
+    if doplotting:
+        plt.plot(ENetO['CoeffAxis'],DSV['Left'],color='blue',linewidth=3,label='Left LFP')
+        plt.plot(ENetO['CoeffAxis'],DSV['Right'],color='red',linewidth=3,label = 'Right LFP')
+        
+        plt.legend(loc='best')
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Coefficient Magnitude')
+        plt.title(ENetO['Experiment'] + ' Prediction Score: ' + str(ENetO['Score']))
+        plt.suptitle('Depression Biometric (compound)')
+    
+    return DSV
+
 class ENetPred():
     Model = []
     Model_Stats = 'Vanilla'
@@ -520,6 +667,8 @@ class ENetPred():
     test_ph_setup = 'Nmo_ephys' #or Nmo_ephys
     test_nph = -1
     stim_changes = []
+    l_ratio = np.linspace(0.2,0.8,20)
+    alpha_list = np.linspace(0.15,0.2,50)
 
     def __init__(self,CV=True):
         print('Initializing ENet')
@@ -550,7 +699,11 @@ class ENetPred():
         feat_side = 'B'
         
         #Standard Elastic Net approach
-        ENetModel = ENetR(X,Y,feat_side,f_dict['FreqTruncation'],f_dict['FreqVector'][f_dict['FreqTruncation']],exp = exp,alpha=alpha,CV=self.CV) #0.1 works grreat        
+        #If we're doing CV, we need the below two lines for parameters
+        l_ratio = self.l_ratio
+        alpha_list = self.alpha_list
+        
+        ENetModel = ENetR(X,Y,feat_side,f_dict['FreqTruncation'],f_dict['FreqVector'][f_dict['FreqTruncation']],exp = exp,alpha=alpha,CV=self.CV,l_ratio=l_ratio,alpha_list = alpha_list) #0.1 works grreat        
         DSV = ENetPlot(ENetModel,doplotting=False)
         
         #Save the elastic net model coming from above
@@ -672,46 +825,3 @@ class ENetPred():
             
             self.StatVerif['Testing']['DSM'][pp,:] = YSynth
             self.StatVerif['Testing']['HDRS'][pp,:] = YActual
-            
-class BandDict():
-    band_labels = ['Delta','Theta','Alpha','Beta*','Beta+','Gamma*','Gamma+']
-    band_lims = [(1,4),(4,8),(8,14),(14,20),(25,30),(30,50),(70,90)]
-    
-    def __init__(self):
-        pass
-    
-    def returnDict(self):
-        band_dict = defaultdict(dict)        
-        for bb,bname in enumerate(self.band_labels):
-            band_dict[bname] = self.band_lims[bb]
-            
-        return band_dict
-        
-    def Osc_feats_SG(self,Input_SG):
-        return Banded_Matrix
-    def Osc_feats_TS(self,Input_TS):
-        pass
-    
-    #%%
-#Stim matrix
-#This should be moved into the JSON file
-def write_Stim_changes():
-    stim_matr = 3.5*np.ones((6,32))
-    
-    stim_matr[0,16+8:] = 4.0
-    stim_matr[1,10+8:] = 4.0
-    stim_matr[2,8+1:] = 3.0
-    stim_matr[2,8+17:] = 3.5
-    stim_matr[2,8+19:] = 4.0
-    stim_matr[2,8+22:] = 4.5
-    stim_matr[3,8+4:] = 4.0
-    stim_matr[4,8+15:] = 4.0
-    stim_matr[5,8+22:] = 4.0
-    
-    stim_matr[:,0:8] = 0
-    
-    import scipy
-    import scipy.io
-    
-    save_array = {'StimMatrix':stim_matr}
-    scipy.io.savemat('/tmp/stim_changes',save_array)
