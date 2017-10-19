@@ -263,7 +263,7 @@ for pp,pt in enumerate(pts):
         #try something that seems right!
         #I want to mask the mean changes with the variance across patients; to see "what's most consistent" across the patients
         #topo_plotting(BONT_bands_consist,BOFT_bands_consist,suplabel='Mean masked with reliability')
-        
+
 #%%    
 scalp_plotting(BONT_bands_mean,suplabel='Mean')
 
