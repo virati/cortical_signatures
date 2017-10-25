@@ -6,26 +6,12 @@ Store of useful code for (mostly) testing purposes.
 
 """
 
-
-
-def print_dict(dictionary, ident = '', braces=1):
-    """ Recursively prints nested dictionary keys."""
-
-    for key, value in dictionary.iteritems():
-        if isinstance(value, dict):
-            print '%s%s%s%s' %(ident,braces*'[',key,braces*']') 
-            print_dict(value, ident+'  ', braces+1)
-        else:
-            print "hi:", ident+'%s' % (key) # Edited to only show nested keys
-
-
 def plot_3d_scalp(band=None):
-	"""
+    """
 
-	Plots 3D visualization of electrodes on the scalp.
+    Plots 3D visualization of electrodes on the scalp.
 
-	"""
-
+    """
     ax = plt.figure().add_subplot(111,projection='3d')
     egipos = mne.channels.read_montage('GSN-HydroCel-257')
     etrodes = egipos.pos
@@ -49,3 +35,23 @@ def plot_3d_scalp(band=None):
     #plt.title(pt + ' ' + condit) # pt is patient, and condit is on vs. off target
     plt.title("Title")
     plt.show()
+
+"""
+def print_dict(dict)
+    print "keys:", mat.keys()
+    for key in mat.keys():
+        print type(mat[key])
+        #print mat[key].shape
+"""
+
+def print_dict(dictionary, ident = '', braces=1):
+    """ Recursively prints nested dictionary keys."""
+
+    for key, value in dictionary.iteritems():
+        if isinstance(value, dict):
+            print '%s%s%s%s' %(ident,braces*'[',key,braces*']') 
+            print_dict(value, ident+'  ', braces+1)
+        else:
+            print "hi:", ident+'%s' % (key) # Edited to only show nested keys
+
+

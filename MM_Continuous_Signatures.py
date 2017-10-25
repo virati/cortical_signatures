@@ -19,7 +19,7 @@ import h5py
 
 from collections import defaultdict
 
-from EEG_Viz import *
+#from EEG_Viz import *
 
 plt.close('all')
 
@@ -48,12 +48,16 @@ plt.close('all')
     
 
 def extract_raw_mat():
+    ldln = "/Volumes/Eli Hanover's WD MyPassport//OnTarget_OffTarget_B4/less data_less noise/"
+    file1 = "DBS905_B4_OffTar_HP_LP_seg_mff_cln_ref_con.mat"
+
     data_dir = '/home/virati/MDD_Data/proc_hdEEG/Continuous/'
     pt_dir = 'DBS906/'
     file = 'DBS906_TurnOn_Day1_Sess1_20150827_024013.mat'
     
     data_dir = '/home/virati/B04/'
-    Inp = sio.loadmat(data_dir + pt_dir + file)
+    #Inp = sio.loadmat(data_dir + pt_dir + file)
+    Inp = sio.loadmat(ldln+file1)
     #%%
     
     #Find the key corresponding to the data
@@ -80,7 +84,6 @@ def extract_raw_mat():
 
 def load_raw_mat(fname):
     signal = sio.loadmat(fname)
-    
     return signal['EXPORT']['chann'][0][0]
 
 #for condit in ['OnTarget','OffTarget']:
@@ -89,7 +92,9 @@ for condit in ['OnTarget']:
     #condit = 'OffTarget'
     
     file = '/home/virati/MDD_Data/proc_hdEEG/' + pt + '/' + pt + '_Sample_Chirp_template/' + pt + '_' + condit + '_all.mat'
-    signal = load_raw_mat(fname=file)
+    ldln = "/Volumes/Eli Hanover's WD MyPassport//OnTarget_OffTarget_B4/less data_less noise/"
+    file1 = "DBS905_B4_OffTar_HP_LP_seg_mff_cln_ref_con.mat"
+    signal = load_raw_mat(fname=ldln+file1)
     
     def EEG_to_Matr(signal):
         data = []

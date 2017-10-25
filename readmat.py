@@ -7,6 +7,7 @@ Little script to road .mat files into Python objects.
 
 """
 import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import scipy.io as sio
 import scipy.stats as stats
@@ -14,32 +15,29 @@ import util
 import mne
 import os
 
-def read(matfile=""):
+def read(matfile, path="/Volumes/Eli Hanover's WD MyPassport/"):
 	""" Read in data from some .mat file """
+	
+	matfile = path + matfile
+	mat = sio.loadmat(matfile)
 
-	# OVERRIDE for testing
-	harddrive = "/Volumes/Eli Hanover's WD MyPassport"
-	mat1 = "/OnTarget_OffTarget_B4/less data_less noise/DBS905_B4_OffTar_HP_LP_seg_mff_cln_ref_con.mat"
-	mat2 = "/OnTarget_OffTarget_B4/more data_more noise/DBS906_TO_onTAR_MU_HP_LP_seg_mff_cln_ref.mat"
-
-	matfile = mat2
-
-	# check filename
-	assert matfile[-4:].lower() == ".mat"
-
-	# if good, load in file
-	mat = sio.loadmat(harddrive+matfile)
-
-	#print mat
-	print "keys:", mat.keys()
-	for key in mat.keys():
-		print type(mat[key])
-		#print mat[key].shape
+	# Print dict keys for testing
+	util.print_dict(mat)
 
 	return mat
 
-#mat = read()
-#print_dict(mat)
+"""
+ldln = "/Volumes/Eli Hanover's WD MyPassport/OnTarget_OffTarget_B4/less data_less noise/"
+file1 = "DBS905_B4_OffTar_HP_LP_seg_mff_cln_ref_con.mat"
+
+mdmn = "/Volumes/Eli Hanover's WD MyPassport/OnTarget_OffTarget_B4/more data_more noise/"
+file2 = "DBS906_TO_onTAR_MU_HP_LP_seg_mff_cln_ref.mat"
+
+bont = read(path=ldln, matfile=file1)
+print bont['BONT'].shape
+print bont['BONT'][1][1]
+"""
+#boft = read(path=mdmn, matfile=file2)
 
 
 
@@ -63,8 +61,8 @@ def topoplot(BONT_bands, BOFT_bands, sup='Title?', preplot='unity', bands=['Alph
 
 	# topoplot for each band
 	for i, band in enumerate(bands):
-		# for each band of each time_series, find the range of values for both B
-		print "Q ---> What is c????"
+		# for each band of each time_series, find the color range of values for both B
+		time_series = [BONT_bands, BOFT_bands]
 		set_c_max = np.max([ts[band] for ts in time_series])
 		set_c_min = np.min([ts[band] for ts in time_series])
 
@@ -78,15 +76,15 @@ def topoplot(BONT_bands, BOFT_bands, sup='Title?', preplot='unity', bands=['Alph
 
         # ????
         # plot 3d version of BONT
-		scalp_plotting(preplot_f(BONT_bands), suplabel="Mean")
+        scalp_plotting(preplot_f(BONT_bands), suplabel="Mean")
 
 
-BONT_bands = 
-BOFT_bands = 
-bont_processed = eeg.neighbors.process()
-boft_processed = eeg.neighbors.process()
-topoplot(BONT_bands, BOFT_bands, sup="working?")
-topoplot(bont_processed, boft_processed, sup="processed?")
+#BONT_bands = 
+#BOFT_bands = 
+#bont_processed = eeg.neighbors.process()
+#boft_processed = eeg.neighbors.process()
+#topoplot(bont, boft, sup="working?")
+#topoplot(bont_processed, boft_processed, sup="processed?")
 
 
 
