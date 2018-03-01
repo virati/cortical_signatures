@@ -7,302 +7,163 @@ Created on Mon Feb  5 21:21:56 2018
 This file loads in the preprocessed datafiles from AW preprocessing steps
 Either the conservative versions or the non-conservative (liberal/all) versions
 """
-import sys
+# import sys
+# sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
+# import DBS_Osc as dbo
 
-sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
-import DBS_Osc as dbo
+# from collections import defaultdict
+# import mne
+# from scipy.io import loadmat
+# import pdb
+# import numpy as np
 
-from collections import defaultdict
-import mne
-from scipy.io import loadmat
-import pdb
-import numpy as np
+# import scipy.stats as stats
+# import matplotlib.pyplot as plt
+# plt.close('all')
 
-import matplotlib.pyplot as plt
-plt.close('all')
+# from EEG_Viz import plot_3d_scalp
 
-import seaborn as sns
-sns.set()
-sns.set_style("white")
+# import seaborn as sns
+# sns.set()
+# sns.set_style("white")
+
+# from DBS_Osc import nestdict
+
+#%%
+#Simple definitions
 
 
 #%%
 
-TargetingEXP = defaultdict(dict)
-#TargetingEXP['conservative'] = {'905':0,'906':0,'907':0,'908':0}
-TargetingEXP['conservative'] = {
-        '905':{'OnT':'','OffT':''},
-        '906':{
-                'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS906_TO_onTAR_MU_HP_LP_seg_mff_cln_ref_1.mat',
-                'OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS906_TO_offTAR_bcr_LP_HP_seg_bcr_ref.mat'
-                },
-        '907':{
-                'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS907_TO_onTAR_MU_seg_mff_cln_ref.mat',
-                'OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS907_TO_offTAR_MU_seg_mff_cln_ref.mat'
-                },
-        '908':{
-                'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS908_TO_onTAR_bcr_LP_seg_mff_cln_bcr_ref.mat',
-                'OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS908_TO_offTAR_bcr_MU_seg_mff_cln_ref_1.mat'
-                }
-        }
-TargetingEXP['liberal'] = {
-        '905':{'OnT':'','OffT':''},
-        '906':{
-                'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS906_TO_onTAR_MU_HP_LP_seg_mff_cln_ref.mat',
-                'OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS906_TO_offTAR_LP_seg_mff_cln_ref_1.mat'
-                },
-        '907':{
-                'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS907_TO_onTAR_MU_seg_mff_cln_2ref.mat',
-                'OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS907_TO_offTAR_MU_seg_mff_cln_2ref.mat'
-                },
-        '908':{
-                'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS908_TO_onTAR_bcr_LP_seg_mff_cln_ref.mat',
-                'OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS908_TO_offTAR_bcr_MU_seg_mff_cln_ref.mat'
-                }
-        }
+from proc_dEEG import proc_dEEG
+                
+                
+#%%
 
 all_pts = ['906','907','908']
 
-keys_oi = {'OnT':['Off_3','BONT'],'OffT':['Off_3','BOFT']}
-
-class proc_dEEG:
-    def __init__(self,procsteps='liberal',pts=all_pts,condits=['OnT','OffT']):
-        #load in the procsteps files
-        ts_data = defaultdict(dict)
-        
-        for pt in pts:
-            ts_data[pt] = defaultdict(dict)
-            for condit in condits:
-                ts_data[pt][condit] = defaultdict(dict)
-                try:
-                    temp_data = loadmat(TargetingEXP[procsteps][pt][condit])
-                except:
-                    pdb.set_trace()
-                for epoch in keys_oi[condit]:
-                    ts_data[pt][condit][epoch] = temp_data[epoch]
-
-        self.fs = temp_data['EEGSamplingRate'][0][0]
-        self.donfft = 2**11
-        self.fvect = np.linspace(0,self.fs/2,self.donfft/2+1)
-                    
-        self.ts_data = ts_data
-        self.pts = pts
-        self.condits = condits
-        self.psd_trans = {pt:{condit:{epoch:[] for epoch in keys_oi} for condit in self.condits} for pt in self.pts}
-        self.PSD_diff = {pt:{condit:[] for condit in self.condits} for pt in self.pts}
-        self.PSD_var = {pt:{condit:[] for condit in self.condits} for pt in self.pts}
-        
-        self.Feat_trans = {pt:{condit:{epoch:[] for epoch in keys_oi} for condit in self.condits} for pt in self.pts}
-        self.Feat_diff = {pt:{condit:[] for condit in self.condits} for pt in self.pts}
-        self.Feat_var = {pt:{condit:[] for condit in self.condits} for pt in self.pts}
-        
-        self.eeg_locs = mne.channels.read_montage('/home/virati/Dropbox/GSN-HydroCel-257.sfp')
-        
-    def extract_feats(self):
-        donfft = self.donfft
-        pts = self.pts
-        for pt in pts:
-            var_matr = defaultdict(dict)
-            for condit in self.condits:
-                med_matr = defaultdict(dict)
-                var_matr[condit] = defaultdict(dict)
-                
-                med_feat_matr = defaultdict(dict)
-                var_feat_matr = defaultdict(dict)
-                
-                #the size of this object should be
-                for epoch in keys_oi[condit]:
-                    data_matr = self.ts_data[pt][condit][epoch]
-                    
-                    #pdb.set_trace()
-                    #plt.plot(data_dict[100].T)
-                    #print(data_dict[100].shape)
-                    # METHOD 1
-                    method = 2
-                    #Method one concatenates all segments then does the PSD
-                    #this is not a good idea with the liberal preprocessing, since there are still artifacts
-                    if method == 1:
-                        #this next step gets rid of all the segments
-                        data_dict = {ch:data_matr[ch,:,:].reshape(1,-1,order='F') for ch in range(data_matr.shape[0])}
-                        
-                        ret_Fsegs = dbo.gen_psd(data_dict,Fs=1000,nfft=donfft)
-                        
-                        #need to ordered, build list
-                        allchanns = [ret_Fsegs[ch] for ch in range(257)]
-                        
-                        med_matr[epoch] = 10*np.log10(np.squeeze(np.array(allchanns)))
-                        self.psd_trans[pt][condit][epoch] = ret_Fsegs
-                    #in methods 2, we do the PSD of each segment individually then we find the median across all segments
-                    elif method == 2:
-                        
-                        chann_seglist = np.zeros((257,int(donfft/2+1),data_matr.shape[2]))
-                        chann_segfeats = np.zeros((257,len(dbo.feat_order),data_matr.shape[2]))
-                        for ss in range(data_matr.shape[2]):
-                            data_dict = {ch:data_matr[ch,:,ss] for ch in range(data_matr.shape[0])}
-                            ret_f = dbo.gen_psd(data_dict,Fs=1000,nfft=donfft)
-                            #Push ret_f, the dictionary, into the matrix we need for further processing
-                            for cc in range(257):
-                                chann_seglist[cc,:,ss] = ret_f[cc]
-                                #go to each channel and find the oscillatory band feature vector
-                                chann_segfeats[cc,:,ss] = dbo.calc_feats(ret_f[cc],self.fvect)
-                            
-                        self.psd_trans[pt][condit][epoch] = chann_seglist
-                        self.Feat_trans[pt][condit][epoch] = chann_segfeats
-                        
-                        med_matr[epoch] = np.median(10*np.log10(chann_seglist),axis=2)
-                        var_matr[epoch] = np.var(10*np.log10(chann_seglist),axis=2)
-                    
-                        med_feat_matr[epoch] = np.median(10*np.log10(chann_segfeats),axis=2)
-                        var_feat_matr[epoch] = np.var(10*np.log10(chann_segfeats),axis=2)
-                
-                assert med_matr[keys_oi[condit][1]].shape == (257,donfft/2+1)
-                diff_matr = med_matr[keys_oi[condit][1]] - med_matr['Off_3']
-                diff_feat = med_feat_matr[keys_oi[condit][1]] - med_feat_matr['Off_3']
-                
-                #Put the PSD information in the class structures
-                self.PSD_var[pt][condit] = var_matr
-                self.PSD_diff[pt][condit] = diff_matr
-                #Put the Oscillator feature vector in the class structure
-                self.Feat_diff[pt][condit] = diff_feat
-                self.Feat_var[pt][condit] = var_feat_matr
-
-        plot = False
-        if plot:
-            plt.figure()
-            plt.subplot(211)
-            plt.plot(self.fvect,med_matr['Off_3'].T)
-            plt.subplot(212)
-            plt.plot(self.fvect,med_matr[keys_oi[condit][1]].T)        
-        
-    def plot_diff(self,pt='906',condit='OnT',varweigh=False):
-        diff_matr = self.PSD_diff[pt][condit]
-        
-        if varweigh:
-            var_matr = self.PSD_var[pt][condit][keys_oi[condit][1]]
-            plotdiff = (diff_matr / np.sqrt(var_matr)).T
-            varweightext = ' WEIGHTED WITH 1/VAR'
-        else:
-            plotdiff = diff_matr.T
-            varweightext = ''
-            
-        plt.figure()
-        plt.plot(self.fvect,plotdiff,alpha=0.2)
-        
-        plt.xlim((0,150))
-        plt.title('Difference from Pre-Stim to Stim')
-        plt.suptitle(pt + ' ' + condit + varweightext)
-    
-    def plot_ontvsofft(self,pt='906'):
-        if 'OffT' not in self.condits:
-            raise ValueError
-            
-        condit_diff = (self.PSD_diff[pt]['OnT'] - self.PSD_diff[pt]['OffT']).T
-        plt.figure()
-        plt.plot(self.fvect,condit_diff,alpha=0.2)
-        plt.xlim((0,150))
-        plt.title('Difference from OnT and OffT')
-        plt.suptitle(pt)
-    
-    def plot_chann_var(self,pt='906',condit='OnT'):
-        plt.figure()
-        plt.subplot(121)
-        plt.plot(self.PSD_var[pt][condit]['Off_3'].T)
-        plt.xlim((0,150))
-        plt.subplot(122)
-        plt.plot(self.PSD_var[pt][condit][keys_oi[condit][1]].T)
-        plt.xlim((0,150))
-        
-        plt.suptitle(pt + ' ' + condit)
-        
-    #This function quickly gets the power for all channels in each band
-    def Full_feat_band(self):
-        pass
-        
-        
-    def plot_topo(self,vect,vmax=2,vmin=-2,label=''):
-        plt.figure()
-        mne.viz.plot_topomap(vect,pos=self.eeg_locs.pos[:,[0,1]],vmax=vmax,vmin=vmin)
-        plt.suptitle(label)
-                
-                
-#%%
         
 #UNIT TEST
-SegEEG = proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
+SegEEG = proc_dEEG(pts=all_pts,procsteps='liberal',condits=['OnT','OffT'])
 SegEEG.extract_feats()
+SegEEG.compute_diff()
 
 #%%
-chann_changes = np.zeros((3,2,257))
-for pp,pt in enumerate(all_pts):
+#Go across patients now
+
+SegEEG.pop_response()
+SegEEG.plot_pop_stats()
+
+#%%
+
+SegEEG.plot_diff()
+
+
+
+
+
+
+#%%
+#BELOW THIS IS CLUGY SHIT
+
+if 0:
+    chann_changes = np.zeros((3,2,257))
+    for pp,pt in enumerate(all_pts):
+        for cc,condit in enumerate(['OnT','OffT']):
+            
+            #SegEEG.plot_diff(pt=pt,varweigh=False,condit=condit)
+            SegEEG.plot_chann_var(pt=pt,condit=condit)
+            pass
+        ##SegEEG.plot_ontvsofft(pt=pt)
+            ##plot the max peak value
+            ##Fidxs = np.where(np.logical_and(SegEEG.fvect > 0,SegEEG.fvect < 40))
+            ##SegEEG.plot_topo(np.squeeze(np.max(SegEEG.PSD_diff[pt][condit][:,Fidxs],axis=2)),vmax=10,vmin=-2,label=pt + ' ' + condit)
+            
+            
+            plot_band = 'Alpha'
+            band_idx = dbo.feat_order.index(plot_band)
+            #SegEEG.plot_topo(np.squeeze(SegEEG.Feat_diff[pt][condit][:,band_idx]),label=pt + ' ' + condit + ' ' + plot_band)
+            threed = plt.figure()
+            plot_3d_scalp(np.squeeze(SegEEG.Feat_diff[pt][condit][:,band_idx]),threed)
+            
+            chann_changes[pp,cc,:] = SegEEG.Feat_diff[pt][condit][:,band_idx]
+    
+    #%%        
+    pop_channs = plt.figure()
+    robust_channs = defaultdict(dict)
+    for co,condit in enumerate(['OnT','OffT']):
+        #plt.bar(np.arange(257),np.mean(chann_changes[pp,0,:].squeeze(),0))
+        mean_change = np.mean(chann_changes[:,co,:],0)
+        var_change = np.var(chann_changes[:,co,:],0)
+        plt.figure(pop_channs.number)
+        plt.bar(np.arange(257) + co/2,np.mean(chann_changes[:,co,:],0),yerr=np.var(chann_changes[:,co,:],0),label=condit)
+        plt.xlabel('Channel Number')
+        plt.ylabel('Power change in ' + plot_band)
+        plt.legend()
+        
+        #which channels have error bars that don't cross the 0 line?
+        #THIS IS KEY KNOB!
+        #Right now, it keeps keeps channels where the change in power is 2dB = 1.5, AND where there is consistency across the three patients
+        robust_channs[condit] = np.where(np.logical_and(np.abs(mean_change) - 7*var_change > 0,np.abs(mean_change) > 0.6)) 
+        
+        chann_mapper = plt.figure()
+        map_channs = np.zeros((257,1))
+        map_channs[robust_channs[condit]] = 1
+        plt.bar(np.arange(257),map_channs.astype(float).squeeze())
+        
+        plt.title(condit)
+        
+        threed=plt.figure()
+        #SegEEG.plot_topo(map_channs.reshape(-1),label='mapContacts')
+        plot_3d_scalp(map_channs.reshape(-1),threed)
+        plt.title(condit)
+        
+    #%%
+    #Do above plot, but keep ALL segments available and do distributions off of that for each channel
+    stack = []
+    plt.figure()
+    intv_key = {'OnT':'BONT','OffT':'BOFT'}
+    for pt in ['906','907','908']:
+        for co,condit in enumerate(['OnT','OffT']):
+            stack.append(SegEEG.Feat_)
+             
+        
+    #    pt_channvstrials = [rr[condit][intv_key[condit]][:,band_idx,:].T for (key,(key2,rr)),condit in itertools.product(SegEEG.Feat_diff.items(),[condit])]
+    #    channvstrials = np.array([item for sublist in something for item in sublist])
+        plt.bar(np.arange(257) + co/2,np.mean(channvstrials,0),yerr=stats.sem(channvstrials,0))
+        
+    #%%
+    #Segment scatter plot time!
+    segscatter = plt.figure()
     for cc,condit in enumerate(['OnT','OffT']):
-        
-        #SegEEG.plot_diff(pt=pt,varweigh=False,condit=condit)
-        #SegEEG.plot_chann_var(pt='906',condit=condit)
+        #all scatter data
         pass
-    ##SegEEG.plot_ontvsofft(pt=pt)
-        ##plot the max peak value
-        ##Fidxs = np.where(np.logical_and(SegEEG.fvect > 0,SegEEG.fvect < 40))
-        ##SegEEG.plot_topo(np.squeeze(np.max(SegEEG.PSD_diff[pt][condit][:,Fidxs],axis=2)),vmax=10,vmin=-2,label=pt + ' ' + condit)
-        plot_band = 'Gamma1'
-        band_idx = dbo.feat_order.index(plot_band)
-        SegEEG.plot_topo(np.squeeze(SegEEG.Feat_diff[pt][condit][:,band_idx]),label=pt + ' ' + condit + ' ' + plot_band)
+    
+    #%%
+    #Quick segment time plotting
+    import itertools
+    plt.figure()
+    [plt.plot(rr[condit]['BONT'][:,band_idx,:].T) for (key,rr),condit in itertools.product(SegEEG.Feat_trans.items(),['OnT']) if key == '906']
+    
+    #%%
+    plt.figure()
+    [plt.scatter(rr[condit]['BONT'][:,band_idx-2,:].T,rr[condit]['BONT'][:,band_idx-1,:].T,alpha=0.1) for (key,rr),condit in itertools.product(SegEEG.Feat_trans.items(),['OnT'])]
+    plt.xlabel(dbo.feat_order[band_idx-2])
+    plt.ylabel(dbo.feat_order[band_idx-1])
+    plt.axis('equal')
+    
+    #%%
+    # 3d scatter plotting
+    from mpl_toolkits.mplot3d import Axes3D
+    fig = plt.figure()
+    ax = fig.add_subplot(111,projection='3d')
+    [ax.scatter(rr[condit]['BONT'][:,band_idx-2,:].T,rr[condit]['BONT'][:,band_idx-1,:].T,rr[condit]['BONT'][:,band_idx,:].T,alpha=0.1) for (key,rr),condit in itertools.product(SegEEG.Feat_trans.items(),['OnT'])]
+    plt.xlabel(dbo.feat_order[band_idx-2])
+    plt.ylabel(dbo.feat_order[band_idx-1])
+    #plt.zlabel(dbo.feat_order[band_idx])
+    
         
-        chann_changes[pp,cc,:] = SegEEG.Feat_diff[pt][condit][:,band_idx]
-
-#%%        
-pop_channs = plt.figure()
-robust_channs = defaultdict(dict)
-for cc,condit in enumerate(['OnT','OffT']):
-    #plt.bar(np.arange(257),np.mean(chann_changes[pp,0,:].squeeze(),0))
-    mean_change = np.mean(chann_changes[:,cc,:],0)
-    var_change = np.var(chann_changes[:,cc,:],0)
-    plt.figure(pop_channs.number)
-    plt.bar(np.arange(257) + cc/2,np.mean(chann_changes[:,cc,:],0),yerr=np.var(chann_changes[:,cc,:],0))
+    #%%
     
-    
-    #which channels have error bars that don't cross the 0 line?
-    #THIS IS KEY KNOB!
-    #Right now, it keeps keeps channels where the change in power is 2dB = 1.5, AND where there is consistency across the three patients
-    robust_channs[condit] = np.where(np.logical_and(np.abs(mean_change) - 1*var_change > 0,np.abs(mean_change) > 2)) 
-    
-    chann_mapper = plt.figure()
-    map_channs = np.zeros((257,1))
-    map_channs[robust_channs[condit]] = 1
-    plt.bar(np.arange(257),map_channs.astype(float).squeeze())
-    plt.title(condit)
-    
-#%%
-#Segment scatter plot time!
-segscatter = plt.figure()
-for cc,condit in enumerate(['OnT','OffT']):
-    #all scatter data
-    pass
-
-#%%
-#Quick segment time plotting
-import itertools
-plt.figure()
-[plt.plot(rr[condit]['BONT'][:,band_idx,:].T) for (key,rr),condit in itertools.product(SegEEG.Feat_trans.items(),['OnT']) if key == '906']
-
-#%%
-plt.figure()
-[plt.scatter(rr[condit]['BONT'][:,band_idx-2,:].T,rr[condit]['BONT'][:,band_idx-1,:].T,alpha=0.1) for (key,rr),condit in itertools.product(SegEEG.Feat_trans.items(),['OnT'])]
-plt.xlabel(dbo.feat_order[band_idx-2])
-plt.ylabel(dbo.feat_order[band_idx-1])
-
-
-#%%
-# 3d scatter plotting
-from mpl_toolkits.mplot3d import Axes3D
-fig = plt.figure()
-ax = fig.add_subplot(111,projection='3d')
-[ax.scatter(rr[condit]['BONT'][:,band_idx-2,:].T,rr[condit]['BONT'][:,band_idx-1,:].T,rr[condit]['BONT'][:,band_idx,:].T,alpha=0.1) for (key,rr),condit in itertools.product(SegEEG.Feat_trans.items(),['OnT'])]
-plt.xlabel(dbo.feat_order[band_idx-2])
-plt.ylabel(dbo.feat_order[band_idx-1])
-plt.zlabel(dbo.feat_order[band_idx])
-
-    
-#%%
-
-plt.figure()
-plt.boxplot(np.abs(chann_changes[:,0,:]))
+    plt.figure()
+    plt.boxplot(np.abs(chann_changes[:,0,:]))
