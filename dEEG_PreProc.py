@@ -52,6 +52,7 @@ SegEEG.compute_diff()
 #Go across patients now
 
 SegEEG.pop_response()
+SegEEG.do_pop_stats()
 SegEEG.plot_pop_stats()
 
 #%%
@@ -59,7 +60,8 @@ SegEEG.plot_pop_stats()
 SegEEG.plot_diff()
 
 
-
+#%%
+SegEEG.GMM_train('OnT')
 
 
 

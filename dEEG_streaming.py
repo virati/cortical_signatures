@@ -22,6 +22,7 @@ import neigh_mont
 import sys
 sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
 import DBS_Osc as dbo
+from DBS_Osc import nestdict
 
 import pdb
 
@@ -33,9 +34,13 @@ Targeting['All'] = {
         '906':{
                 'OnT':{
                         #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/DS500/DBS906_TurnOn_Day1_Sess1_20150827_024013_tds.mat'
-                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/OnTOffT/B04/DBS906/DBS906_TurnOn_Day1_Sess1_20150827_024013.mat'
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess1_20150827_024013_OnTarget.mat'
                         },
                 'OffT':{
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess2_20150827_041726_OffTarget.mat'
+                        },
+                
+                'Volt':{
                         'fname':''
                         }
                 },
@@ -58,7 +63,7 @@ class streamEEG:
         self.fs = fs/ds_fact
         
         for pt in do_pts:
-            for condit in ['OnT']:
+            for condit in do_condits:
                 data_dict = defaultdict(dict)
                 container = scio.loadmat(Targeting['All'][pt][condit]['fname'])
                 dkey = [key for key in container.keys() if key[0:3] == 'DBS'][-1]
@@ -72,48 +77,69 @@ class streamEEG:
                 #data_dict = data_dict - np.mean(data_dict,0)
                 
                 self.data_dict[pt][condit] = data_dict
+                self.virtual_chann = nestdict()
+                self.virtual_chann_loc = nestdict()
                 
                 del(container)
                 
         self.do_pts = do_pts
         
         
-    def re_ref(self,scheme='local'):
+    def re_ref(self,scheme='local',do_condits=['OnT','OffT']):
         print('Local Referencing...')
-        for pt in self.do_pts:
-            if scheme == 'local':
-                dist_matr = neigh_mont.return_cap_L(dth=3)
+        
+        #do a very simple lowpass filter at 1Hz
+        hpf_cutoff=1/(self.fs/2)
+        bc,ac = sig.butter(3,hpf_cutoff,btype='highpass',output='ba')
+        
+        for condit in do_condits:
+            for pt in self.do_pts:
+                if scheme == 'local':
+                    dist_matr = neigh_mont.return_cap_L(dth=3)
+                    
+                    dataref = self.data_dict[pt][condit]
+                    post_ref = neigh_mont.reref_data(dataref,dist_matr)
                 
-                dataref = self.data_dict[pt]['OnT']
-                post_ref = neigh_mont.reref_data(dataref,dist_matr)
-            
+                    
+                elif scheme == 'diff':
+                    dist_matr = neigh_mont.return_cap_L(dth=3)
+                    dataref = self.data_dict[pt][condit]
+                    post_ref = neigh_mont.diff_reref(dataref,dist_matr)
                 
-            elif scheme == 'diff':
-                dist_matr = neigh_mont.return_cap_L(dth=3)
-                dataref = self.data_dict[pt]['OnT']
-                post_ref = neigh_mont.diff_reref(dataref,dist_matr)
-            
-            self.data_dict[pt]['OnT'] = post_ref
+                self.data_dict[pt][condit] = post_ref
+                
+                
+                
+                #pdb.set_trace()
+                self.virtual_chann[pt][condit] = sig.filtfilt(bc,ac,np.array([vchann[0] for vchann in post_ref]))
+                self.virtual_chann_loc[pt][condit] = np.array([vchann[1] for vchann in post_ref])
     
-    def SG_Transform(self,nperseg=2**10,noverlap=2**10-10):
+    def SG_Transform(self,nperseg=2**10,noverlap=2**10-10,ctype='real',do_condits=['OnT','OffT']):
         do_pts = self.do_pts
+        if ctype == 'virtual':
+            data_source = self.virtual_chann
+        elif ctype == 'real':
+            data_source = self.data_dictsud
         
         for pt in do_pts:
-            for condit in ['OnT']:
+            for condit in do_condits:
                 for cc in [32]:
                     
-                    SGc = dbo.TF_Domain(self.data_dict[pt][condit][cc,:],fs=self.fs,noverlap=noverlap,nperseg=nperseg)
+                    SGc = dbo.TF_Domain(data_source[pt][condit][cc,:],fs=self.fs,noverlap=noverlap,nperseg=nperseg)
                     plt.figure()
+                    plt.subplot(211)
                     plt.pcolormesh(SGc['T'],SGc['F'],np.log10(SGc['SG']))
+                    plt.subplot(212)
+                    plt.plot(SGc['F'],np.log10(SGc['SG'][:,500]))
 #%%
                     
                     
-sEEG = streamEEG(fs=1000,ds_fact=2,do_pts=['908'])
+sEEG = streamEEG(fs=1000,ds_fact=2,do_pts=['906'])
 sEEG.re_ref(scheme='diff')
 
 #sEEG.re_ref()
-
-#sEEG.SG_Transform(nperseg=2**11,noverlap=2**11-50)
+#%%
+sEEG.SG_Transform(nperseg=2**11,noverlap=2**11-50,ctype='virtual')
 
         
 

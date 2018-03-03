@@ -170,6 +170,18 @@ class proc_dEEG:
         
         self.pop_stats = pop_lvl
     
+    def do_pop_stats(self):
+        self.reliablePSD = nestdict()
+        for condit in self.condits:
+            weighedPSD = np.divide(self.pop_stats['Mean'][condit].T,np.sqrt(self.pop_stats['Var'][condit].T))
+            #do subtract weight
+            subtrPSD = self.pop_stats['Mean'][condit].T - 2*np.sqrt(self.pop_stats['Var'][condit].T)
+        
+            #find where the channels are above threshold in a given band
+            #go to each channel and find the mean change in a band
+            
+        
+            self.reliablePSD[condit] = {'cPSD':subtrPSD,'CMask':chann_mask}
     def plot_pop_stats(self):
         for condit in self.condits:
             plt.figure()
@@ -179,10 +191,17 @@ class proc_dEEG:
             plt.subplot(312)
             plt.plot(self.fvect,np.sqrt(self.pop_stats['Var'][condit].T)/np.sqrt(3))
             plt.title('Standard Error of the Mean; n=3')
+            
+            
             plt.subplot(313)
-            weighedPSD = np.divide(self.pop_stats['Mean'][condit].T,np.sqrt(self.pop_stats['Var'][condit].T))
-            plt.plot(self.fvect,weighedPSD)
-            plt.title('Weighed PSD by Pop Variance')
+            #do divide weight
+            
+            
+            
+            reliablePSD = self.reliablePSD[condit]['cPSD']
+            
+            plt.plot(self.fvect,reliablePSD)
+            plt.title('SubtrPSD by Pop 6*std')
             
             plt.xlabel('Frequency (Hz)')
             #plt.subplot(313)
@@ -211,6 +230,10 @@ class proc_dEEG:
             
    
             plt.suptitle(pt)
+    
+    def GMM_train(self,condit='OnT'):
+        #gnerate our big matrix of observations; Should be 256(chann)x4(feats)x(segxpatients)(observations)
+        pass
     
     def DEPRextract_feats(self):
         donfft = self.donfft
