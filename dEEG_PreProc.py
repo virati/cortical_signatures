@@ -42,7 +42,7 @@ all_pts = ['906','907','908']
 
         
 #UNIT TEST
-EEG_analysis = proc_dEEG(pts=all_pts,procsteps='liberal',condits=['OnT','OffT'])
+EEG_analysis = proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
 EEG_analysis.extract_feats()
 EEG_analysis.compute_diff()
 
@@ -74,14 +74,68 @@ def do_similarity(SegEEG):
 do_similarity(EEG_analysis)
 
 #%%
-def do_GMM_stuff(SegEEG):
-    SegEEG.gen_GMM_dsgn(stack_bl='normalize')
+#SegEEG.gen_GMM_dsgn(stack_bl='normalize')
+#SegEEG.gen_GMM_feat()
     
-    SegEEG.gen_GMM_feat()
+def do_PCA_stuff(SegEEG):
+    
+    #do PCA routines now
+    SegEEG.pca_decomp()
+    
+    plt.figure();
+    plt.subplot(221)
+    plt.imshow(EEG_analysis.PCA_d.components_)
+    plt.subplot(222)
+    plt.plot(EEG_analysis.PCA_d.components_)
+    plt.legend({'PC1','PC2','PC3','PC4'})
+    plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma'])
+    plt.subplot(223)
+    plt.imshow(EEG_analysis.PCA_x)
+    
+    plt.figure()
+    plt.plot(EEG_analysis.PCA_d.explained_variance_ratio_)
+    
+    for cc in range(5):
+        fig=plt.figure()
+        plot_3d_scalp(EEG_analysis.PCA_x[:,cc],fig)
+        plt.title('Plotting component ' + str(cc))
+        plt.suptitle('PCA rotated results for OnTarget')
+
+do_PCA_stuff(EEG_analysis)
+#%%
+GMMpreproc = False
+
+#%%
+def do_GMM_stuff(SegEEG,GMMpreproc):
+    if not GMMpreproc:
+        SegEEG.gen_GMM_dsgn(stack_bl='normalize')
+        SegEEG.gen_GMM_feat()
+        SegEEG.pop_meds()
     
     SegEEG.train_GMM()
+    return True
 
-do_GMM_stuff(EEG_analysis)
+GMMpreproc = do_GMM_stuff(EEG_analysis,GMMpreproc)
+
+plt.figure()
+plt.plot(EEG_analysis.Seg_Med[0]['OnT'],label='OnT')
+plt.plot(EEG_analysis.Seg_Med[0]['OffT'],label='OffT')
+plt.title('Medians across Channels')
+plt.legend()
+for condit in EEG_analysis.condits:
+    fig = plt.figure()
+    plot_3d_scalp(EEG_analysis.Seg_Med[0][condit],fig,label=condit + '_med',animate=False)
+    plt.suptitle('Median of all channels across all ' + condit + ' segments')
+
+plt.figure()
+plt.plot(EEG_analysis.Seg_Med[1]['OnT'],label='OnT')
+plt.plot(EEG_analysis.Seg_Med[1]['OffT'],label='OffT')
+plt.title('MADs across Channels')
+plt.legend()
+for condit in EEG_analysis.condits:
+    fig = plt.figure()
+    plot_3d_scalp(EEG_analysis.Seg_Med[1][condit],fig,label=condit + '_mad',animate=False)
+    plt.suptitle('MADs of all channels across all ' + condit + ' segments')
 #%%
 
 for comp in range(2):
@@ -89,7 +143,7 @@ for comp in range(2):
     plt.subplot(211)
     plt.plot(EEG_analysis.GMM.means_[comp])
     plt.subplot(212)
-    plt.imshow(EEG_analysis.GMM.covariances_[comp,:,:],vmin=0,vmax=0.2)
+    plt.imshow(EEG_analysis.GMM.covariances_[comp,:].reshape(-1,1),vmin=0,vmax=0.2)
     plt.colorbar()
     plt.title(comp)
     
@@ -110,6 +164,10 @@ ldict = {'BONT':0,'BOFT':1}
 label_numbers = [ldict[item] for item in labels]
 
 plt.plot(label_numbers,alpha=0.7)
+plt.title('Classification of segments')
+plt.xlabel('Segment number')
+plt.ylabel('Class Label')
+plt.yticks([0,1],['OnTarget','OffTarget'])
 
 
 #%%

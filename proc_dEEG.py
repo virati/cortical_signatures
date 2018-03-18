@@ -34,6 +34,7 @@ from DBS_Osc import nestdict
 from statsmodels import robust
 
 from sklearn import mixture
+from sklearn.decomposition import PCA
 
 #%%
 
@@ -240,6 +241,19 @@ class proc_dEEG:
             
             plt.suptitle(condit)
             
+    def pca_decomp(self):
+        #check to see if we have what variables we need
+        numsegs = self.GMM_Osc_stack['OnT'].shape[1]
+        
+        Xdsgn = np.mean(self.GMM_Osc_stack['OnT'],axis=1).squeeze()
+        
+        pca = PCA(n_components=5)
+        
+        pca.fit(Xdsgn)
+        
+        self.PCA_d = pca
+        self.PCA_x = pca.fit_transform(Xdsgn)
+        
         
     
     def gen_GMM_priors(self,condit='OnT'):
@@ -287,12 +301,26 @@ class proc_dEEG:
             #We want a 257 dimensional vector with num_segs observations
         
         return segs_feats
+
+    def pop_meds(self):
+        dsgn_X = self.shape_GMM_dsgn()
+        X_med = nestdict()
+        X_mad = nestdict()
+        #do some small simple crap here
+        for condit in self.condits:
+            X_med[condit]= np.median(dsgn_X[condit],axis=0)
+            X_mad[condit] = robust.mad(dsgn_X[condit],axis=0)
+        
+        self.Seg_Med = (X_med,X_mad)
             
     def train_GMM(self):
         #shape our dsgn matrix properly
         dsgn_X = self.shape_GMM_dsgn()
         
+
         #let's stack the two together and expect 3 components?
+        #this is right shape: (n_samples x n_features)
+        
         full_X = np.concatenate([val for key,val in dsgn_X.items()],axis=0)
         
         #setup our covariance prior from OUR OTHER ANALYSES
@@ -300,13 +328,18 @@ class proc_dEEG:
         covariance_prior_alpha = self.gen_GMM_priors()
         
         #when below reg_covar was 1e-1 I got SOMETHING to work
-        gMod = mixture.BayesianGaussianMixture(n_components=self.num_gmm_comps,covariance_type='full',reg_covar=1,tol=1e-2)#,covariance_prior=covariance_prior_alpha)
+        gMod = mixture.BayesianGaussianMixture(n_components=self.num_gmm_comps,mean_prior=self.Seg_Med[0]['OnT'],mean_precision_prior=0.1,covariance_type='diag',reg_covar=10,tol=1e-2)#,covariance_prior=covariance_prior_alpha)
+        #gMod = mixture.BayesianGaussianMixture(n_components=self.num_gmm_comps,covariance_type='full',reg_covar=1,tol=1e-2)#,covariance_prior=covariance_prior_alpha)
         
-        gMod.fit(full_X)
+        try:
+            gMod.fit(full_X)
+        except:
+            pdb.set_trace()
         
         self.GMM = gMod
         
         self.predictions = gMod.predict(full_X)
+        self.posteriors = gMod.predict_proba(full_X)
         
         
         
