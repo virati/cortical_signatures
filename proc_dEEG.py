@@ -17,6 +17,8 @@ from scipy.io import loadmat
 import pdb
 import numpy as np
 
+import scipy.signal as sig
+
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 plt.close('all')
@@ -30,6 +32,8 @@ sns.set_style("white")
 from DBS_Osc import nestdict
 
 from statsmodels import robust
+
+from sklearn import mixture
 
 #%%
 
@@ -117,7 +121,7 @@ class proc_dEEG:
                     data_matr = self.ts_data[pt][condit][epoch] #should give us a big matrix with all the crap we care about
                     data_dict = {ch:data_matr[ch,:,:].squeeze() for ch in range(data_matr.shape[0])} #transpose is done to make it segxtime
                     
-                    seg_psds,_ = dbo.gen_psd(data_dict,Fs=self.fs,nfft=self.donfft,polyord=polyorder)
+                    seg_psds = dbo.gen_psd(data_dict,Fs=self.fs,nfft=self.donfft,polyord=polyorder)
                     
                     #gotta flatten the DICTIONARY, so have to do it carefully
                     
@@ -125,8 +129,186 @@ class proc_dEEG:
                     
                     #find the variance for all segments
                     feat_dict[pt][condit][epoch] = PSD_matr
+                    
+                    #need to do OSCILLATIONS here
         
         self.feat_dict = feat_dict
+    
+    def train_simple(self):
+        #Train our simple classifier that just finds the shortest distance
+        self.signature = {'OnT':0,'OffT':0}
+        self.signature['OnT'] = self.pop_osc_change['OnT'][dbo.feat_order.index('Alpha')] / np.linalg.norm(self.pop_osc_change['OnT'][dbo.feat_order.index('Alpha')])
+        self.signature['OffT'] = self.pop_osc_change['OffT'][dbo.feat_order.index('Alpha')] / np.linalg.norm(self.pop_osc_change['OffT'][dbo.feat_order.index('Alpha')])
+        
+    
+    def test_simple(self):
+        #go to our GMM stack and, for each segment, determine the distance to the two conditions
+        
+        OnT_sim = nestdict()
+        OffT_sim = nestdict()
+        
+        for condit in self.condits:
+            seg_stack = self.GMM_Osc_stack[condit]
+            seg_num = seg_stack.shape[1]
+            OnT_sim[condit] = [None] * seg_num
+            OffT_sim[condit] = [None] * seg_num
+            
+            for seg in range(seg_num):
+                net_vect = seg_stack[:,seg,dbo.feat_order.index('Alpha')].reshape(-1,1)
+                net_vect = net_vect/np.linalg.norm(net_vect)
+                
+                OnT_sim[condit][seg] = np.arccos(np.dot(net_vect.T,self.signature['OnT'].reshape(-1,1)) / np.linalg.norm(net_vect))
+                OffT_sim[condit][seg] = np.arccos(np.dot(net_vect.T,self.signature['OffT'].reshape(-1,1)) / np.linalg.norm(net_vect))
+                
+            OnT_sim[condit] = np.array(OnT_sim[condit])
+            OffT_sim[condit] = np.array(OffT_sim[condit])
+            
+        return (OnT_sim, OffT_sim)
+    
+    #this function will generate a big stack of all observations for a given condition across all patients
+    def gen_GMM_dsgn(self,stack_bl=''):
+        state_stack = nestdict()
+        state_labels = nestdict()
+        
+        
+        for condit in self.condits:
+            state_stack[condit] = []
+            keyoi = keys_oi[condit][1]
+            
+            if stack_bl == 'add':
+                pt_stacks = [val[condit][keyoi] for pt,val in self.feat_dict.items()] 
+                base_len = len(pt_stacks)
+                pt_labels = [keyoi] * base_len
+                
+                pt_stacks += [val[condit]['Off_3'] for pt,val in self.feat_dict.items()]
+                pt_labels += ['Off_3'] * (len(pt) - base_len)
+                #pt_labels = [keyoi for pt,val in self.feat_dict.items()] + ['Off_3' for pt,val in self.feat_dict.items()]
+                self.num_gmm_comps = 3
+            elif stack_bl == 'normalize':
+                #bl_stack = [val[condit]['Off_3'] for pt,val in self.feat_dict.items()]
+                #bl_stack = np.concatenate(bl_stack,axis=1)
+                bl_stack = {pt:val[condit]['Off_3'] for pt,val in self.feat_dict.items()}
+                
+                pt_stacks = [val[condit][keyoi] - np.repeat(np.median(bl_stack[pt],axis=1).reshape(257,1,1025),val[condit][keyoi].shape[1],axis=1) for pt,val in self.feat_dict.items()]
+                pt_labels = [[keyoi] * gork.shape[1] for gork in pt_stacks]
+                self.num_gmm_comps = 2
+            else:
+                pt_stacks = [val[condit][keyoi] for pt,val in self.feat_dict.items()]
+                pt_labels = [keyoi] * len(pt_stacks)
+                self.num_gmm_comps = 2
+                
+            state_stack[condit] = np.concatenate(pt_stacks,axis=1)
+            state_labels[condit] = pt_labels
+            
+        
+        self.GMM_stack = state_stack
+        self.GMM_stack_labels = state_labels
+    
+    def find_seg_covar(self):
+        covar_matrix = nestdict()
+        
+        for condit in self.condits:
+            seg_stack = sig.detrend(self.GMM_Osc_stack[condit],axis=1)
+            seg_num = seg_stack.shape[1]
+            
+            for bb,band in enumerate(dbo.feat_order):
+                covar_matrix[condit][band] = []
+                for seg in range(seg_num):
+                    
+                    net_vect = seg_stack[:,seg,bb].reshape(-1,1)
+                    
+                    cov_matr = np.dot(net_vect,net_vect.T)
+                    covar_matrix[condit][band].append(cov_matr)
+                    
+                covar_matrix[condit][band] = np.array(covar_matrix[condit][band])
+                    
+        
+        self.cov_segs = covar_matrix
+                    
+    def plot_seg_covar(self,band='Alpha'):
+        for condit in self.condits:
+            plt.figure()
+            plt.subplot(211)
+            plt.imshow(np.median(self.cov_segs[condit][band],axis=0),vmin=0,vmax=0.5)
+            plt.colorbar()
+            plt.title('Mean Covar')
+            
+            plt.subplot(212)
+            plt.imshow(np.var(self.cov_segs[condit][band],axis=0),vmin=0,vmax=2)
+            plt.colorbar()
+            plt.title('Var Covar')
+            
+            plt.suptitle(condit)
+            
+        
+    
+    def gen_GMM_priors(self,condit='OnT'):
+        band = 'Alpha'
+        
+        
+        #prior_change = self.pop_osc_mask[condit][dbo.feat_order.index(band)] * self.pop_osc_change[condit][dbo.feat_order.index(band)].reshape(-1,1)
+        prior_change = self.pop_osc_change[condit][dbo.feat_order.index(band)].reshape(-1,1)
+        
+        prior_covar = np.dot(prior_change,prior_change.T)
+        
+        self.prior_covar = prior_covar
+        return prior_covar
+        
+    
+    def gen_GMM_feat(self):
+        fvect = self.fvect
+        
+        feat_out = nestdict()
+        
+        for condit in self.condits:
+            num_segs = self.GMM_stack[condit].shape[1]
+            feat_out[condit] = np.zeros((257,num_segs,len(dbo.feat_order)))
+            
+            for ss in range(num_segs):
+                try:
+                    feat_out[condit][:,ss,:] = dbo.calc_feats(self.GMM_stack[condit][:,ss,:].squeeze(),fvect).T
+                except:
+                    pdb.set_trace()
+                
+        self.GMM_Osc_stack = feat_out
+        
+    def shape_GMM_dsgn(self):
+        segs_feats = nestdict()
+        
+        for condit in self.condits:
+            num_segs = self.GMM_Osc_stack[condit].shape[1]
+            
+            segs_chann_feats = np.swapaxes(self.GMM_Osc_stack[condit],1,0)
+            #this stacks all the ALPHAS for all channels together
+            #CHOOSE ALPHA HERE
+            segs_feats[condit] = segs_chann_feats[:,:,2]
+            #segs_feats = np.reshape(segs_chann_feats,(num_segs,-1),order='F')
+            
+            #We want a 257 dimensional vector with num_segs observations
+        
+        return segs_feats
+            
+    def train_GMM(self):
+        #shape our dsgn matrix properly
+        dsgn_X = self.shape_GMM_dsgn()
+        
+        #let's stack the two together and expect 3 components?
+        full_X = np.concatenate([val for key,val in dsgn_X.items()],axis=0)
+        
+        #setup our covariance prior from OUR OTHER ANALYSES
+        
+        covariance_prior_alpha = self.gen_GMM_priors()
+        
+        #when below reg_covar was 1e-1 I got SOMETHING to work
+        gMod = mixture.BayesianGaussianMixture(n_components=self.num_gmm_comps,covariance_type='full',reg_covar=1,tol=1e-2)#,covariance_prior=covariance_prior_alpha)
+        
+        gMod.fit(full_X)
+        
+        self.GMM = gMod
+        
+        self.predictions = gMod.predict(full_X)
+        
+        
         
     def compute_diff(self,take_mean=True):
         avg_psd = nestdict()
@@ -143,45 +325,76 @@ class proc_dEEG:
                 #var_psd[pt][condit] = {epoch:np.var(self.feat_dict[pt][condit][epoch],axis=1) for epoch in self.feat_dict[pt][condit].keys()}
                 #if you want Mean Absolute Deviance
                 var_psd[pt][condit] = {epoch:robust.mad(self.feat_dict[pt][condit][epoch],axis=1) for epoch in self.feat_dict[pt][condit].keys()}
+                
+                
                 keyoi = keys_oi[condit][1]
                 
                 avg_change[pt][condit] = 10*(np.log10(avg_psd[pt][condit][keyoi]) - np.log10(avg_psd[pt][condit]['Off_3']))
                 
                 
-        self.feat_diff = avg_change
-        self.feat_avg = avg_psd
+        self.psd_change = avg_change
+        self.psd_avg = avg_psd
         #This is really just a measure of how dynamic the underlying process is, not of particular interest for Aim 3.1, maybe 3.3
-        self.feat_var = var_psd
+        self.psd_var = var_psd
         
     def NEWcompute_diff(self):
         avg_change = {pt:{condit:10*(np.log10(avg_psd[pt][condit][keys_oi[condit][1]]) - np.log10(avg_psd[pt][condit]['Off_3'])) for pt,condit in itertools.product(self.pts,self.condits)}}
    
+    #This goes to the psd change average and computed average PSD across all available patients
     def pop_response(self):
-        all_psds = nestdict()
-        pop_lvl = nestdict()
+        psd_change_matrix = nestdict()
+        population_change = nestdict()
         #pop_psds = defaultdict(dict)
         #pop_psds_var = defaultdict(dict)
         
+        #Generate the full PSDs matrix and then find the MEAN along the axes for the CHANGE
         for condit in self.condits:
-            all_psds[condit] = np.array([rr[condit] for pt,rr in self.feat_diff.items()])
+            #Get us a matrix of the PSD Changes
+            psd_change_matrix[condit] = np.array([rr[condit] for pt,rr in self.psd_change.items()])
             
-            pop_lvl['Mean'][condit] = np.mean(all_psds[condit],axis=0)
-            pop_lvl['Var'][condit] = np.var(all_psds[condit],axis=0)
-        
-        self.pop_stats = pop_lvl
+            population_change[condit]['Mean'] = np.mean(psd_change_matrix[condit],axis=0)
+            population_change[condit]['Var'] = np.var(psd_change_matrix[condit],axis=0)
+            
+            
+        self.pop_psd_change = population_change
     
-    def do_pop_stats(self):
-        self.reliablePSD = nestdict()
+    def do_pop_stats(self,band='Alpha',threshold=0.4):
+        #self.reliablePSD = nestdict()
+        avgOsc = nestdict()
+        varOsc = nestdict()
+        varOsc_mask = nestdict()
+        
         for condit in self.condits:
-            weighedPSD = np.divide(self.pop_stats['Mean'][condit].T,np.sqrt(self.pop_stats['Var'][condit].T))
-            #do subtract weight
-            subtrPSD = self.pop_stats['Mean'][condit].T - 2*np.sqrt(self.pop_stats['Var'][condit].T)
-        
-            #find where the channels are above threshold in a given band
-            #go to each channel and find the mean change in a band
             
+            #First, let's average across patients
+            
+            #band = np.where(np.logical_and(self.fvect > 14, self.fvect < 30))
+            
+            avgOsc[condit] = dbo.calc_feats(self.pop_psd_change[condit]['Mean'],self.fvect)
+            varOsc[condit] = dbo.calc_feats(self.pop_psd_change[condit]['Var'],self.fvect)
+            varOsc_mask[condit] = np.array(np.sqrt(varOsc[condit]) < threshold).astype(np.int)
+            
+        self.pop_osc_change = avgOsc
+        self.pop_osc_var = varOsc
+        self.pop_osc_mask = varOsc_mask
+
+    def do_pop_mask(self,threshold):
+        cMask = nestdict()
         
-            self.reliablePSD[condit] = {'cPSD':subtrPSD,'CMask':chann_mask}
+        #weighedPSD = np.divide(self.pop_stats['Mean'][condit].T,np.sqrt(self.pop_stats['Var'][condit].T))
+        #do subtract weight
+        #THIS SHOULD ONLY BE USED TO DETERMINE THE MOST USEFUL CHANNELS
+        #THIS IS A SHITTY THING TO DO
+        for condit in self.condits:
+            pre_mask = np.abs(self.pop_change['Mean'][condit].T) - threshold*np.sqrt(self.pop_change['Var'][condit].T)
+            #which channels survive?
+            cMask[condit] = np.array(pre_mask > 0).astype(np.int)
+            
+        cMask['Threshold'] = threshold
+        
+        self.reliability_mask = cMask
+        
+            
     def plot_pop_stats(self):
         for condit in self.condits:
             plt.figure()
@@ -208,25 +421,79 @@ class proc_dEEG:
             #plt.hist(weighedPSD,bins=50)
             
             plt.suptitle(condit + ' population level')
+            
+    
+    def topo_wrap(self,band='Alpha',label='',condit='OnT',mask=False,animate=False):
+        mainfig = plt.figure()
+        
+        if not mask:
+            plot_3d_scalp(self.pop_osc_change[condit][dbo.feat_order.index(band)],mainfig,animate=animate,label=label,clims=(-1,1))
+        else:
+            try:
+                plot_3d_scalp(self.pop_osc_mask[condit][dbo.feat_order.index(band)] * self.pop_osc_change[condit][dbo.feat_order.index(band)],mainfig,clims=(-1,1),animate=animate,label=label)
+            except:
+                pdb.set_trace()
+        
+            
+        plt.suptitle(label)
+        
+        
+    def topo_3d_chann_mask(self,band='Alpha',animate=True,pt='all',var_fixed=False,label=''):
+        for condit in ['OnT','OffT']:
+            #plot_vect = np.zeros((257))
+            #plot_vect[self.reliablePSD[condit]['CMask']] = 1
+            #plot_vect = self.reliablePSD[condit]['CMask']
+            
+            mainfig = plt.figure()
+            
+            band_idxs = np.where(np.logical_and(self.fvect > dbo.feat_dict[band]['param'][0], self.fvect < dbo.feat_dict[band]['param'][1]))
+            if pt == 'all':
+                if var_fixed:
+                    plot_vect = self.reliablePSD[condit]['BandVect']['Vect']
+                else:
+                    
+                    plot_vect = np.median(self.avgPSD[condit]['PSD'][:,band_idxs].squeeze(),axis=1)
+                    #abov_thresh = np.median(self.reliablePSD[condit]['cPSD'][band_idxs,:],axis=1).T.reshape(-1)
+                    
+            else:
+                #just get the patient's diff
+                
+                plot_vect = np.median(self.feat_diff[pt][condit][:,band_idxs].squeeze(),axis=1)
+                
+            
+            plot_3d_scalp(plot_vect,mainfig,clims=(-3,3),label=condit+label,animate=animate)
+            plt.title(condit + ' ' + pt + ' ' + str(var_fixed))
+            plt.suptitle(label)
+            
+            self.write_sig(plot_vect)
+            
+    def write_sig(self,signature):
+        for condit in ['OnT','OffT']:
+            #plot_vect = np.zeros((257))
+            #plot_vect[self.reliablePSD[condit]['CMask']] = 1
+            #plot_vect = self.reliablePSD[condit]['CMask']
+            
+            #write this to a text file
+            np.save('/tmp/' + condit + '_sig.npy',signature)
     
     def plot_diff(self):
         
         for pt in self.pts:
             plt.figure()
             plt.subplot(221)
-            plt.plot(self.fvect,self.feat_diff[pt]['OnT'].T)
+            plt.plot(self.fvect,self.psd_change[pt]['OnT'].T)
             plt.title('OnT')
             
             plt.subplot(222)
-            plt.plot(self.fvect,self.feat_diff[pt]['OffT'].T)
+            plt.plot(self.fvect,self.psd_change[pt]['OffT'].T)
             plt.title('OffT')
             
             plt.subplot(223)
-            plt.plot(self.fvect,10*np.log10(self.feat_var[pt]['OnT']['BONT'].T))
+            plt.plot(self.fvect,10*np.log10(self.psd_var[pt]['OnT']['BONT'].T))
             
             
             plt.subplot(224)
-            plt.plot(self.fvect,10*np.log10(self.feat_var[pt]['OffT']['BOFT'].T))
+            plt.plot(self.fvect,10*np.log10(self.psd_var[pt]['OffT']['BOFT'].T))
             
    
             plt.suptitle(pt)

@@ -21,7 +21,7 @@ Either the conservative versions or the non-conservative (liberal/all) versions
 # import matplotlib.pyplot as plt
 # plt.close('all')
 
-# from EEG_Viz import plot_3d_scalp
+from EEG_Viz import plot_3d_scalp
 
 # import seaborn as sns
 # sns.set()
@@ -36,38 +36,106 @@ Either the conservative versions or the non-conservative (liberal/all) versions
 #%%
 
 from proc_dEEG import proc_dEEG
-                
-                
-#%%
-
+import matplotlib.pyplot as plt
+   
 all_pts = ['906','907','908']
 
         
 #UNIT TEST
-SegEEG = proc_dEEG(pts=all_pts,procsteps='liberal',condits=['OnT','OffT'])
-SegEEG.extract_feats()
-SegEEG.compute_diff()
+EEG_analysis = proc_dEEG(pts=all_pts,procsteps='liberal',condits=['OnT','OffT'])
+EEG_analysis.extract_feats()
+EEG_analysis.compute_diff()
 
 #%%
 #Go across patients now
 
-SegEEG.pop_response()
-SegEEG.do_pop_stats()
-SegEEG.plot_pop_stats()
+def population_stuff(SegEEG):
+    
+    SegEEG.pop_response()
+    
+    SegEEG.do_pop_stats()
+    #SegEEG.plot_pop_stats()
+    
+    SegEEG.plot_diff()
+
+
+population_stuff(EEG_analysis)
+   
+#%%
+def do_similarity(SegEEG):
+    #generate covariance for each segments and find AVERAGE
+    SegEEG.gen_GMM_dsgn(stack_bl=False)
+    SegEEG.gen_GMM_feat()
+    
+    
+    SegEEG.find_seg_covar()
+    SegEEG.plot_seg_covar()
+    
+do_similarity(EEG_analysis)
 
 #%%
+def do_GMM_stuff(SegEEG):
+    SegEEG.gen_GMM_dsgn(stack_bl='normalize')
+    
+    SegEEG.gen_GMM_feat()
+    
+    SegEEG.train_GMM()
 
-SegEEG.plot_diff()
+do_GMM_stuff(EEG_analysis)
+#%%
+
+for comp in range(2):
+    plt.figure()
+    plt.subplot(211)
+    plt.plot(EEG_analysis.GMM.means_[comp])
+    plt.subplot(212)
+    plt.imshow(EEG_analysis.GMM.covariances_[comp,:,:],vmin=0,vmax=0.2)
+    plt.colorbar()
+    plt.title(comp)
+    
+    fig = plt.figure()
+    plot_3d_scalp(EEG_analysis.GMM.means_[comp],fig,clims=(0,4))
+    
+
+#%%
+plt.figure()
+plt.plot(EEG_analysis.predictions)
+
+l =  [[val2 for val2 in val] for key,val in EEG_analysis.GMM_stack_labels.items()]
+labels = [item for sublist in l for item in sublist]
+labels = [item for sublist in labels for item in sublist]
+
+ldict = {'BONT':0,'BOFT':1}
+
+label_numbers = [ldict[item] for item in labels]
+
+plt.plot(label_numbers,alpha=0.7)
 
 
 #%%
-SegEEG.GMM_train('OnT')
+def population_3d_topos(SegEEG):
+    do_bands = ['Delta','Theta','Alpha','Beta','Gamma1']
+    do_bands = ['Alpha']
+    for condit in SegEEG.condits:
+        for band in do_bands:
+            #Mask sets a threshold based off of VARIANCE across the three patients
+            SegEEG.topo_wrap(band=band,condit=condit,label=condit + ' ' + band,mask=False,animate=False)
+    
 
+#population_3d_topos(EEG_analysis)
 
 
 #%%
-#BELOW THIS IS CLUGY SHIT
+#Do simple classifier
+def simple_classif(SegEEG):
+    SegEEG.train_simple()
+    OnT,OffT = SegEEG.test_simple()
+    
+    return OnT,OffT
+    
+OnT, OffT = simple_classif(EEG_analysis)
 
+#%% 
 if 0:
     chann_changes = np.zeros((3,2,257))
     for pp,pt in enumerate(all_pts):
