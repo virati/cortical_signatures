@@ -20,20 +20,17 @@ Either the conservative versions or the non-conservative (liberal/all) versions
 # import scipy.stats as stats
 # import matplotlib.pyplot as plt
 # plt.close('all')
-
-from EEG_Viz import plot_3d_scalp
-
 # import seaborn as sns
 # sns.set()
 # sns.set_style("white")
 
 # from DBS_Osc import nestdict
 
-#%%
-#Simple definitions
 
 
-#%%
+from EEG_Viz import plot_3d_scalp
+import numpy as np
+
 
 from proc_dEEG import proc_dEEG
 import matplotlib.pyplot as plt
@@ -44,7 +41,23 @@ all_pts = ['906','907','908']
 #UNIT TEST
 EEG_analysis = proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
 EEG_analysis.extract_feats()
-EEG_analysis.compute_diff()
+#%%
+EEG_analysis.gen_OSC_stack()
+EEG_analysis.simple_stats()
+
+#%%
+EEG_analysis.pop_meds()
+#%%
+fig = plt.figure();plot_3d_scalp(EEG_analysis.median_mask.astype(np.int),fig)
+EEG_analysis.train_SVM(mask=True)
+mask_svm_coeff = EEG_analysis.SVM.coef_.reshape(3,sum(EEG_analysis.median_mask),-1)
+EEG_analysis.train_SVM(mask=False)
+nomask_svm_coeff = EEG_analysis.SVM.coef_
+
+#%%
+#EEG_analysis.train_newGMM()
+#%%
+#EEG_analysis.compute_diff()
 
 #%%
 #Go across patients now
@@ -59,7 +72,7 @@ def population_stuff(SegEEG):
     SegEEG.plot_diff()
 
 
-population_stuff(EEG_analysis)
+#population_stuff(EEG_analysis)
    
 #%%
 def do_similarity(SegEEG):
@@ -71,7 +84,7 @@ def do_similarity(SegEEG):
     SegEEG.find_seg_covar()
     SegEEG.plot_seg_covar()
     
-do_similarity(EEG_analysis)
+#do_similarity(EEG_analysis)
 
 #%%
 #SegEEG.gen_GMM_dsgn(stack_bl='normalize')
@@ -80,75 +93,78 @@ do_similarity(EEG_analysis)
 def do_PCA_stuff(SegEEG):
     
     #do PCA routines now
-    SegEEG.pca_decomp()
-    
+    SegEEG.pca_decomp(direction='channels')
+
+#do_PCA_stuff(EEG_analysis)
+
+#%%
+def plot_PCA_stuff(SegEEG):
+        
     plt.figure();
     plt.subplot(221)
-    plt.imshow(EEG_analysis.PCA_d.components_)
+    plt.imshow(SegEEG.PCA_d.components_,cmap=plt.cm.jet,vmax=1,vmin=-1)
+    plt.colorbar()
     plt.subplot(222)
-    plt.plot(EEG_analysis.PCA_d.components_)
-    plt.legend({'PC1','PC2','PC3','PC4'})
+    plt.plot(SegEEG.PCA_d.components_)
+    plt.legend(['PC0','PC1','PC2','PC3','PC4'])
     plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma'])
     plt.subplot(223)
-    plt.imshow(EEG_analysis.PCA_x)
+    #plt.imshow(EEG_analysis.PCA_x)
     
-    plt.figure()
-    plt.plot(EEG_analysis.PCA_d.explained_variance_ratio_)
+    #plt.figure()
+    plt.plot(SegEEG.PCA_d.explained_variance_ratio_)
     
-    for cc in range(5):
+    for cc in range(2):
         fig=plt.figure()
-        plot_3d_scalp(EEG_analysis.PCA_x[:,cc],fig)
+        plot_3d_scalp(SegEEG.PCA_x[:,cc],fig,animate=False)
         plt.title('Plotting component ' + str(cc))
         plt.suptitle('PCA rotated results for OnTarget')
+#plot_PCA_stuff(EEG_analysis)
 
-do_PCA_stuff(EEG_analysis)
+#%%
+
+
+#%%
+#This section does MEDIANS and MADs on the data/big segment stack
+#EEG_analysis.pop_meds()
+EEG_analysis.plot_meds(band='Alpha')
+
+
+#%%
+def do_SVM(SegEEG):
+    SegEEG.train_SVM()
+    
+do_SVM(EEG_analysis)
+
+
 #%%
 GMMpreproc = False
 
-#%%
 def do_GMM_stuff(SegEEG,GMMpreproc):
-    if not GMMpreproc:
-        SegEEG.gen_GMM_dsgn(stack_bl='normalize')
-        SegEEG.gen_GMM_feat()
-        SegEEG.pop_meds()
-    
+
     SegEEG.train_GMM()
     return True
 
-GMMpreproc = do_GMM_stuff(EEG_analysis,GMMpreproc)
+#GMMpreproc = do_GMM_stuff(EEG_analysis,GMMpreproc)
 
-plt.figure()
-plt.plot(EEG_analysis.Seg_Med[0]['OnT'],label='OnT')
-plt.plot(EEG_analysis.Seg_Med[0]['OffT'],label='OffT')
-plt.title('Medians across Channels')
-plt.legend()
-for condit in EEG_analysis.condits:
-    fig = plt.figure()
-    plot_3d_scalp(EEG_analysis.Seg_Med[0][condit],fig,label=condit + '_med',animate=False)
-    plt.suptitle('Median of all channels across all ' + condit + ' segments')
-
-plt.figure()
-plt.plot(EEG_analysis.Seg_Med[1]['OnT'],label='OnT')
-plt.plot(EEG_analysis.Seg_Med[1]['OffT'],label='OffT')
-plt.title('MADs across Channels')
-plt.legend()
-for condit in EEG_analysis.condits:
-    fig = plt.figure()
-    plot_3d_scalp(EEG_analysis.Seg_Med[1][condit],fig,label=condit + '_mad',animate=False)
-    plt.suptitle('MADs of all channels across all ' + condit + ' segments')
 #%%
-
 for comp in range(2):
     plt.figure()
     plt.subplot(211)
     plt.plot(EEG_analysis.GMM.means_[comp])
     plt.subplot(212)
-    plt.imshow(EEG_analysis.GMM.covariances_[comp,:].reshape(-1,1),vmin=0,vmax=0.2)
-    plt.colorbar()
+    if EEG_analysis.GMM.covariances_.ndim == 1:
+        plt.plot(EEG_analysis.GMM.covariances_[comp,:].reshape(-1,1))
+    else:
+        plt.imshow(EEG_analysis.GMM.covariances_[comp,:],vmin=0,vmax=0.5)
+        
+        plt.colorbar()
     plt.title(comp)
     
     fig = plt.figure()
-    plot_3d_scalp(EEG_analysis.GMM.means_[comp],fig,clims=(0,4))
+    dense_means = np.zeros((257,1))
+    dense_means[EEG_analysis.median_mask==True] = EEG_analysis.GMM.means_[comp].reshape(-1,1)
+    plot_3d_scalp(dense_means.squeeze(),fig,clims=(0,0.3))
     
 
 #%%
@@ -159,15 +175,24 @@ l =  [[val2 for val2 in val] for key,val in EEG_analysis.GMM_stack_labels.items(
 labels = [item for sublist in l for item in sublist]
 labels = [item for sublist in labels for item in sublist]
 
-ldict = {'BONT':0,'BOFT':1}
+ldict = {'BONT':1,'BOFT':0}
 
 label_numbers = [ldict[item] for item in labels]
 
 plt.plot(label_numbers,alpha=0.7)
+
+#compare predictions with label_numbers
+correct = sum(EEG_analysis.predictions == label_numbers)
+percent_correct = correct / len(label_numbers)
+print('Percentage correct: ' + str(percent_correct))
+
 plt.title('Classification of segments')
 plt.xlabel('Segment number')
 plt.ylabel('Class Label')
 plt.yticks([0,1],['OnTarget','OffTarget'])
+#%%
+plt.figure()
+plt.plot(EEG_analysis.posteriors)
 
 
 #%%
@@ -191,7 +216,7 @@ def simple_classif(SegEEG):
     
     return OnT,OffT
     
-OnT, OffT = simple_classif(EEG_analysis)
+#OnT, OffT = simple_classif(EEG_analysis)
 
 #%% 
 if 0:
