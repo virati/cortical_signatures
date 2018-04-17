@@ -40,17 +40,21 @@ all_pts = ['906','907','908']
         
 #UNIT TEST
 EEG_analysis = proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
-EEG_analysis.extract_feats()
+EEG_analysis.extract_feats(polyorder=0)
 #%%
 EEG_analysis.gen_OSC_stack()
+#%%
 EEG_analysis.simple_stats()
 
 #%%
+print('Calculating Population Medians')
 EEG_analysis.pop_meds()
 #%%
-fig = plt.figure();plot_3d_scalp(EEG_analysis.median_mask.astype(np.int),fig)
 EEG_analysis.train_SVM(mask=True)
-mask_svm_coeff = EEG_analysis.SVM.coef_.reshape(3,sum(EEG_analysis.median_mask),-1)
+fig = plt.figure();plot_3d_scalp(EEG_analysis.SVM_Mask.astype(np.int),fig)
+mask_svm_coeff = EEG_analysis.SVM.coef_.reshape(3,sum(EEG_analysis.SVM_Mask),-1)
+
+
 EEG_analysis.train_SVM(mask=False)
 nomask_svm_coeff = EEG_analysis.SVM.coef_
 
@@ -63,7 +67,7 @@ nomask_svm_coeff = EEG_analysis.SVM.coef_
 #Go across patients now
 
 def population_stuff(SegEEG):
-    
+    print('Doing population-level stats ROUTINE')
     SegEEG.pop_response()
     
     SegEEG.do_pop_stats()
@@ -76,6 +80,7 @@ def population_stuff(SegEEG):
    
 #%%
 def do_similarity(SegEEG):
+    print('Doing simple similarity routine')
     #generate covariance for each segments and find AVERAGE
     SegEEG.gen_GMM_dsgn(stack_bl=False)
     SegEEG.gen_GMM_feat()
@@ -91,7 +96,7 @@ def do_similarity(SegEEG):
 #SegEEG.gen_GMM_feat()
     
 def do_PCA_stuff(SegEEG):
-    
+    print('Doing PCA routine')
     #do PCA routines now
     SegEEG.pca_decomp(direction='channels')
 
@@ -99,7 +104,8 @@ def do_PCA_stuff(SegEEG):
 
 #%%
 def plot_PCA_stuff(SegEEG):
-        
+    print('Doing PCA plotting routine')
+    
     plt.figure();
     plt.subplot(221)
     plt.imshow(SegEEG.PCA_d.components_,cmap=plt.cm.jet,vmax=1,vmin=-1)
@@ -132,20 +138,21 @@ EEG_analysis.plot_meds(band='Alpha')
 
 #%%
 def do_SVM(SegEEG):
+    print('Doing SVM routine')
     SegEEG.train_SVM()
     
-do_SVM(EEG_analysis)
+#do_SVM(EEG_analysis)
 
 
 #%%
 GMMpreproc = False
 
 def do_GMM_stuff(SegEEG,GMMpreproc):
-
+    print('Doing GMM routine')
     SegEEG.train_GMM()
     return True
 
-#GMMpreproc = do_GMM_stuff(EEG_analysis,GMMpreproc)
+GMMpreproc = do_GMM_stuff(EEG_analysis,GMMpreproc)
 
 #%%
 for comp in range(2):

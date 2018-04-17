@@ -44,7 +44,7 @@ Targeting['All'] = {
                         },
                 
                 'Volt':{
-                        'fname':''
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS906_TurnOn_Day2_Sess3_Sess4_20150828_043231_VoltageAndFreq.mat'
                         }
                 },
         '908':{
@@ -58,10 +58,10 @@ Targeting['All'] = {
                 },
         '907':{
                 'OnT':{
-                        'fname':''
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day1_onTARGET_20151216_105913.mat'
                         },
                 'OffT':{
-                        'fname':''
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_offTARGET_20151217_094245.mat'
                         },
                 'Volt':{'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_Voltage_20151217_102952.mat'}
                 }
@@ -119,6 +119,11 @@ class streamEEG:
         self.re_ref()
         self.data_matr = self.re_ref_data
         
+        #can add LFP and interpolate HERE?!
+        
+        
+        
+        #Proceed with standard code for EEG that should not break with LFP addition
         self.tvect = np.linspace(tlim[0],tlim[1],data_matr.shape[1])
         self.fvect = np.linspace(0,self.fs/2,self.donfft/2+1)
                 
@@ -152,7 +157,7 @@ class streamEEG:
     def seg_PSDs(self):
         tvect = self.tvect
         max_idx = tvect.shape[0]
-        int_len = 2*int(self.fs)
+        int_len = 6*int(self.fs)
         
         
         idxs = range(0,max_idx,int_len)
@@ -164,7 +169,7 @@ class streamEEG:
         self.stim_feat = np.zeros((num_segs))
         
         for ii,idx in enumerate(idxs):
-            print('Transforming segment ' + str(ii) + ' at ' + str(idx))
+            #print('Transforming segment ' + str(ii) + ' at ' + str(idx))
             seg_dict = {ch:self.data_matr[ch,idx:idx+int_len].squeeze().reshape(-1,1) for ch in range(257)}
             #generate the psd
             psd_vect = dbo.gen_psd(seg_dict,Fs=self.fs,nfft=self.donfft)
@@ -185,13 +190,13 @@ class streamEEG:
             
             
         #seg_starts = tvect[0::2*self.fs]
-    def load_classifier(self):
-        self.clf = pickle.load(open('/tmp/SVMModel','rb'))
+    def load_classifier(self,ctype):
+        self.clf = pickle.load(open('/tmp/SVMModel_' + ctype,'rb'))
     
     def calc_baseline(self):
         #go to every stim_feat segment WITHOUT stimulation and average them together. This is like a calibration
         
-        no_stim_segs = self.stim_feat < 20
+        no_stim_segs = self.stim_feat < 10
         stim_segs = np.logical_not( no_stim_segs)
         
         self.no_stim_median = np.median(self.osc_matr[:,no_stim_segs,:],axis=1)
@@ -206,16 +211,24 @@ class streamEEG:
             label_val = 2
         elif self.condit == 'OffT':
             label_val = 1
+        elif self.condit == 'Volt':
+            label_val = 2
+            
+        self.label_val = label_val
         
         self.true_labels[stim_segs] = label_val
         
-    
-    def classify_segs(self):
-        self.load_classifier()
-        
+    def gen_test_matrix(self):
         test_matr = np.copy(self.stim_matr)
         test_matr = np.swapaxes(test_matr,0,1)
         test_matr = test_matr.reshape(-1,257*5,order='F')
+        
+        return test_matr
+    
+    def classify_segs(self,ctype='l2'):
+        self.load_classifier(ctype)
+        
+        test_matr = self.gen_test_matrix()
         
         
         self.pred_labels = self.clf.predict(test_matr)
@@ -232,13 +245,26 @@ class streamEEG:
         
         plt.figure()
         #plt.plot(self.pred_labels)
-        plt.plot(pred_nums,label='Predicted')
-        plt.plot(self.true_labels,label='True')
+        plt.plot(pred_nums,label='Predicted',linewidth=3)
+        plt.plot(self.true_labels,label='True',linewidth=5,alpha=0.6)
         plt.legend()
         
         
-        
-        
+        #What percentage of the time where it's "ONT" is 
+        loc_true = self.true_labels == self.label_val
+        print('Prob Measure OnT | OnT Stim - True Positive')
+        print(sum(pred_nums[loc_true] == self.label_val) / sum(loc_true))
+        print('Prob Measure OnT | NOT OnT Stim - False Positive')
+        print(sum(pred_nums[np.logical_not(loc_true)] == self.label_val) / sum(np.logical_not(loc_true)))
+    
+        #BAYES FLIP
+        loc_pos = pred_nums == self.label_val
+        print('Prob OnT | predicted On Target - PPV')
+        print(sum(self.true_labels[loc_pos] == self.label_val)/sum(loc_pos))
+        print('Prob OnT | predicted NOT OnTarget - NPV')
+        print(sum(self.true_labels[np.logical_not(loc_pos)] == self.label_val)/sum(np.logical_not(loc_pos)))
+    
+        return (pred_nums,self.true_labels)
     
     def plot_TF(self,chann):
         in_x = self.data_matr[chann,:]

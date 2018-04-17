@@ -560,7 +560,12 @@ class proc_dEEG:
         
         #generate a mask
         if mask:
-            sub_X = self.SVM_stack[:,self.median_mask,:]
+            #what mask do we want?
+            #self.SVM_Mask = self.median_mask
+            self.SVM_Mask = np.zeros((257,)).astype(bool)
+            self.SVM_Mask[[253]] = True
+            
+            sub_X = self.SVM_stack[:,self.SVM_Mask,:]
             dsgn_X = sub_X.reshape(num_segs,-1,order='C')
         else:
             dsgn_X = self.SVM_stack.reshape(num_segs,-1,order='C')
@@ -583,10 +588,11 @@ class proc_dEEG:
         plt.figure()
         plt.plot(Yte,label='test')
         plt.plot(predlabels,label='predict')
+        simple_accuracy = np.sum(np.array(Yte) == np.array(predlabels))/len(Yte)
+        plt.title('SVM Results with Mask:' + str(mask) + ' ; Accuracy: ' + str(simple_accuracy))
+        plt.legend()
         
-        print(np.sum(np.array(Yte) == np.array(predlabels))/len(Yte))
-        
-        pickle.dump(clf,open('/tmp/SVMModel','wb'))
+        pickle.dump(clf,open('/tmp/SVMModel_l2','wb'))
         
         self.SVM = clf
         self.SVM_dsgn_X = dsgn_X
