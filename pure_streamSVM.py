@@ -16,12 +16,16 @@ import pickle
 
 import matplotlib.pyplot as plt
 
+from sklearn.metrics import confusion_matrix
+
 
 
 #LOAD IN THE EEG FILE
 inFile = pickle.load(open('/home/virati/stream_intvs.pickle','rb'))
 
 #IF WE ADD LFP HERE WE'RE AWESOME
+
+
 
 rec = inFile['States']
 lab = inFile['Labels']
@@ -36,10 +40,20 @@ clf.fit(Xtr,Ytr)
 
 preds = clf.predict(Xte)
 
+
+#%%
+
 plt.figure()
 plt.plot(preds)
 plt.plot(Yte)
-#%%
+
+conf_matrix = confusion_matrix(preds,Yte)
+plt.figure()
+plt.imshow(conf_matrix)
+plt.yticks(np.arange(0,3),['OFF','OffT','OnT'])
+plt.xticks(np.arange(0,3),['OFF','OffT','OnT'])
+plt.colorbar()
+
 correct = sum(preds == Yte)
 accuracy = correct / len(preds)
 
@@ -52,7 +66,7 @@ print(accuracy)
 
 #%%
 coeffs = clf.coef_.reshape(3,257,-1,order='C')
-
+plt.figure()
 for stimclass in range(3):
     plt.subplot(1,3,stimclass+1)
     plt.imshow(coeffs[stimclass,:,:])
