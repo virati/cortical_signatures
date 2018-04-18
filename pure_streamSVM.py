@@ -17,7 +17,7 @@ import pickle
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import confusion_matrix
-
+from EEG_Viz import plot_3d_scalp
 
 
 #LOAD IN THE EEG FILE
@@ -32,20 +32,49 @@ lab = inFile['Labels']
 
 dsgn_X = np.array(np.concatenate([np.concatenate([rec[pt][cdt] for cdt in range(2)]) for pt in range(3)]))
 labels = np.array(np.concatenate([np.concatenate([lab[pt][cdt] for cdt in range(2)]) for pt in range(3)]))
+#Transform the labels to actual labels
+label_map = {0:'OFF',2:'OnTON',1:'OffTON'}
 
-clf = svm.LinearSVC(penalty='l2',dual=False)
-Xtr,Xte,Ytr,Yte = sklearn.model_selection.train_test_split(dsgn_X,labels,test_size=0.33)
+labels = np.array([label_map[item] for item in labels])
 
-clf.fit(Xtr,Ytr)
+#%%
 
-preds = clf.predict(Xte)
 
+#do iteration of model a few times
+for ii in range(1):
+    clf = svm.LinearSVC(penalty='l2',dual=False)
+    
+    Xtr,Xte,Ytr,Yte = sklearn.model_selection.train_test_split(dsgn_X,labels,test_size=0.33)
+    
+    clf.fit(Xtr,Ytr)
+    
+    preds = clf.predict(Xte)
+
+    correct = sum(preds == Yte)
+    accuracy = correct / len(preds)
+    
+    nclass0 = sum(Yte == 'OFF')
+    nclass1 = sum(Yte == 'OnTON')
+    nclass2 = sum(Yte == 'OffTON')
+    total = len(Yte)
+    
+    print(accuracy)
+
+#%%
+
+#Save the classifier here
+pickle.dump(clf,open('/tmp/Stream_SVMModel_l2','wb'))
 
 #%%
 
 plt.figure()
-plt.plot(preds)
-plt.plot(Yte)
+plt.subplot(2,1,1)
+plt.plot(preds,label='Prediction')
+plt.plot(Yte,label='Actual')
+plt.legend()
+plt.subplot(2,1,2)
+plt.stem((preds == Yte).astype(np.int),label='HITS')
+plt.legend()
 
 conf_matrix = confusion_matrix(preds,Yte)
 plt.figure()
@@ -54,19 +83,18 @@ plt.yticks(np.arange(0,3),['OFF','OffT','OnT'])
 plt.xticks(np.arange(0,3),['OFF','OffT','OnT'])
 plt.colorbar()
 
-correct = sum(preds == Yte)
-accuracy = correct / len(preds)
-
-nclass0 = sum(Yte == 0)
-nclass1 = sum(Yte == 1)
-nclass2 = sum(Yte == 2)
-total = len(Yte)
-
-print(accuracy)
 
 #%%
 coeffs = clf.coef_.reshape(3,257,-1,order='C')
-plt.figure()
+
+coeff_mag = [None] * 3
 for stimclass in range(3):
-    plt.subplot(1,3,stimclass+1)
+    plt.figure()
+    #plt.subplot(1,2,stimcla)
     plt.imshow(coeffs[stimclass,:,:])
+    
+    coeff_mag[stimclass] = np.linalg.norm(coeffs[stimclass,:,:],axis=1)
+    
+    mainfig = plt.figure()
+    plot_3d_scalp(coeff_mag[stimclass],mainfig,clims=(0,0.1))
+    plt.title(stimclass)

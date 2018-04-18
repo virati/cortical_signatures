@@ -26,8 +26,8 @@ import pickle
 
 perf_dict = nestdict()
 
-pts = ['906','907','908']
-condits =  ['OnT','OffT']
+pts = ['906']
+condits =  ['Volt']
 class_type = 'l2'
 #%%
 pt_test = [None] * len(pts)
@@ -88,6 +88,10 @@ np.save('/home/virati/pre_conf_matrix_'+class_type,results_matrix)
 
 
 #%%
+#Show the SVM's coefficients
+coeffs = sEEG.clf.coeff_
+plt.figure()
+plt.plot()
 
 
 

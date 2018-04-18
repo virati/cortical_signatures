@@ -141,7 +141,7 @@ def do_SVM(SegEEG):
     print('Doing SVM routine')
     SegEEG.train_SVM()
     
-#do_SVM(EEG_analysis)
+do_SVM(EEG_analysis)
 
 
 #%%

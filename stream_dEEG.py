@@ -44,7 +44,9 @@ Targeting['All'] = {
                         },
                 
                 'Volt':{
-                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS906_TurnOn_Day2_Sess3_Sess4_20150828_043231_VoltageAndFreq.mat'
+                        #
+                        #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS906_TurnOn_Day2_Sess3_Sess4_20150828_043231_VoltageAndFreq.mat'
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS906_TurnOn_Day2_Sess2_20150828_032515_CurrentSweep.mat'
                         }
                 },
         '908':{
@@ -63,7 +65,10 @@ Targeting['All'] = {
                 'OffT':{
                         'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_offTARGET_20151217_094245.mat'
                         },
-                'Volt':{'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_Voltage_20151217_102952.mat'}
+                'Volt':{
+                        #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_Voltage_20151217_102952.mat'
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day3_Current_20151218_092443.mat'
+                        }
                 }
                 
             }
@@ -190,8 +195,11 @@ class streamEEG:
             
             
         #seg_starts = tvect[0::2*self.fs]
-    def load_classifier(self,ctype):
-        self.clf = pickle.load(open('/tmp/SVMModel_' + ctype,'rb'))
+    def load_classifier(self,ctype,train_type='cleaned'):
+        if train_type == 'cleaned':
+            self.clf = pickle.load(open('/home/virati/SVMModel_' + ctype,'rb'))
+        elif train_type == 'stream':
+            self.clf = pickle.load(open('/home/virati/Stream_SVMModel_' + ctype,'rb'))
     
     def calc_baseline(self):
         #go to every stim_feat segment WITHOUT stimulation and average them together. This is like a calibration
@@ -225,8 +233,8 @@ class streamEEG:
         
         return test_matr
     
-    def classify_segs(self,ctype='l2'):
-        self.load_classifier(ctype)
+    def classify_segs(self,ctype='l2',train_type='cleaned'):
+        self.load_classifier(ctype,train_type)
         
         test_matr = self.gen_test_matrix()
         
@@ -238,7 +246,7 @@ class streamEEG:
         
         
         pred_nums = np.array([labmap[label] for label in self.pred_labels])
-        pred_nums = sig.medfilt(pred_nums.astype(np.float64),5)
+        #pred_nums = sig.medfilt(pred_nums.astype(np.float64),5)
         
         print('Accuracy: ' + str(sum(pred_nums == self.true_labels)/len(pred_nums)))
         #print(stats.mode(pred_nums))
@@ -284,4 +292,5 @@ class streamEEG:
         plt.subplot(211)
         plt.pcolormesh(time,freq.squeeze(),10*np.log10(specg))
         plt.colorbar()
-        
+            
+    
