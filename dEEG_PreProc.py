@@ -100,7 +100,7 @@ def do_PCA_stuff(SegEEG):
     #do PCA routines now
     SegEEG.pca_decomp(direction='channels')
 
-#do_PCA_stuff(EEG_analysis)
+do_PCA_stuff(EEG_analysis)
 
 #%%
 def plot_PCA_stuff(SegEEG):
@@ -125,7 +125,7 @@ def plot_PCA_stuff(SegEEG):
         plot_3d_scalp(SegEEG.PCA_x[:,cc],fig,animate=False)
         plt.title('Plotting component ' + str(cc))
         plt.suptitle('PCA rotated results for OnTarget')
-#plot_PCA_stuff(EEG_analysis)
+plot_PCA_stuff(EEG_analysis)
 
 #%%
 

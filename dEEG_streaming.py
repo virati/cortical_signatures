@@ -29,6 +29,7 @@ perf_dict = nestdict()
 pts = ['906','907','908']
 condits =  ['OnT','OffT']
 class_type = 'l2'
+do_classif = False
 #%%
 pt_test = [None] * len(pts)
 pt_test_labels = [None] * len(pts)
@@ -48,7 +49,7 @@ for pp,pt in enumerate(pts):
         #%%
         sEEG.calc_baseline()
         #%%
-        if 1:
+        if do_classif:
             #This CLASSIFIES the data
             perf_dict[pt][condit] = sEEG.classify_segs(ctype=class_type,train_type='stream')
         else:

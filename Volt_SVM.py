@@ -26,7 +26,7 @@ import pickle
 
 perf_dict = nestdict()
 
-pts = ['907']
+pts = ['906']
 condits =  ['Volt']
 class_type = 'l2'
 #%%
