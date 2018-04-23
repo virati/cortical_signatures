@@ -39,6 +39,7 @@ from sklearn import mixture
 from sklearn.decomposition import PCA
 from sklearn import svm
 import sklearn
+from sklearn.metrics import confusion_matrix
 
 import pickle
 
@@ -279,7 +280,7 @@ class proc_dEEG:
         label_list = [newlab[item] for item in label_list]
         
         self.SVM_stack = all_stack
-        self.SVM_labels = label_list
+        self.SVM_labels = np.array(label_list)
         
     
     def find_seg_covar(self):
@@ -317,41 +318,62 @@ class proc_dEEG:
             plt.title('Var Covar')
             
             plt.suptitle(condit)
-            
-    def pca_decomp(self,direction='channels',band='Alpha'):
-        print('Doing PCA on the GMM Oscillatory Stack')
+    
+    def OnT_v_OffT_MAD(self,band='Alpha'):
+        Xdsgn = self.SVM_stack
+        #THIS DOES MAD across the segments!!!!!!
+        X_onT = Xdsgn[self.SVM_labels == 'OnTON',:,:].squeeze()
+        X_offT = Xdsgn[self.SVM_labels == 'OffTON',:,:].squeeze()
+        X_NONE = Xdsgn[self.SVM_labels == 'OFF',:,:].squeeze()
+        
+        OnT_MAD = robust.mad(X_onT,axis=0)
+        OffT_MAD = robust.mad(X_offT,axis=0)
+        NONE_MAD = robust.mad(X_NONE,axis=0)
+        
+        print('OnT segs: ' + str(X_onT.shape[0]))
+        print('OffT segs: ' + str(X_offT.shape[0]))
+        print('OFF segs: ' + str(X_NONE.shape[0]))
+        
+        self.Var_Meas = {'OnT':{'Med':np.median(X_onT,axis=0),'MAD':OnT_MAD},'OffT':{'Med':np.median(X_offT,axis=0),'MAD':OffT_MAD},'OFF':{'Med':np.median(X_NONE,axis=0),'MAD':NONE_MAD}}
+        
+    
+    def pca_decomp(self,direction='channels',band='Alpha',condit='OnT',bl_correct=False):
+        print('Doing PCA on the SVM Oscillatory Stack')
         #check to see if we have what variables we need
-        if direction=='segments':
-            GMM_O_stack = self.gen_GMM_Osc(self.gen_GMM_stack(stack_bl='add')['Stack'])['Stack']
-        elif direction=='channels':
-            GMM_O_stack = self.gen_GMM_Osc(self.gen_GMM_stack(stack_bl='normalize')['Stack'])['Stack']
+        Xdsgn = self.SVM_stack
+        lbls = self.SVM_labels
         
-        numsegs = GMM_O_stack['OnT'].shape[1]
+        lblsdo = lbls == condit + 'ON'
         
-        if direction == 'channels':
-            Xdsgn = np.mean(GMM_O_stack['OnT'],axis=1).squeeze()
-            pca = PCA(n_components=5)
-        elif direction == 'segments':
-            band_idx = dbo.feat_order.index(band)
-            Xdsgn = GMM_O_stack['OnT'][:,:,band_idx].T
-            pca = PCA(n_components = 257)
+        
+        Xdo = Xdsgn[lblsdo,:,:]
+        
+        #what do we want to do with this now?
+        #spatiotemporal PCA
+        Xdo = np.median(Xdo,axis=0) 
+        
+        if bl_correct:
+            print('Correcting with baseline (OFF EEG)')
+            #find the stim Off timepoints to subtract
+            X_bl = np.median(Xdsgn[lbls=='OFF',:,:],axis=0)
             
-        PCAdsgn = sig.detrend(Xdsgn,axis=0,type='constant')
+            Xdo = Xdo - X_bl
+            
+            
+        PCAdsgn = sig.detrend(Xdo,axis=0,type='constant')
         PCAdsgn = sig.detrend(PCAdsgn,axis=1,type='constant')
-            
+        
+        pca = PCA()
+        
         pca.fit(PCAdsgn)
         
+        
         self.PCA_d = pca
+        self.PCA_inX = Xdo
+        
         PCA_X = pca.fit_transform(PCAdsgn)
         self.PCA_x = PCA_X
-        
-        #remove the first component
-        PCA_X[0,:] = 0
-        #Re composed without the first component, which is delta noise
-        re_comp = pca.inverse_transform(PCA_X)
-        self.PCA_deX = re_comp
-        
-        
+               
         
     
     def gen_GMM_priors(self,condit='OnT',mask_chann=False,band='Alpha'):
@@ -423,7 +445,7 @@ class proc_dEEG:
         return segs_feats
 
     def pop_meds(self):
-        print('Doing Population Meds/Mads')
+        print('Doing Population Meds/Mads w/ PCA')
         dsgn_X = self.shape_GMM_dsgn(self.gen_GMM_Osc(self.gen_GMM_stack(stack_bl='normalize')['Stack']),band='All')
         
         X_med = nestdict()
@@ -442,8 +464,17 @@ class proc_dEEG:
         
         weigh_mad = 0.3
         self.median_mask = (np.abs(self.Seg_Med[0]['OnT'][:,2]) - weigh_mad*self.Seg_Med[1]['OnT'][:,2] >= 0)
+        
+        
+        #Go ahead and do PCA here since the variables are already here
+        pca = PCA()
+        pca.fit(X_med['OnT'])
+        self.PCA_d = pca
+        self.PCA_inX = X_med['OnT']
+        self.PCA_x = pca.fit_transform(X_med['OnT'])
             
     def plot_meds(self,band='Alpha'):
+        print('Doing Population Level Medians and MADs')
         band_idx = dbo.feat_order.index(band)
         
         plt.figure()
@@ -455,7 +486,8 @@ class proc_dEEG:
         
         for condit in self.condits:
             fig = plt.figure()
-            plot_3d_scalp(self.Seg_Med[0][condit][:,band_idx],fig,label=condit + '_med',animate=False)
+            #This is MEDS
+            plot_3d_scalp(self.Seg_Med[0][condit][:,band_idx],fig,label=condit + '_med',animate=False,clims=(-0.2,0.2),unwrap=True)
             plt.suptitle('Median of all channels across all ' + condit + ' segments | Band is ' + band)
         
         plt.figure()
@@ -465,7 +497,8 @@ class proc_dEEG:
         plt.legend()
         for condit in self.condits:
             fig = plt.figure()
-            plot_3d_scalp(self.Seg_Med[1][condit][:,band_idx],fig,label=condit + '_mad',animate=False)
+            #this is MADs
+            plot_3d_scalp(self.Seg_Med[1][condit][:,band_idx],fig,label=condit + '_mad',animate=False,unwrap=True)
             plt.suptitle('MADs of all channels across all ' + condit + ' segments | Band is ' + band)
         
         #Finally, for qualitative, let's look at the most consistent changes
@@ -563,7 +596,7 @@ class proc_dEEG:
             #what mask do we want?
             #self.SVM_Mask = self.median_mask
             self.SVM_Mask = np.zeros((257,)).astype(bool)
-            self.SVM_Mask[[253]] = True
+            self.SVM_Mask[np.arange(257)] = True
             
             sub_X = self.SVM_stack[:,self.SVM_Mask,:]
             dsgn_X = sub_X.reshape(num_segs,-1,order='C')
@@ -586,6 +619,7 @@ class proc_dEEG:
         predlabels = clf.predict(Xte)
         
         plt.figure()
+        plt.subplot(2,1,1)
         plt.plot(Yte,label='test')
         plt.plot(predlabels,label='predict')
         simple_accuracy = np.sum(np.array(Yte) == np.array(predlabels))/len(Yte)
@@ -593,6 +627,14 @@ class proc_dEEG:
         plt.legend()
         
         pickle.dump(clf,open('/tmp/SVMModel_l2','wb'))
+        
+        plt.subplot(2,1,2)
+        conf_matrix = confusion_matrix(predlabels,Yte)
+        plt.imshow(conf_matrix)
+        plt.yticks(np.arange(0,3),['OFF','OffT','OnT'])
+        plt.xticks(np.arange(0,3),['OFF','OffT','OnT'])
+        plt.colorbar()
+        
         
         self.SVM = clf
         self.SVM_dsgn_X = dsgn_X

@@ -7,9 +7,9 @@ Created on Mon Feb  5 21:21:56 2018
 This file loads in the preprocessed datafiles from AW preprocessing steps
 Either the conservative versions or the non-conservative (liberal/all) versions
 """
-# import sys
-# sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
-# import DBS_Osc as dbo
+import sys
+sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
+import DBS_Osc as dbo
 
 # from collections import defaultdict
 # import mne
@@ -46,17 +46,24 @@ EEG_analysis.gen_OSC_stack()
 #%%
 EEG_analysis.simple_stats()
 
+
 #%%
+#This does the SVM classifier on preprocessed, cleaned EEG
 print('Calculating Population Medians')
 EEG_analysis.pop_meds()
+
+
 #%%
-EEG_analysis.train_SVM(mask=True)
-fig = plt.figure();plot_3d_scalp(EEG_analysis.SVM_Mask.astype(np.int),fig)
-mask_svm_coeff = EEG_analysis.SVM.coef_.reshape(3,sum(EEG_analysis.SVM_Mask),-1)
 
-
-EEG_analysis.train_SVM(mask=False)
-nomask_svm_coeff = EEG_analysis.SVM.coef_
+def cSVM(EEG_analysis):
+    EEG_analysis.train_SVM(mask=True)
+    fig = plt.figure();plot_3d_scalp(EEG_analysis.SVM_Mask.astype(np.int),fig)
+    mask_svm_coeff = EEG_analysis.SVM.coef_.reshape(3,sum(EEG_analysis.SVM_Mask),-1)
+    
+    
+    EEG_analysis.train_SVM(mask=False)
+    nomask_svm_coeff = EEG_analysis.SVM.coef_
+cSVM(EEG_analysis)
 
 #%%
 #EEG_analysis.train_newGMM()
@@ -94,17 +101,19 @@ def do_similarity(SegEEG):
 #%%
 #SegEEG.gen_GMM_dsgn(stack_bl='normalize')
 #SegEEG.gen_GMM_feat()
-    
+
+pca_condit = 'OnT'
+
 def do_PCA_stuff(SegEEG):
     print('Doing PCA routine')
     #do PCA routines now
-    SegEEG.pca_decomp(direction='channels')
+    SegEEG.pca_decomp(direction='channels',condit=pca_condit)
 
 do_PCA_stuff(EEG_analysis)
 
-#%%
 def plot_PCA_stuff(SegEEG):
     print('Doing PCA plotting routine')
+    
     
     plt.figure();
     plt.subplot(221)
@@ -113,7 +122,7 @@ def plot_PCA_stuff(SegEEG):
     plt.subplot(222)
     plt.plot(SegEEG.PCA_d.components_)
     plt.legend(['PC0','PC1','PC2','PC3','PC4'])
-    plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma'])
+    plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma1'])
     plt.subplot(223)
     #plt.imshow(EEG_analysis.PCA_x)
     
@@ -122,18 +131,38 @@ def plot_PCA_stuff(SegEEG):
     
     for cc in range(2):
         fig=plt.figure()
-        plot_3d_scalp(SegEEG.PCA_x[:,cc],fig,animate=False)
+        plot_3d_scalp(SegEEG.PCA_x[:,cc],fig,animate=False,unwrap=False)
         plt.title('Plotting component ' + str(cc))
-        plt.suptitle('PCA rotated results for OnTarget')
+        plt.suptitle('PCA rotated results for ' + pca_condit)
 plot_PCA_stuff(EEG_analysis)
-
-#%%
-
 
 #%%
 #This section does MEDIANS and MADs on the data/big segment stack
 #EEG_analysis.pop_meds()
+print('Calculating Population Medians')
+EEG_analysis.pop_meds()
+#%%
 EEG_analysis.plot_meds(band='Alpha')
+#%%
+plot_PCA_stuff(EEG_analysis)
+
+#%%
+#Check Dynamics within segments
+#THIS ASSESSED WHICH CHANNELS ARE DYNAMIC indirectly through calculating variance across OnT and OffT for all patients.
+
+def do_DYN_assess(pEEG,band='Alpha'):
+    band_idx = dbo.feat_order.index(band)
+    pEEG.OnT_v_OffT_MAD()
+    for stat in ['Med','MAD']:
+        fig = plt.figure()
+        plot_3d_scalp(pEEG.Var_Meas['OnT'][stat][:,band_idx],fig,clims=(0,0),label='OnT '+ stat,unwrap=True)
+        fig = plt.figure()
+        plot_3d_scalp(pEEG.Var_Meas['OffT'][stat][:,band_idx],fig,clims=(0,0),label='OffT ' + stat,unwrap=True)
+        fig = plt.figure()
+        plot_3d_scalp(pEEG.Var_Meas['OFF'][stat][:,band_idx],fig,clims=(0,0),label='OFF ' + stat,unwrap=True)
+
+do_DYN_assess(EEG_analysis,band='Alpha')
+
 
 
 #%%
@@ -215,15 +244,6 @@ def population_3d_topos(SegEEG):
 #population_3d_topos(EEG_analysis)
 
 
-#%%
-#Do simple classifier
-def simple_classif(SegEEG):
-    SegEEG.train_simple()
-    OnT,OffT = SegEEG.test_simple()
-    
-    return OnT,OffT
-    
-#OnT, OffT = simple_classif(EEG_analysis)
 
 #%% 
 if 0:
