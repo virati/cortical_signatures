@@ -44,39 +44,56 @@ labels = np.array([label_map[item] for item in labels])
 #%%
 
 #do iteration of model a few times
-for ii in range(1):
-    clf = svm.LinearSVC(penalty='l2',dual=False)
-    
-    Xtr,Xte,Ytr,Yte = sklearn.model_selection.train_test_split(dsgn_X,labels,test_size=0.33)
-    
-    clf.fit(Xtr,Ytr)
-    
-    
-    if limit_chann:
-        #NOW let's do an artificial MASK!!! coup de grace
-        fold_dsgn_X = Xte.reshape(-1,257,5,order='C')
-        sub_X = np.zeros_like(fold_dsgn_X)
-        
-        sub_X[:,active_chann] = fold_dsgn_X[:,active_chann]
-        
-        sub_X = sub_X.reshape(-1,257*5)
-        Xte_subset = sub_X
-    
-        ##
-    
-        preds = clf.predict(Xte_subset)
-    else:    
-        preds = clf.predict(Xte)
+#clf = svm.LinearSVC(penalty='l2',dual=False)
 
-    correct = sum(preds == Yte)
-    accuracy = correct / len(preds)
+Xtr,Xte,Ytr,Yte = sklearn.model_selection.train_test_split(dsgn_X,labels,test_size=0.33)
+
+#NOW we do cross validation WITHIN the training set here
+
+accuracy = np.zeros((100,1))
+model = [None] * 100
+
+for ii in range(1):
+    #split our training set into 90% and 10% and do it 100 times
+    print(ii)
+    X_cvtr,X_cvte,Y_cvtr,Y_cvte = sklearn.model_selection.train_test_split(Xtr,Ytr,test_size=0.10)
+
+    clf = svm.LinearSVC(penalty='l2',dual=False)
+    clf.fit(X_cvtr,Y_cvtr)
+    cvtePreds = clf.predict(X_cvte)
+    accuracy[ii] = sum(cvtePreds == Y_cvte) / len(cvtePreds)
+    model[ii] = clf
     
-    nclass0 = sum(Yte == 'OFF')
-    nclass1 = sum(Yte == 'OnTON')
-    nclass2 = sum(Yte == 'OffTON')
-    total = len(Yte)
+iimodel_max = np.argmax(accuracy)
+
+clf = model[iimodel_max]
+
+
+if limit_chann:
+    #NOW let's do an artificial MASK!!! coup de grace
+    fold_dsgn_X = Xte.reshape(-1,257,5,order='C')
+    sub_X = np.zeros_like(fold_dsgn_X)
     
-    print(accuracy)
+    sub_X[:,active_chann] = fold_dsgn_X[:,active_chann]
+    
+    sub_X = sub_X.reshape(-1,257*5)
+    Xte_subset = sub_X
+
+    ##
+
+    preds = clf.predict(Xte_subset)
+else:    
+    preds = clf.predict(Xte)
+
+correct = sum(preds == Yte)
+accuracy = correct / len(preds)
+
+nclass0 = sum(Yte == 'OFF')
+nclass1 = sum(Yte == 'OnTON')
+nclass2 = sum(Yte == 'OffTON')
+total = len(Yte)
+
+print(accuracy)
 
 #%%
 

@@ -34,6 +34,8 @@ import numpy as np
 
 from proc_dEEG import proc_dEEG
 import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set_context('paper')
    
 all_pts = ['906','907','908']
 
@@ -105,16 +107,13 @@ def do_similarity(SegEEG):
 pca_condit = 'OnT'
 
 def do_PCA_stuff(SegEEG):
-    print('Doing PCA routine')
+    print('Doing NON-BASELINE PCA routine')
     #do PCA routines now
     SegEEG.pca_decomp(direction='channels',condit=pca_condit)
 
 do_PCA_stuff(EEG_analysis)
 
 def plot_PCA_stuff(SegEEG):
-    print('Doing PCA plotting routine')
-    
-    
     plt.figure();
     plt.subplot(221)
     plt.imshow(SegEEG.PCA_d.components_,cmap=plt.cm.jet,vmax=1,vmin=-1)
@@ -124,14 +123,12 @@ def plot_PCA_stuff(SegEEG):
     plt.legend(['PC0','PC1','PC2','PC3','PC4'])
     plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma1'])
     plt.subplot(223)
-    #plt.imshow(EEG_analysis.PCA_x)
     
-    #plt.figure()
     plt.plot(SegEEG.PCA_d.explained_variance_ratio_)
     
     for cc in range(2):
         fig=plt.figure()
-        plot_3d_scalp(SegEEG.PCA_x[:,cc],fig,animate=False,unwrap=False)
+        plot_3d_scalp(SegEEG.PCA_x[:,cc],fig,animate=False,unwrap=True)
         plt.title('Plotting component ' + str(cc))
         plt.suptitle('PCA rotated results for ' + pca_condit)
 plot_PCA_stuff(EEG_analysis)
@@ -142,10 +139,11 @@ plot_PCA_stuff(EEG_analysis)
 print('Calculating Population Medians')
 EEG_analysis.pop_meds()
 #%%
-EEG_analysis.plot_meds(band='Alpha')
+EEG_analysis.plot_meds(band='Alpha',flatten=True)
 #%%
-plot_PCA_stuff(EEG_analysis)
-
+#plot_PCA_stuff(EEG_analysis)
+EEG_analysis.plot_ICA_stuff()
+EEG_analysis.plot_PCA_stuff()
 #%%
 #Check Dynamics within segments
 #THIS ASSESSED WHICH CHANNELS ARE DYNAMIC indirectly through calculating variance across OnT and OffT for all patients.
@@ -156,11 +154,17 @@ def do_DYN_assess(pEEG,band='Alpha'):
     for stat in ['Med','MAD']:
         fig = plt.figure()
         plot_3d_scalp(pEEG.Var_Meas['OnT'][stat][:,band_idx],fig,clims=(0,0),label='OnT '+ stat,unwrap=True)
+        plt.suptitle('Non-normalized Power ' + stat + ' in ' + band + ' OnT')
+        
+        plt.figure()
+        plt.bar(np.arange(1,258),pEEG.Var_Meas['OnT'][stat][:,band_idx])
+        
         fig = plt.figure()
         plot_3d_scalp(pEEG.Var_Meas['OffT'][stat][:,band_idx],fig,clims=(0,0),label='OffT ' + stat,unwrap=True)
+        plt.suptitle('Non-normalized Power ' + stat + ' in ' + band + ' OffT')
         fig = plt.figure()
         plot_3d_scalp(pEEG.Var_Meas['OFF'][stat][:,band_idx],fig,clims=(0,0),label='OFF ' + stat,unwrap=True)
-
+        plt.suptitle('Non-normalized Power ' + stat + ' in ' + band + ' OFF')
 do_DYN_assess(EEG_analysis,band='Alpha')
 
 

@@ -10,6 +10,7 @@ This library is a small quick library for 3d plotting of EEG
 import matplotlib.pyplot as plt
 import mne
 import numpy as np
+import scipy.stats as stats
 
 import pdb
 
@@ -55,7 +56,7 @@ def DEPRplot_flat_scalp(band,clims=(0,0),unwrap=True):
     sc = plt.scatter(flat_etrodes[:,0],flat_etrodes[:,1],c=np.arange(257),vmin=clims[0],vmax=clims[1],cmap=cm)
     plt.colorbar(sc)
 
-def plot_3d_scalp(band,fig,n=1,clims=(0,0),label='generic',animate=False,unwrap=False):
+def plot_3d_scalp(band,fig,n=1,clims=(0,0),label='generic',animate=False,unwrap=False,sparse_labels = True):
     #fig = plt.figure()
     
     egipos = mne.channels.read_montage('/home/virati/Dropbox/GSN-HydroCel-257.sfp')
@@ -73,13 +74,23 @@ def plot_3d_scalp(band,fig,n=1,clims=(0,0),label='generic',animate=False,unwrap=
         flat_etrodes = np.copy(etrodes)
         flat_etrodes[:,2] = flat_etrodes[:,2] - np.max(flat_etrodes[:,2]) + 0.01
     
-        flat_etrodes[:,0] = flat_etrodes[:,0] * -10*(flat_etrodes[:,2] - 0.3*(flat_etrodes[:,2]) + 1)
-        flat_etrodes[:,1] = flat_etrodes[:,1] * -10*(flat_etrodes[:,2] - 0.3*(flat_etrodes[:,2]) + 1)
+        flat_etrodes[:,0] = flat_etrodes[:,0] * -10*(flat_etrodes[:,2] + 3*1/(flat_etrodes[:,2] - 0.6) + 0.5)
+        flat_etrodes[:,1] = flat_etrodes[:,1] * -10*(flat_etrodes[:,2] + 3*1/(flat_etrodes[:,2] - 0.6) + 0.5)
         
         ax = fig.add_subplot(1,1,n)
         sc = plt.scatter(flat_etrodes[:,0],flat_etrodes[:,1],c=band,vmin=clims[0],vmax=clims[1],s=300,cmap=cm,alpha=0.5)
-        for ii in range(257):
-            plt.annotate('E'+str(ii+1),(flat_etrodes[ii,0],flat_etrodes[ii,1]),size=8)
+        
+        #Which channels are above two stds?
+        zsc_band = stats.zscore(band)
+        top_etrodes = np.where(np.abs(zsc_band) > 1)[0]
+        
+        if sparse_labels:
+            annotate_list = top_etrodes
+        else:
+            annotate_list = range(257)
+        
+        for ii in annotate_list:
+            plt.annotate('E'+str(ii+1),(flat_etrodes[ii,0],flat_etrodes[ii,1]),size=12)
         
         plt.axis('off')        
         

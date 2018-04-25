@@ -36,7 +36,7 @@ from DBS_Osc import nestdict
 from statsmodels import robust
 
 from sklearn import mixture
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, FastICA
 from sklearn import svm
 import sklearn
 from sklearn.metrics import confusion_matrix
@@ -445,7 +445,7 @@ class proc_dEEG:
         return segs_feats
 
     def pop_meds(self):
-        print('Doing Population Meds/Mads w/ PCA')
+        print('Doing Population Meds/Mads on Oscillatory RESPONSES w/ PCA')
         dsgn_X = self.shape_GMM_dsgn(self.gen_GMM_Osc(self.gen_GMM_stack(stack_bl='normalize')['Stack']),band='All')
         
         X_med = nestdict()
@@ -465,15 +465,76 @@ class proc_dEEG:
         weigh_mad = 0.3
         self.median_mask = (np.abs(self.Seg_Med[0]['OnT'][:,2]) - weigh_mad*self.Seg_Med[1]['OnT'][:,2] >= 0)
         
+        #Do a quick zscore to zero out the problem channels
+        chann_patt_zs = stats.zscore(X_med['OnT'],axis=0)
+        outlier_channs = np.where(chann_patt_zs > 3)
+
+        rem_channs = False     
+        print('ICA Time')
+        ICA_inX = X_med['OnT']
+        if rem_channs:
+            ICA_inX[outlier_channs,:] = np.zeros_like(ICA_inX[outlier_channs,:])
+        
+        PCA_inX = np.copy(ICA_inX)
         
         #Go ahead and do PCA here since the variables are already here
+        
+        #PCA SECTION
+        #pca = PCA()
         pca = PCA()
-        pca.fit(X_med['OnT'])
+        pca.fit(PCA_inX)
         self.PCA_d = pca
-        self.PCA_inX = X_med['OnT']
-        self.PCA_x = pca.fit_transform(X_med['OnT'])
+        self.PCA_inX = PCA_inX
+        self.PCA_x = pca.fit_transform(PCA_inX)
+        
+        
+        #ICA
+        ica = FastICA(n_components=5)
+        ica.fit(ICA_inX)
+        self.ICA_d = ica
+        self.ICA_inX = ICA_inX
+        self.ICA_x = ica.fit_transform(ICA_inX)
+    
+    def plot_PCA_stuff(self):
+        plt.figure();
+        plt.subplot(221)
+        plt.imshow(self.PCA_d.components_,cmap=plt.cm.jet,vmax=1,vmin=-1)
+        plt.colorbar()
+        plt.subplot(222)
+        plt.plot(self.PCA_d.components_)
+        plt.legend(['PC0','PC1','PC2','PC3','PC4'])
+        plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma1'])
+        plt.subplot(223)
+        
+        plt.plot(self.PCA_d.explained_variance_ratio_)
+        
+        for cc in range(2):
+            fig=plt.figure()
+            plot_3d_scalp(self.PCA_x[:,cc],fig,animate=False,unwrap=True)
+            plt.title('Plotting component ' + str(cc))
+            plt.suptitle('PCA rotated results for OnT')
+
+    
+    def plot_ICA_stuff(self):
+        plt.figure()
+        plt.subplot(221)
+        plt.imshow(self.ICA_d.components_[:,:-1],cmap=plt.cm.jet,vmax=1,vmin=-1)
+        plt.colorbar()
+        plt.subplot(222)
+        plt.plot(self.ICA_d.components_[:,:-1])
+        plt.legend(['IC0','IC1','IC2','IC3','IC4'])
+        plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma1'])
+        plt.subplot(223)
+        
+        plt.plot(self.ICA_d.mixing_)
+        
+        for cc in range(2):
+            fig=plt.figure()
+            plot_3d_scalp(self.ICA_x[:,cc],fig,animate=False,unwrap=True)
+            plt.title('Plotting component ' + str(cc))
+            plt.suptitle('ICA rotated results for OnT')
             
-    def plot_meds(self,band='Alpha'):
+    def plot_meds(self,band='Alpha',flatten=True):
         print('Doing Population Level Medians and MADs')
         band_idx = dbo.feat_order.index(band)
         
@@ -487,8 +548,8 @@ class proc_dEEG:
         for condit in self.condits:
             fig = plt.figure()
             #This is MEDS
-            plot_3d_scalp(self.Seg_Med[0][condit][:,band_idx],fig,label=condit + '_med',animate=False,clims=(-0.2,0.2),unwrap=True)
-            plt.suptitle('Median of all channels across all ' + condit + ' segments | Band is ' + band)
+            plot_3d_scalp(self.Seg_Med[0][condit][:,band_idx],fig,label=condit + '_med',animate=False,clims=(-0.2,0.2),unwrap=flatten)
+            plt.suptitle('Median of Cortical Response across all ' + condit + ' segments | Band is ' + band)
         
         plt.figure()
         plt.plot(self.Seg_Med[1]['OnT'][:,band_idx],label='OnT')
@@ -498,8 +559,8 @@ class proc_dEEG:
         for condit in self.condits:
             fig = plt.figure()
             #this is MADs
-            plot_3d_scalp(self.Seg_Med[1][condit][:,band_idx],fig,label=condit + '_mad',animate=False,unwrap=True)
-            plt.suptitle('MADs of all channels across all ' + condit + ' segments | Band is ' + band)
+            plot_3d_scalp(self.Seg_Med[1][condit][:,band_idx],fig,label=condit + '_mad',animate=False,unwrap=flatten,clims=(0,1.0))
+            plt.suptitle('MADs of Cortical Response across all ' + condit + ' segments | Band is ' + band)
         
         #Finally, for qualitative, let's look at the most consistent changes
         for condit in self.condits:
@@ -596,7 +657,7 @@ class proc_dEEG:
             #what mask do we want?
             #self.SVM_Mask = self.median_mask
             self.SVM_Mask = np.zeros((257,)).astype(bool)
-            self.SVM_Mask[np.arange(257)] = True
+            self.SVM_Mask[[238,237]] = True
             
             sub_X = self.SVM_stack[:,self.SVM_Mask,:]
             dsgn_X = sub_X.reshape(num_segs,-1,order='C')
