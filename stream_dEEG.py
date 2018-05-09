@@ -77,7 +77,22 @@ Targeting['All'] = {
                         'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day3_Current_20151218_092443.mat',
                         'lfp':''
                         }
-                }
+                },
+        '901':{
+            'OnT':{
+                    'fname':'',
+                    'lfp':''
+                    },
+            'OffT':{
+                    'fname':'',
+                    'lfp':''
+                    },
+            'Volt':{
+                    'fname':'',
+                    'lfp':''
+                    }
+            }
+                
                 
             }
 
@@ -105,9 +120,11 @@ class streamEEG:
         snippet = True
         if snippet:
             #906
-            if pt == '906':
+            if pt == '906' and condit == 'OnT':
                 #tint = (np.array([238,1090]) * self.fs).astype(np.int)
                 start_time = 4
+            elif pt == '906' and condit =='OffT':
+                start_time = 3
             elif pt == '908' and condit == 'OnT':
                 #tint = (np.array([1000,1800]) * self.fs).astype(np.int)
                 start_time = 16
@@ -215,10 +232,13 @@ class streamEEG:
         no_stim_segs = self.stim_feat < 10
         stim_segs = np.logical_not( no_stim_segs)
         
+        self.label_time = np.zeros((self.osc_matr.shape[1]))
+        
         self.no_stim_median = np.median(self.osc_matr[:,no_stim_segs,:],axis=1)
         self.stim_matr = np.zeros_like(self.osc_matr)
         for ss in range(self.osc_matr.shape[1]):
             self.stim_matr[:,ss,:] = self.osc_matr[:,ss,:] - self.no_stim_median
+            self.label_time[ss] = ss
         
         
         self.true_labels = np.zeros((self.osc_matr.shape[1]))
@@ -233,6 +253,7 @@ class streamEEG:
         self.label_val = label_val
         
         self.true_labels[stim_segs] = label_val
+        
         
     def gen_test_matrix(self):
         test_matr = np.copy(self.stim_matr)

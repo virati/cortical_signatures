@@ -35,8 +35,13 @@ import numpy as np
 from proc_dEEG import proc_dEEG
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from sklearn.decomposition import PCA, FastICA
+
 sns.set_context('paper')
-   
+sns.set(font_scale=4)
+sns.set_style('white')
+
 all_pts = ['906','907','908']
 
         
@@ -109,7 +114,7 @@ pca_condit = 'OnT'
 def do_PCA_stuff(SegEEG):
     print('Doing NON-BASELINE PCA routine')
     #do PCA routines now
-    SegEEG.pca_decomp(direction='channels',condit=pca_condit)
+    SegEEG.pca_decomp(direction='channels',condit=pca_condit,bl_correct=False)
 
 do_PCA_stuff(EEG_analysis)
 
@@ -120,11 +125,13 @@ def plot_PCA_stuff(SegEEG):
     plt.colorbar()
     plt.subplot(222)
     plt.plot(SegEEG.PCA_d.components_)
+    plt.ylim((-1,1))
     plt.legend(['PC0','PC1','PC2','PC3','PC4'])
     plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma1'])
     plt.subplot(223)
     
     plt.plot(SegEEG.PCA_d.explained_variance_ratio_)
+    plt.ylim((0,1))
     
     for cc in range(2):
         fig=plt.figure()
@@ -142,7 +149,10 @@ EEG_analysis.pop_meds()
 EEG_analysis.plot_meds(band='Alpha',flatten=True)
 #%%
 #plot_PCA_stuff(EEG_analysis)
-EEG_analysis.plot_ICA_stuff()
+#EEG_analysis.plot_ICA_stuff()
+EEG_analysis.do_response_PCA()
+#%%
+#This PCA is the baseline corrected
 EEG_analysis.plot_PCA_stuff()
 #%%
 #Check Dynamics within segments
@@ -165,16 +175,64 @@ def do_DYN_assess(pEEG,band='Alpha'):
         fig = plt.figure()
         plot_3d_scalp(pEEG.Var_Meas['OFF'][stat][:,band_idx],fig,clims=(0,0),label='OFF ' + stat,unwrap=True)
         plt.suptitle('Non-normalized Power ' + stat + ' in ' + band + ' OFF')
+        
+        
+    plt.figure()
+    plt.subplot(211)
+    plt.hist(pEEG.Var_Meas['OnT']['Med'][:,band_idx],label='OnT',bins=30)
+    plt.hist(pEEG.Var_Meas['OFF']['Med'][:,band_idx],label='OFF',bins=30)
+    plt.title('Distributions of Medians')
+    
+    plt.subplot(212)
+    plt.hist([pEEG.Var_Meas['OnT']['MAD'][:,band_idx],pEEG.Var_Meas['OFF']['MAD'][:,band_idx]],label=['OnT','OFF'],bins=30)
+    #plt.hist(pEEG.Var_Meas['OFF']['MAD'][:,band_idx],label='OFF',bins=30)
+    plt.title('Distributions of MADs')
+    plt.legend()
+    
 do_DYN_assess(EEG_analysis,band='Alpha')
 
 
 
 #%%
-def do_SVM(SegEEG):
-    print('Doing SVM routine')
-    SegEEG.train_SVM()
+def do_binSVM(SegEEG):
+    print('Doing Binary SVM routine')
+    SegEEG.train_binSVM(mask=False)
     
-do_SVM(EEG_analysis)
+    bin_coeff = SegEEG.binSVM.coef_.reshape(-1,5) #this can now go into the PCA
+    for bb,band in enumerate(['Delta','Theta','Alpha','Beta','Gamma']):
+        fig = plt.figure()
+        plot_3d_scalp(bin_coeff[:,bb],fig,label=band + ' SVM Coefficients',unwrap=True)
+        
+    #doing PCA on coefficients
+    svm_cPCA = PCA()
+    svm_cPCA.fit(bin_coeff)
+    rotX = svm_cPCA.fit_transform(bin_coeff)
+    
+    plt.figure();
+    plt.subplot(221)
+    plt.imshow(svm_cPCA.components_,cmap=plt.cm.jet,vmax=1,vmin=-1)
+    plt.colorbar()
+    plt.subplot(222)
+    plt.plot(svm_cPCA.components_)
+    plt.ylim((-1,1))
+    plt.legend(['PC0','PC1','PC2','PC3','PC4'])
+    plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma1'])
+    plt.subplot(223)
+    
+    plt.plot(svm_cPCA.explained_variance_ratio_)
+    plt.ylim((0,1))
+    
+    for cc in range(2):
+        fig=plt.figure()
+        plot_3d_scalp(rotX[:,cc],fig,animate=False,unwrap=True)
+        plt.title('Plotting component ' + str(cc))
+        plt.suptitle('PCA rotated results for ' + pca_condit)
+    
+    
+do_binSVM(EEG_analysis)
+
+
+
 
 
 #%%

@@ -19,7 +19,11 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from EEG_Viz import plot_3d_scalp
 
+from sklearn.model_selection import learning_curve
 
+import seaborn as sns
+sns.set_context('paper')
+sns.set_style('white')
 
 active_chann = [24,35,66,240,212]
 limit_chann = False
@@ -33,6 +37,7 @@ inFile = pickle.load(open('/home/virati/stream_intvs.pickle','rb'))
 
 rec = inFile['States']
 lab = inFile['Labels']
+times = np.concatenate(np.array(inFile['Times']).reshape(-1))
 
 dsgn_X = np.array(np.concatenate([np.concatenate([rec[pt][cdt] for cdt in range(2)]) for pt in range(3)]))
 labels = np.array(np.concatenate([np.concatenate([lab[pt][cdt] for cdt in range(2)]) for pt in range(3)]))
@@ -45,13 +50,22 @@ labels = np.array([label_map[item] for item in labels])
 
 #do iteration of model a few times
 #clf = svm.LinearSVC(penalty='l2',dual=False)
+#plt.figure()
+#plt.plot(labels)
 
-Xtr,Xte,Ytr,Yte = sklearn.model_selection.train_test_split(dsgn_X,labels,test_size=0.33)
-
+Xtr,Xte,Ytr,Yte,buffnum_tr,buffnum_te = sklearn.model_selection.train_test_split(dsgn_X,labels,times,test_size=0.33)
 #NOW we do cross validation WITHIN the training set here
 
-accuracy = np.zeros((100,1))
-model = [None] * 100
+#%%
+#Learning curve
+#tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False),Xtr,Ytr,train_sizes=np.linspace(0.05,1,20),shuffle=True)
+#plt.figure()
+#plt.plot(tsize,np.mean(tscore,axis=1))
+#plt.plot(tsize,np.mean(vscore,axis=1))
+
+#%%    
+multi_accuracy = np.zeros((100,1))
+multi_model = [None] * 100
 
 for ii in range(1):
     #split our training set into 90% and 10% and do it 100 times
@@ -60,13 +74,18 @@ for ii in range(1):
 
     clf = svm.LinearSVC(penalty='l2',dual=False)
     clf.fit(X_cvtr,Y_cvtr)
-    cvtePreds = clf.predict(X_cvte)
-    accuracy[ii] = sum(cvtePreds == Y_cvte) / len(cvtePreds)
-    model[ii] = clf
+    #cvtePreds = clf.predict(X_cvte)
+    #multi_accuracy[ii] = sum(cvtePreds == Y_cvte) / len(cvtePreds)
+    multi_accuracy[ii] = clf.score(X_cvte,Y_cvte)
+    multi_model[ii] = clf
     
-iimodel_max = np.argmax(accuracy)
+    
+    
+iimodel_max = np.argmax(multi_accuracy)
 
-clf = model[iimodel_max]
+
+#%%
+clf = multi_model[iimodel_max]
 
 
 if limit_chann:
@@ -79,21 +98,26 @@ if limit_chann:
     sub_X = sub_X.reshape(-1,257*5)
     Xte_subset = sub_X
 
-    ##
-
     preds = clf.predict(Xte_subset)
 else:    
     preds = clf.predict(Xte)
 
-correct = sum(preds == Yte)
+Yte_labels = np.copy(Yte)
+correct = sum(preds == Yte_labels)
 accuracy = correct / len(preds)
 
-nclass0 = sum(Yte == 'OFF')
-nclass1 = sum(Yte == 'OnTON')
-nclass2 = sum(Yte == 'OffTON')
+nclass0 = sum(Yte_labels == 'OFF')
+nclass1 = sum(Yte_labels == 'OnTON')
+nclass2 = sum(Yte_labels == 'OffTON')
 total = len(Yte)
 
 print(accuracy)
+
+#%%
+#Analyse the error segments heres
+wrong_buffers = np.where(preds != Yte)
+plt.figure()
+plt.hist(buffnum_tr[wrong_buffers[0]],bins=20)
 
 #%%
 
@@ -104,8 +128,19 @@ pickle.dump(clf,open('/tmp/Stream_SVMModel_l2','wb'))
 
 plt.figure()
 plt.subplot(2,1,1)
-plt.plot(preds,label='Prediction')
-plt.plot(Yte,label='Actual')
+
+Yte[Yte == 'OffTON'] = 2
+Yte[Yte == 'OnTON'] = 1
+Yte[Yte == 'OFF'] = 0
+
+preds[preds== 'OffTON'] = 2
+preds[preds== 'OnTON'] = 1
+preds[preds== 'OFF'] = 0
+
+plt.imshow(np.vstack((Yte.astype(np.int),preds.astype(np.int))),aspect='auto')
+#plt.plot(preds,label='Prediction')
+#plt.plot(Yte,label='Actual')
+
 plt.legend()
 plt.subplot(2,1,2)
 plt.stem((preds == Yte).astype(np.int),label='HITS')

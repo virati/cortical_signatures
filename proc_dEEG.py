@@ -26,9 +26,10 @@ plt.close('all')
 from EEG_Viz import plot_3d_scalp
 
 import seaborn as sns
-sns.set()
-sns.set(font_scale=3)
-sns.set_style("white")
+
+sns.set_context('paper')
+sns.set(font_scale=4)
+sns.set_style('white')
 
 
 from DBS_Osc import nestdict
@@ -40,6 +41,7 @@ from sklearn.decomposition import PCA, FastICA
 from sklearn import svm
 import sklearn
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import learning_curve
 
 import pickle
 
@@ -196,45 +198,6 @@ class proc_dEEG:
         return (OnT_sim, OffT_sim)
     
     #this function will generate a big stack of all observations for a given condition across all patients
-    def gen_GMM_stack(self,stack_bl=''):
-        state_stack = nestdict()
-        state_labels = nestdict()
-        
-        
-        for condit in self.condits:
-            state_stack[condit] = []
-            keyoi = keys_oi[condit][1]
-            
-            if stack_bl == 'add':
-                pt_stacks = [val[condit][keyoi] for pt,val in self.feat_dict.items()] 
-                base_len = len(pt_stacks)
-                pt_labels = [keyoi] * base_len
-                
-                pt_stacks += [val[condit]['Off_3'] for pt,val in self.feat_dict.items()]
-                pt_labels += ['Off_3'] * (len(self.feat_dict.keys()) - base_len)
-                #pt_labels = [keyoi for pt,val in self.feat_dict.items()] + ['Off_3' for pt,val in self.feat_dict.items()]
-                self.num_gmm_comps = 3
-            elif stack_bl == 'normalize':
-                #bl_stack = [val[condit]['Off_3'] for pt,val in self.feat_dict.items()]
-                #bl_stack = np.concatenate(bl_stack,axis=1)
-                bl_stack = {pt:val[condit]['Off_3'] for pt,val in self.feat_dict.items()}
-                
-                pt_stacks = [val[condit][keyoi] - np.repeat(np.median(bl_stack[pt],axis=1).reshape(257,1,1025),val[condit][keyoi].shape[1],axis=1) for pt,val in self.feat_dict.items()]
-                pt_labels = [[keyoi] * gork.shape[1] for gork in pt_stacks]
-                self.num_gmm_comps = 2
-            else:
-                pt_stacks = [val[condit][keyoi] for pt,val in self.feat_dict.items()]
-                pt_labels = [keyoi] * len(pt_stacks)
-                self.num_gmm_comps = 2
-                
-            state_stack[condit] = np.concatenate(pt_stacks,axis=1)
-            state_labels[condit] = pt_labels
-            
-        
-        GMM_stack = state_stack
-        GMM_stack_labels = state_labels
-        self.GMM_stack_labels = state_labels
-        return {'Stack':GMM_stack,'Labels':GMM_stack_labels}
     
     def gen_OSC_stack(self,stack_type='all'):
         remap = {'Off_3':'OF','BONT':'ON','BOFT':'ON'}
@@ -348,10 +311,13 @@ class proc_dEEG:
         
         Xdo = Xdsgn[lblsdo,:,:]
         
+        
+        
         #what do we want to do with this now?
         #spatiotemporal PCA
         Xdo = np.median(Xdo,axis=0) 
         
+        #BL_correct here is NOT patient specific bl correction
         if bl_correct:
             print('Correcting with baseline (OFF EEG)')
             #find the stim Off timepoints to subtract
@@ -450,6 +416,7 @@ class proc_dEEG:
         
         X_med = nestdict()
         X_mad = nestdict()
+        X_segnum = nestdict()
         #do some small simple crap here
         
         #Here we're averaging across axis zero which corresponds to 'averaging' across SEGMENTS
@@ -459,8 +426,9 @@ class proc_dEEG:
             #X_med[condit]= np.mean(dsgn_X[condit],axis=0)
             X_mad[condit] = robust.mad(dsgn_X[condit],axis=0)
             #X_mad[condit] = np.var(dsgn_X[condit],axis=0)
+            X_segnum[condit] = dsgn_X[condit].shape[0]
         
-        self.Seg_Med = (X_med,X_mad)
+        self.Seg_Med = (X_med,X_mad,X_segnum)
         
         weigh_mad = 0.3
         self.median_mask = (np.abs(self.Seg_Med[0]['OnT'][:,2]) - weigh_mad*self.Seg_Med[1]['OnT'][:,2] >= 0)
@@ -469,6 +437,7 @@ class proc_dEEG:
         chann_patt_zs = stats.zscore(X_med['OnT'],axis=0)
         outlier_channs = np.where(chann_patt_zs > 3)
 
+    def do_ICA_fullstack(self):
         rem_channs = False     
         print('ICA Time')
         ICA_inX = X_med['OnT']
@@ -481,12 +450,7 @@ class proc_dEEG:
         
         #PCA SECTION
         #pca = PCA()
-        pca = PCA()
-        pca.fit(PCA_inX)
-        self.PCA_d = pca
-        self.PCA_inX = PCA_inX
-        self.PCA_x = pca.fit_transform(PCA_inX)
-        
+
         
         #ICA
         ica = FastICA(n_components=5)
@@ -494,19 +458,85 @@ class proc_dEEG:
         self.ICA_d = ica
         self.ICA_inX = ICA_inX
         self.ICA_x = ica.fit_transform(ICA_inX)
+        
+        
+    def gen_GMM_stack(self,stack_bl=''):
+        state_stack = nestdict()
+        state_labels = nestdict()
+        
+        
+        for condit in self.condits:
+            state_stack[condit] = []
+            keyoi = keys_oi[condit][1]
+            
+            if stack_bl == 'add':
+                raise ValueError
+                pt_stacks = [val[condit][keyoi] for pt,val in self.feat_dict.items()] 
+                base_len = len(pt_stacks)
+                pt_labels = [keyoi] * base_len
+                
+                pt_stacks += [val[condit]['Off_3'] for pt,val in self.feat_dict.items()]
+                pt_labels += ['Off_3'] * (len(self.feat_dict.keys()) - base_len)
+                #pt_labels = [keyoi for pt,val in self.feat_dict.items()] + ['Off_3' for pt,val in self.feat_dict.items()]
+                self.num_gmm_comps = 3
+            elif stack_bl == 'normalize':
+                #bl_stack = [val[condit]['Off_3'] for pt,val in self.feat_dict.items()]
+                #bl_stack = np.concatenate(bl_stack,axis=1)
+                bl_stack = {pt:val[condit]['Off_3'] for pt,val in self.feat_dict.items()}
+                
+                pt_stacks = [val[condit][keyoi] - np.repeat(np.median(bl_stack[pt],axis=1).reshape(257,1,1025),val[condit][keyoi].shape[1],axis=1) for pt,val in self.feat_dict.items()]
+                pt_labels = [[keyoi] * gork.shape[1] for gork in pt_stacks]
+                self.num_gmm_comps = 2
+            else:
+                pt_stacks = [val[condit][keyoi] for pt,val in self.feat_dict.items()]
+                pt_labels = [keyoi] * len(pt_stacks)
+                self.num_gmm_comps = 2
+                
+            state_stack[condit] = np.concatenate(pt_stacks,axis=1)
+            state_labels[condit] = pt_labels
+            
+        
+        GMM_stack = state_stack
+        GMM_stack_labels = state_labels
+        self.GMM_stack_labels = state_labels
+        return {'Stack':GMM_stack,'Labels':GMM_stack_labels}
+    
+    
+    def do_response_PCA(self):
+        pca = PCA()
+        
+        print("Using GMM Stack, which is baseline normalized within each patient")
+        
+        #This has both OnTarget and OffTarget conditions in the stack
+        
+        GMMStack = self.gen_GMM_stack(stack_bl='normalize')
+        GMMOsc = self.gen_GMM_Osc(GMMStack['Stack'])
+        
+        
+        
+        PCA_inX = np.median(np.swapaxes(GMMOsc['Stack']['OnT'],0,1),axis=0)
+        
+        pca.fit(PCA_inX)
+        self.PCA_d = pca
+        self.PCA_inX = PCA_inX
+        self.PCA_x = pca.fit_transform(PCA_inX)
+        
     
     def plot_PCA_stuff(self):
         plt.figure();
         plt.subplot(221)
         plt.imshow(self.PCA_d.components_,cmap=plt.cm.jet,vmax=1,vmin=-1)
         plt.colorbar()
+        
         plt.subplot(222)
         plt.plot(self.PCA_d.components_)
+        plt.ylim((-1,1))
         plt.legend(['PC0','PC1','PC2','PC3','PC4'])
         plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma1'])
-        plt.subplot(223)
         
+        plt.subplot(223)
         plt.plot(self.PCA_d.explained_variance_ratio_)
+        plt.ylim((0,1))
         
         for cc in range(2):
             fig=plt.figure()
@@ -540,7 +570,12 @@ class proc_dEEG:
         
         plt.figure()
         plt.plot(self.Seg_Med[0]['OnT'][:,band_idx],label='OnT')
+        plt.fill_between(np.arange(257),self.Seg_Med[0]['OnT'][:,band_idx] - self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT']),self.Seg_Med[0]['OnT'][:,band_idx] + self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT']),alpha=0.4)
+        print(self.Seg_Med[2]['OnT'])
+        
         plt.plot(self.Seg_Med[0]['OffT'][:,band_idx],label='OffT')
+        plt.fill_between(np.arange(257),self.Seg_Med[0]['OffT'][:,band_idx] - self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT']),self.Seg_Med[0]['OffT'][:,band_idx] + self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT']),alpha=0.4)
+        print(self.Seg_Med[2]['OffT'])
         plt.title('Medians across Channels')
         plt.legend()
         
@@ -553,6 +588,7 @@ class proc_dEEG:
         
         plt.figure()
         plt.plot(self.Seg_Med[1]['OnT'][:,band_idx],label='OnT')
+        
         plt.plot(self.Seg_Med[1]['OffT'][:,band_idx],label='OffT')
         plt.title('MADs across Channels')
         plt.legend()
@@ -569,8 +605,27 @@ class proc_dEEG:
             masked_median = self.Seg_Med[0][condit][:,band_idx] * (np.abs(self.Seg_Med[0][condit][:,band_idx]) - weigh_mad*self.Seg_Med[1][condit][:,band_idx] >= 0).astype(np.int)
             plot_3d_scalp(masked_median,fig,label=condit + '_masked_median',animate=False,clims=(-0.1,0.1))
             plt.suptitle('Medians with small variances (' + str(weigh_mad) + ') ' + condit + ' segments | Band is ' + band)
-            
         
+        ## Figure out which channels have overlap
+        ont_olap = np.array((self.Seg_Med[0]['OnT'][:,band_idx],self.Seg_Med[0]['OnT'][:,band_idx] - self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT']),self.Seg_Med[0]['OnT'][:,band_idx] + self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT'])))
+        offt_olap = np.array((self.Seg_Med[0]['OffT'][:,band_idx],self.Seg_Med[0]['OffT'][:,band_idx] - self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT']),self.Seg_Med[0]['OffT'][:,band_idx] + self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT'])))
+        
+        for cc in range(257):
+            np.hstack((ont_olap[1][cc],ont_olap[2][cc]))
+        
+        #do a sweep through to find the channels that don't overlap
+        sweep_range = np.linspace(-0.3,0.3,100)
+        
+        ont_over = np.zeros_like(sweep_range)
+        offt_over = np.zeros_like(sweep_range)
+        
+        for ss,sr in enumerate(sweep_range):
+            ont_over[ss] = sum(self.Seg_Med[0]['OnT'][:,band_idx] > sr)
+            offt_over[ss] = sum(self.Seg_Med[0]['OffT'][:,band_idx] > sr)
+        
+        plt.figure()
+        plt.plot(sweep_range,ont_over)
+        plt.plot(sweep_range,offt_over)
         
     def train_GMM(self):
         #shape our dsgn matrix properly
@@ -664,7 +719,15 @@ class proc_dEEG:
         else:
             dsgn_X = self.SVM_stack.reshape(num_segs,-1,order='C')
         
-        
+        #Learning curve
+        print('Learning Curve')
+        tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False),dsgn_X,self.SVM_labels,train_sizes=np.linspace(0.2,1.0,5),cv=5)
+        plt.figure()
+        plt.plot(tsize,np.mean(tscore,axis=1))
+        plt.plot(tsize,np.mean(vscore,axis=1))
+
+
+
         #doing a one class SVM
         #clf = svm.OneClassSVM(nu=0.1,kernel="rbf", gamma=0.1)
         clf = svm.LinearSVC(penalty='l2',dual=False)
@@ -700,6 +763,94 @@ class proc_dEEG:
         self.SVM = clf
         self.SVM_dsgn_X = dsgn_X
         self.SVM_test_labels = predlabels
+    
+    def train_binSVM(self,mask=False):
+        num_segs = self.SVM_stack.shape[0]
+        print('DOING BINARY')
+        #generate a mask
+        if mask:
+            #what mask do we want?
+            #self.SVM_Mask = self.median_mask
+            self.SVM_Mask = np.zeros((257,)).astype(bool)
+            self.SVM_Mask[np.arange(216,239)] = True
+            
+            sub_X = self.SVM_stack[:,self.SVM_Mask,:]
+            dsgn_X = sub_X.reshape(num_segs,-1,order='C')
+        else:
+            dsgn_X = self.SVM_stack.reshape(num_segs,-1,order='C')
+        
+        #doing a one class SVM
+        #clf = svm.OneClassSVM(nu=0.1,kernel="rbf", gamma=0.1)
+        
+        
+
+        
+        
+        
+        
+        #get rid of ALL OFF, and only do two labels
+        OFFs = np.where(self.SVM_labels == 'OFF')
+        dsgn_X = np.delete(dsgn_X,OFFs,0)
+        SVM_labels = np.delete(self.SVM_labels,OFFs,0)
+        
+        #learning curve
+        print(dsgn_X.shape)
+        
+        
+        
+        
+        
+        #split out into test and train
+        Xtr,Xte,Ytr,Yte = sklearn.model_selection.train_test_split(dsgn_X,SVM_labels,test_size=0.90,random_state=0)
+        
+        tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False,C=1),Xtr,Ytr,train_sizes=np.linspace(0.4,1,10),shuffle=True,cv=5,random_state=0)
+        plt.figure()
+        plt.plot(tsize,np.mean(tscore,axis=1))
+        plt.plot(tsize,np.mean(vscore,axis=1))
+        
+        
+        #classifier time itself
+        clf = svm.LinearSVC(penalty='l2',dual=False)
+        #Fit the actual algorithm
+        clf.fit(Xtr,Ytr)
+        
+        #predict IN training set
+        predlabels = clf.predict(Xte)
+        
+        plt.figure()
+        plt.subplot(2,1,1)
+        
+        Yten = np.copy(Yte)
+        predlabelsn = np.copy(predlabels)
+        
+        #Fix labels for PLOTTING
+        Yten[Yte == 'OffTON'] = 0
+        Yten[Yte == 'OnTON'] = 1
+        predlabelsn[predlabels == 'OffTON'] = 0
+        predlabelsn[predlabels == 'OnTON'] = 1
+        
+        
+        plt.imshow(np.vstack((Yten.astype(np.int),predlabelsn.astype(np.int))),aspect='auto')
+        #plt.plot(Yte,label='test')
+        #plt.plot(predlabels,label='predict')
+        #simple_accuracy = np.sum(np.array(Yte) == np.array(predlabels))/len(Yte)
+        score = clf.score(Xte,Yte)
+        plt.title('SVM Results with Mask:' + str(mask) + ' ; Accuracy: ' + str(score))
+        plt.legend()
+        
+        pickle.dump(clf,open('/tmp/SVMModel_l2','wb'))
+        
+        plt.subplot(2,1,2)
+        conf_matrix = confusion_matrix(predlabels,Yte)
+        plt.imshow(conf_matrix)
+        plt.yticks(np.arange(0,2),['OffT','OnT'])
+        plt.xticks(np.arange(0,2),['OffT','OnT'])
+        plt.colorbar()
+        
+        
+        self.binSVM = clf
+        self.binSVM_dsgn_X = dsgn_X
+        self.binSVM_test_labels = predlabels
         
         
     def compute_diff(self,take_mean=True):

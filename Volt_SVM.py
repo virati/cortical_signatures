@@ -89,7 +89,7 @@ np.save('/home/virati/pre_conf_matrix_'+class_type,results_matrix)
 
 #%%
 #Show the SVM's coefficients
-coeffs = sEEG.clf.coeff_
+coeffs = sEEG.clf.coef_
 plt.figure()
 plt.plot()
 
