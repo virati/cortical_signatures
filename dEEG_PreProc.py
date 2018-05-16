@@ -146,7 +146,8 @@ plot_PCA_stuff(EEG_analysis)
 print('Calculating Population Medians')
 EEG_analysis.pop_meds()
 #%%
-EEG_analysis.plot_meds(band='Alpha',flatten=True)
+for band in ['Alpha']:#dbo.feat_order:
+    EEG_analysis.plot_meds(band=band,flatten=False)
 #%%
 #plot_PCA_stuff(EEG_analysis)
 #EEG_analysis.plot_ICA_stuff()
@@ -199,7 +200,7 @@ def do_binSVM(SegEEG):
     SegEEG.train_binSVM(mask=False)
     
     bin_coeff = SegEEG.binSVM.coef_.reshape(-1,5) #this can now go into the PCA
-    for bb,band in enumerate(['Delta','Theta','Alpha','Beta','Gamma']):
+    for bb,band in enumerate(dbo.feat_order):
         fig = plt.figure()
         plot_3d_scalp(bin_coeff[:,bb],fig,label=band + ' SVM Coefficients',unwrap=True)
         

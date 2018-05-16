@@ -570,16 +570,19 @@ class proc_dEEG:
         
         plt.figure()
         plt.plot(self.Seg_Med[0]['OnT'][:,band_idx],label='OnT')
-        plt.fill_between(np.arange(257),self.Seg_Med[0]['OnT'][:,band_idx] - self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT']),self.Seg_Med[0]['OnT'][:,band_idx] + self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT']),alpha=0.4)
+        ont_semed = 1.48*self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT'])
+        plt.fill_between(np.arange(257),self.Seg_Med[0]['OnT'][:,band_idx] - ont_semed,self.Seg_Med[0]['OnT'][:,band_idx] + 1.48*self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT']),alpha=0.4)
         print(self.Seg_Med[2]['OnT'])
         
         plt.plot(self.Seg_Med[0]['OffT'][:,band_idx],label='OffT')
-        plt.fill_between(np.arange(257),self.Seg_Med[0]['OffT'][:,band_idx] - self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT']),self.Seg_Med[0]['OffT'][:,band_idx] + self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT']),alpha=0.4)
+        offt_semed = 1.48*self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT']) #Seg_Med 1 is the MAD, seg_med[2] is the number of segments
+        plt.fill_between(np.arange(257),self.Seg_Med[0]['OffT'][:,band_idx] - offt_semed,self.Seg_Med[0]['OffT'][:,band_idx] + offt_semed,alpha=0.4)
         print(self.Seg_Med[2]['OffT'])
         plt.title('Medians across Channels')
         plt.legend()
+        plt.suptitle(band)
         
-        
+        #plot EEG change for conditions
         for condit in self.condits:
             fig = plt.figure()
             #This is MEDS
@@ -587,25 +590,31 @@ class proc_dEEG:
             plt.suptitle('Median of Cortical Response across all ' + condit + ' segments | Band is ' + band)
         
         plt.figure()
-        plt.plot(self.Seg_Med[1]['OnT'][:,band_idx],label='OnT')
-        
-        plt.plot(self.Seg_Med[1]['OffT'][:,band_idx],label='OffT')
-        plt.title('MADs across Channels')
+        plt.plot(ont_semed,label='OnT')
+        plt.plot(offt_semed,label='OffT')
+        plt.title('Normed MADs across Channels')
         plt.legend()
+        plt.suptitle(band)
+        
+        #plot the scalp EEG changes
         for condit in self.condits:
             fig = plt.figure()
             #this is MADs
             plot_3d_scalp(self.Seg_Med[1][condit][:,band_idx],fig,label=condit + '_mad',animate=False,unwrap=flatten,clims=(0,1.0))
             plt.suptitle('MADs of Cortical Response across all ' + condit + ' segments | Band is ' + band)
         
-        #Finally, for qualitative, let's look at the most consistent changes
-        for condit in self.condits:
-            weigh_mad = 0.4
-            fig = plt.figure()
-            masked_median = self.Seg_Med[0][condit][:,band_idx] * (np.abs(self.Seg_Med[0][condit][:,band_idx]) - weigh_mad*self.Seg_Med[1][condit][:,band_idx] >= 0).astype(np.int)
-            plot_3d_scalp(masked_median,fig,label=condit + '_masked_median',animate=False,clims=(-0.1,0.1))
-            plt.suptitle('Medians with small variances (' + str(weigh_mad) + ') ' + condit + ' segments | Band is ' + band)
+        plt.suptitle(band)
         
+        #Finally, for qualitative, let's look at the most consistent changes
+        #This is the MASKED EEG channels
+        if 0:
+            for condit in self.condits:
+                weigh_mad = 0.4
+                fig = plt.figure()
+                masked_median = self.Seg_Med[0][condit][:,band_idx] * (np.abs(self.Seg_Med[0][condit][:,band_idx]) - weigh_mad*self.Seg_Med[1][condit][:,band_idx] >= 0).astype(np.int)
+                plot_3d_scalp(masked_median,fig,label=condit + '_masked_median',animate=False,clims=(-0.1,0.1))
+                plt.suptitle('Medians with small variances (' + str(weigh_mad) + ') ' + condit + ' segments | Band is ' + band)
+            
         ## Figure out which channels have overlap
         ont_olap = np.array((self.Seg_Med[0]['OnT'][:,band_idx],self.Seg_Med[0]['OnT'][:,band_idx] - self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT']),self.Seg_Med[0]['OnT'][:,band_idx] + self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT'])))
         offt_olap = np.array((self.Seg_Med[0]['OffT'][:,band_idx],self.Seg_Med[0]['OffT'][:,band_idx] - self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT']),self.Seg_Med[0]['OffT'][:,band_idx] + self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT'])))
@@ -613,19 +622,30 @@ class proc_dEEG:
         for cc in range(257):
             np.hstack((ont_olap[1][cc],ont_olap[2][cc]))
         
+        
+        
+        
+        #find the channels that do overlap
+        allcond_vec = np.array([[self.Seg_Med[0]['OnT'][:,band_idx] + ont_semed,self.Seg_Med[0]['OnT'][:,band_idx] - ont_semed],[self.Seg_Med[0]['OffT'][:,band_idx] + offt_semed,self.Seg_Med[0]['OffT'][:,band_idx] - offt_semed]])
+        #check if overlap here
+        ipdb.set_trace()
+        
+        
         #do a sweep through to find the channels that don't overlap
-        sweep_range = np.linspace(-0.3,0.3,100)
+        sweep_range = np.linspace(0,0.11,100)
         
         ont_over = np.zeros_like(sweep_range)
         offt_over = np.zeros_like(sweep_range)
         
         for ss,sr in enumerate(sweep_range):
-            ont_over[ss] = sum(self.Seg_Med[0]['OnT'][:,band_idx] > sr)
-            offt_over[ss] = sum(self.Seg_Med[0]['OffT'][:,band_idx] > sr)
+            ont_over[ss] = sum(ont_semed > sr)
+            offt_over[ss] = sum(offt_semed > sr)
+        plt.suptitle(band)
         
         plt.figure()
         plt.plot(sweep_range,ont_over)
         plt.plot(sweep_range,offt_over)
+        plt.suptitle(band)
         
     def train_GMM(self):
         #shape our dsgn matrix properly
@@ -793,24 +813,26 @@ class proc_dEEG:
         dsgn_X = np.delete(dsgn_X,OFFs,0)
         SVM_labels = np.delete(self.SVM_labels,OFFs,0)
         
-        #learning curve
-        print(dsgn_X.shape)
-        
-        
+              
         
         
         
         #split out into test and train
-        Xtr,Xte,Ytr,Yte = sklearn.model_selection.train_test_split(dsgn_X,SVM_labels,test_size=0.90,random_state=0)
+        testing_size = 0.5
+        print(testing_size)
+        Xtr,Xte,Ytr,Yte = sklearn.model_selection.train_test_split(dsgn_X,SVM_labels,test_size=testing_size,random_state=0)
         
+        #Just doing a learning curve on the training data
         tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False,C=1),Xtr,Ytr,train_sizes=np.linspace(0.4,1,10),shuffle=True,cv=5,random_state=0)
         plt.figure()
         plt.plot(tsize,np.mean(tscore,axis=1))
         plt.plot(tsize,np.mean(vscore,axis=1))
         
+        #go into TRAINING set only to do CV five fold
+        
         
         #classifier time itself
-        clf = svm.LinearSVC(penalty='l2',dual=False)
+        clf = svm.LinearSVC(penalty='l2',dual=False,C=1)
         #Fit the actual algorithm
         clf.fit(Xtr,Ytr)
         

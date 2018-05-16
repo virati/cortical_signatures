@@ -80,7 +80,7 @@ Targeting['All'] = {
                 },
         '901':{
             'OnT':{
-                    'fname':'',
+                    'fname':'/tmp/DBS901-02 Eyes 20140520 1600.mat',
                     'lfp':''
                     },
             'OffT':{
@@ -131,6 +131,8 @@ class streamEEG:
             elif pt == '908' and condit == 'OffT':
                 start_time = 0
             elif pt == '907':
+                start_time = 0
+            elif pt == '901':
                 start_time = 0
             tlim = np.array((start_time,start_time + 16)) * 60 #in seconds
                         
