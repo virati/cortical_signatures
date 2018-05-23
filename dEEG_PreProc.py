@@ -42,22 +42,19 @@ sns.set_context('paper')
 sns.set(font_scale=4)
 sns.set_style('white')
 
-all_pts = ['906','907','908']
+all_pts = ['907']
 
         
 #UNIT TEST
 EEG_analysis = proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
 EEG_analysis.extract_feats(polyorder=0)
-#%%
 EEG_analysis.gen_OSC_stack()
-#%%
 EEG_analysis.simple_stats()
 
-
-#%%
-#This does the SVM classifier on preprocessed, cleaned EEG
 print('Calculating Population Medians')
 EEG_analysis.pop_meds()
+for band in ['Alpha']:
+    EEG_analysis.plot_meds(band=band,flatten=False)
 
 
 #%%
@@ -146,8 +143,8 @@ plot_PCA_stuff(EEG_analysis)
 print('Calculating Population Medians')
 EEG_analysis.pop_meds()
 #%%
-for band in ['Alpha']:#dbo.feat_order:
-    EEG_analysis.plot_meds(band=band,flatten=False)
+# for band in ['Alpha']:
+#     EEG_analysis.plot_meds(band=band,flatten=False)
 #%%
 #plot_PCA_stuff(EEG_analysis)
 #EEG_analysis.plot_ICA_stuff()
@@ -202,7 +199,7 @@ def do_binSVM(SegEEG):
     bin_coeff = SegEEG.binSVM.coef_.reshape(-1,5) #this can now go into the PCA
     for bb,band in enumerate(dbo.feat_order):
         fig = plt.figure()
-        plot_3d_scalp(bin_coeff[:,bb],fig,label=band + ' SVM Coefficients',unwrap=True)
+        plot_3d_scalp(bin_coeff[:,bb],fig,label=band + ' SVM Coefficients',unwrap=True,animate=False)
         
     #doing PCA on coefficients
     svm_cPCA = PCA()

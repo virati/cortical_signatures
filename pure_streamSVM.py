@@ -22,7 +22,9 @@ from EEG_Viz import plot_3d_scalp
 from sklearn.model_selection import learning_curve
 
 import seaborn as sns
+
 sns.set_context('paper')
+sns.set(font_scale=4)
 sns.set_style('white')
 
 active_chann = [24,35,66,240,212]
@@ -41,6 +43,7 @@ times = np.concatenate(np.array(inFile['Times']).reshape(-1))
 
 dsgn_X = np.array(np.concatenate([np.concatenate([rec[pt][cdt] for cdt in range(2)]) for pt in range(3)]))
 labels = np.array(np.concatenate([np.concatenate([lab[pt][cdt] for cdt in range(2)]) for pt in range(3)]))
+raw_labels = np.copy(labels)
 #Transform the labels to actual labels
 label_map = {0:'OFF',2:'OnTON',1:'OffTON'}
 
@@ -50,9 +53,16 @@ labels = np.array([label_map[item] for item in labels])
 
 #do iteration of model a few times
 #clf = svm.LinearSVC(penalty='l2',dual=False)
-#plt.figure()
+plt.figure()
 #plt.plot(labels)
+plt.imshow(raw_labels.reshape(1,-1),aspect='auto')
+#just for display
+ddXtr,ddXte,ddYtr,ddYte,ddbuffnum_tr,ddbuffnum_te = sklearn.model_selection.train_test_split(dsgn_X,raw_labels,times,test_size=0.33)
+plt.figure()
+plt.imshow(np.hstack((ddYtr,ddYte)).reshape(1,-1),aspect='auto')
 
+
+#%%
 Xtr,Xte,Ytr,Yte,buffnum_tr,buffnum_te = sklearn.model_selection.train_test_split(dsgn_X,labels,times,test_size=0.33)
 #NOW we do cross validation WITHIN the training set here
 
@@ -66,6 +76,8 @@ Xtr,Xte,Ytr,Yte,buffnum_tr,buffnum_te = sklearn.model_selection.train_test_split
 #%%    
 multi_accuracy = np.zeros((100,1))
 multi_model = [None] * 100
+
+
 
 for ii in range(1):
     #split our training set into 90% and 10% and do it 100 times

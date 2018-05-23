@@ -628,7 +628,7 @@ class proc_dEEG:
         #find the channels that do overlap
         allcond_vec = np.array([[self.Seg_Med[0]['OnT'][:,band_idx] + ont_semed,self.Seg_Med[0]['OnT'][:,band_idx] - ont_semed],[self.Seg_Med[0]['OffT'][:,band_idx] + offt_semed,self.Seg_Med[0]['OffT'][:,band_idx] - offt_semed]])
         #check if overlap here
-        ipdb.set_trace()
+        #pdb.set_trace()
         
         
         #do a sweep through to find the channels that don't overlap
@@ -814,13 +814,31 @@ class proc_dEEG:
         SVM_labels = np.delete(self.SVM_labels,OFFs,0)
         
               
+        #%% PLOT THE WHOLE DATA
+        plt.figure()
+        Yall = np.zeros(SVM_labels.shape[0]).astype(np.float)
         
-        
+        Yall[SVM_labels == 'OffTON'] = 0
+        Yall[SVM_labels == 'OnTON'] = 1
+        plt.imshow(Yall.reshape(1,-1),aspect='auto')
+               
         
         #split out into test and train
-        testing_size = 0.5
+        testing_size = 0.9
         print(testing_size)
         Xtr,Xte,Ytr,Yte = sklearn.model_selection.train_test_split(dsgn_X,SVM_labels,test_size=testing_size,random_state=0)
+        
+        plt.figure()
+        trYall = np.zeros(Ytr.shape[0]).astype(np.float)
+        trYall[Ytr == 'OffTON'] = 0
+        trYall[Ytr == 'OnTON'] = 1
+        
+        teYall = np.zeros(Yte.shape[0]).astype(np.float)
+        teYall[Yte == 'OffTON'] = 0
+        teYall[Yte == 'OnTON'] = 1
+        
+        plt.imshow(np.hstack((trYall,teYall)).reshape(1,-1),aspect='auto')
+        
         
         #Just doing a learning curve on the training data
         tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False,C=1),Xtr,Ytr,train_sizes=np.linspace(0.4,1,10),shuffle=True,cv=5,random_state=0)
