@@ -42,17 +42,18 @@ sns.set_context('paper')
 sns.set(font_scale=4)
 sns.set_style('white')
 
-all_pts = ['907']
+all_pts = ['906','907','908']
 
         
 #UNIT TEST
-EEG_analysis = proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
+EEG_analysis = proc_dEEG(pts=all_pts,procsteps='liberal',condits=['OnT','OffT'])
 EEG_analysis.extract_feats(polyorder=0)
 EEG_analysis.gen_OSC_stack()
 EEG_analysis.simple_stats()
 
 print('Calculating Population Medians')
 EEG_analysis.pop_meds()
+#%%
 for band in ['Alpha']:
     EEG_analysis.plot_meds(band=band,flatten=False)
 
@@ -143,8 +144,8 @@ plot_PCA_stuff(EEG_analysis)
 print('Calculating Population Medians')
 EEG_analysis.pop_meds()
 #%%
-# for band in ['Alpha']:
-#     EEG_analysis.plot_meds(band=band,flatten=False)
+for band in ['Alpha']:
+    EEG_analysis.plot_meds(band=band,flatten=False)
 #%%
 #plot_PCA_stuff(EEG_analysis)
 #EEG_analysis.plot_ICA_stuff()
@@ -201,6 +202,9 @@ def do_binSVM(SegEEG):
         fig = plt.figure()
         plot_3d_scalp(bin_coeff[:,bb],fig,label=band + ' SVM Coefficients',unwrap=True,animate=False)
         
+    fig = plt.figure()
+    plot_3d_scalp(np.linalg.norm(bin_coeff[:,:],axis=1,ord=2),fig,label=band + ' SVM Coefficients',unwrap=False,animate=False)
+    plt.suptitle('L2 of all bands')
     #doing PCA on coefficients
     svm_cPCA = PCA()
     svm_cPCA.fit(bin_coeff)

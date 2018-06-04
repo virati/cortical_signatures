@@ -96,6 +96,9 @@ Targeting['All'] = {
                 
             }
 
+Targetin['3mo'] = {'906':{'OnT':{'fname':''}}}
+Targetin['6mo'] = {}
+
 class EEG_check:
     def __init__(self,pt='908',condit='OnT',ds_fact=1,fs=500,spotcheck=False):
         pass

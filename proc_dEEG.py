@@ -566,18 +566,43 @@ class proc_dEEG:
             
     def plot_meds(self,band='Alpha',flatten=True):
         print('Doing Population Level Medians and MADs')
-        band_idx = dbo.feat_order.index(band)
+        
+        band_median = {key:0 for key in self.condits}
+        band_mad = {key:0 for key in self.condits}
+        band_segnum = {key:0 for key in self.condits}
+        
+        
+        if band == 'DSV':
+            #lridge = [-0.00583578, -0.00279751,  0.00131825,  0.01770169,  0.01166687]
+            #rridge = [-1.06586005e-02,  2.42700023e-05,  7.31445236e-03,  2.68723035e-03,-3.90440108e-06]
+            doridge = np.array([-0.00583578, -0.00279751,  0.00131825,  0.01770169,  0.01166687])/np.linalg.norm([-0.00583578, -0.00279751,  0.00131825,  0.01770169,  0.01166687])
+            band_idx = np.array([0,1,2,3,4])
+        else:
+            band_idx = dbo.feat_order.index(band)
+            doridge = [0,0,0,0,0]
+            doridge[band_idx] = 1
+            #rridge = [0,0,0,0,0]
+            
+        
+        
+        for condit in self.condits:
+            band_median[condit] = np.dot(self.Seg_Med[0][condit][:,:],doridge)
+            band_mad[condit] = np.dot(self.Seg_Med[1][condit][:,:],doridge)
+            band_segnum[condit] = self.Seg_Med[2][condit]
+            
+            #band_mad[condit] = self.Seg_Med[1][condit][:,band_idx]
+            #band_segnum[condit] = self.Seg_Med[2][condit]
         
         plt.figure()
-        plt.plot(self.Seg_Med[0]['OnT'][:,band_idx],label='OnT')
-        ont_semed = 1.48*self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT'])
-        plt.fill_between(np.arange(257),self.Seg_Med[0]['OnT'][:,band_idx] - ont_semed,self.Seg_Med[0]['OnT'][:,band_idx] + 1.48*self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT']),alpha=0.4)
-        print(self.Seg_Med[2]['OnT'])
-        
-        plt.plot(self.Seg_Med[0]['OffT'][:,band_idx],label='OffT')
-        offt_semed = 1.48*self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT']) #Seg_Med 1 is the MAD, seg_med[2] is the number of segments
-        plt.fill_between(np.arange(257),self.Seg_Med[0]['OffT'][:,band_idx] - offt_semed,self.Seg_Med[0]['OffT'][:,band_idx] + offt_semed,alpha=0.4)
-        print(self.Seg_Med[2]['OffT'])
+        serr_med = {key:0 for key in self.condits}
+        for condit in self.condits:
+            
+            plt.plot(band_median[condit],label=condit)
+            serr_med[condit] = 1.48*band_mad[condit]/np.sqrt(band_segnum[condit])
+            
+            plt.fill_between(np.arange(257),band_median[condit] - serr_med[condit],band_median[condit] + serr_med[condit],alpha=0.4)
+
+        plt.hlines(0,0,256)                    
         plt.title('Medians across Channels')
         plt.legend()
         plt.suptitle(band)
@@ -586,12 +611,12 @@ class proc_dEEG:
         for condit in self.condits:
             fig = plt.figure()
             #This is MEDS
-            plot_3d_scalp(self.Seg_Med[0][condit][:,band_idx],fig,label=condit + '_med',animate=False,clims=(-0.2,0.2),unwrap=flatten)
+            plot_3d_scalp(band_median[condit],fig,label=condit + '_med',animate=False,clims=(-0.2,0.2),unwrap=flatten)
             plt.suptitle('Median of Cortical Response across all ' + condit + ' segments | Band is ' + band)
         
         plt.figure()
-        plt.plot(ont_semed,label='OnT')
-        plt.plot(offt_semed,label='OffT')
+        plt.plot(serr_med['OnT'],label='OnT')
+        plt.plot(serr_med['OffT'],label='OffT')
         plt.title('Normed MADs across Channels')
         plt.legend()
         plt.suptitle(band)
@@ -600,7 +625,7 @@ class proc_dEEG:
         for condit in self.condits:
             fig = plt.figure()
             #this is MADs
-            plot_3d_scalp(self.Seg_Med[1][condit][:,band_idx],fig,label=condit + '_mad',animate=False,unwrap=flatten,clims=(0,1.0))
+            plot_3d_scalp(band_mad[condit],fig,label=condit + '_mad',animate=False,unwrap=flatten,clims=(0,1.0))
             plt.suptitle('MADs of Cortical Response across all ' + condit + ' segments | Band is ' + band)
         
         plt.suptitle(band)
@@ -615,20 +640,18 @@ class proc_dEEG:
                 plot_3d_scalp(masked_median,fig,label=condit + '_masked_median',animate=False,clims=(-0.1,0.1))
                 plt.suptitle('Medians with small variances (' + str(weigh_mad) + ') ' + condit + ' segments | Band is ' + band)
             
+        
+        olap = {key:0 for key in self.condits}
+        
         ## Figure out which channels have overlap
-        ont_olap = np.array((self.Seg_Med[0]['OnT'][:,band_idx],self.Seg_Med[0]['OnT'][:,band_idx] - self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT']),self.Seg_Med[0]['OnT'][:,band_idx] + self.Seg_Med[1]['OnT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OnT'])))
-        offt_olap = np.array((self.Seg_Med[0]['OffT'][:,band_idx],self.Seg_Med[0]['OffT'][:,band_idx] - self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT']),self.Seg_Med[0]['OffT'][:,band_idx] + self.Seg_Med[1]['OffT'][:,band_idx]/np.sqrt(self.Seg_Med[2]['OffT'])))
+        for condit in self.condits:
+            olap[condit] = np.array((band_median[condit],band_median[condit] - band_mad[condit]/np.sqrt(band_segnum[condit]),band_median[condit] + band_mad[condit]/np.sqrt(band_segnum[condit])))
         
         for cc in range(257):
-            np.hstack((ont_olap[1][cc],ont_olap[2][cc]))
-        
-        
-        
+            np.hstack((olap['OnT'][1][cc],olap['OnT'][2][cc]))
         
         #find the channels that do overlap
-        allcond_vec = np.array([[self.Seg_Med[0]['OnT'][:,band_idx] + ont_semed,self.Seg_Med[0]['OnT'][:,band_idx] - ont_semed],[self.Seg_Med[0]['OffT'][:,band_idx] + offt_semed,self.Seg_Med[0]['OffT'][:,band_idx] - offt_semed]])
-        #check if overlap here
-        #pdb.set_trace()
+        #allcond_vec = np.array([[self.Seg_Med[0]['OnT'][:,band_idx] + ont_semed,self.Seg_Med[0]['OnT'][:,band_idx] - ont_semed],[self.Seg_Med[0]['OffT'][:,band_idx] + offt_semed,self.Seg_Med[0]['OffT'][:,band_idx] - offt_semed]])
         
         
         #do a sweep through to find the channels that don't overlap
@@ -638,8 +661,8 @@ class proc_dEEG:
         offt_over = np.zeros_like(sweep_range)
         
         for ss,sr in enumerate(sweep_range):
-            ont_over[ss] = sum(ont_semed > sr)
-            offt_over[ss] = sum(offt_semed > sr)
+            ont_over[ss] = sum(serr_med['OnT'] > sr)
+            offt_over[ss] = sum(serr_med['OffT'] > sr)
         plt.suptitle(band)
         
         plt.figure()
