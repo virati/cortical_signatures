@@ -17,6 +17,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import MMDBS.TimeSeries as ts
 
+from scipy.interpolate import interp1d
 
 import pdb
 import matplotlib.colors as colors
@@ -366,9 +367,28 @@ for pt in ['901','903','905','906','907','908']:
     plt.figure()
     for cc,condit in enumerate(['OnTarget','OffTarget']):
         plt.subplot(2,1,cc+1)
-        plt.plot(SGs[modal][pt][condit]['DSV'][:,0],label='Left LFP')
-        plt.plot(SGs[modal][pt][condit]['DSV'][:,1],label='Right LFP')
-        plt.ylim((-1e-3,1e-3))
+        #plt.plot(SGs[modal][pt][condit]['DSV'][:,0],label='Left LFP')
+        #plt.plot(SGs[modal][pt][condit]['DSV'][:,1],label='Right LFP')
+        
+        llfp = stats.zscore(SGs[modal][pt][condit]['DSV'][:,0]).squeeze()
+        rlfp = stats.zscore(SGs[modal][pt][condit]['DSV'][:,1]).squeeze()
+        orig_len=len(llfp)
+        ti = np.linspace(2,orig_len+1,10*orig_len)
+        
+        li = np.concatenate((llfp[-3:-1],llfp,llfp[1:3]))
+        ri = np.concatenate((rlfp[-3:-1],rlfp,rlfp[1:3]))
+        t = np.arange(li.shape[0])
+        
+        lii = interp1d(t,li,kind='cubic')(ti)
+        rii = interp1d(t,ri,kind='cubic')(ti)
+        
+        plt.scatter(llfp,rlfp,c=np.linspace(0,1,llfp.shape[0]),cmap='cool')
+        plt.plot(lii,rii,alpha=0.2)
+        #for ii in range(len(lii)):
+            #p = plt.plot(lii,rii,color=pl.cm.jet(np.linspace(0,1,len(lii)))[ii])
+        #colorline(lii,rii,np.linspace(0,1,len(lii)),cmap=plt.get_cmap('jet'))
+        plt.ylim((-0.8,0.8))
+        plt.xlim((-0.8,0.8))
         plt.title(condit)
     plt.suptitle(pt)
 #%%
