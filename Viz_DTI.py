@@ -72,12 +72,12 @@ for pp,pt in enumerate(all_pts):
 #Find the mean for a condit
 condit_avg = nestdict()
 for cc, condit in enumerate(['OnT','OffT']):
-    condit_avg[condit] = nilearn.image.math_img("img4+img5+img6",img1=combined['901'][condit],img2=combined['903'][condit],img3=combined['905'][condit],img4=combined['906'][condit],img5=combined['907'][condit],img6=combined['908'][condit])
+    condit_avg[condit] = nilearn.image.math_img("np.mean(np.array([img4,img5,img6]),axis=0)",img1=combined['901'][condit],img2=combined['903'][condit],img3=combined['905'][condit],img4=combined['906'][condit],img5=combined['907'][condit],img6=combined['908'][condit])
     #condit_avg[condit] = nilearn.image.math_img("img1+img2+img3+img4+img5+img6",img1=combined['901'][condit],img2=combined['903'][condit],img3=combined['905'][condit],img4=combined['906'][condit],img5=combined['907'][condit],img6=combined['908'][condit])
-    plotting.plot_glass_brain(condit_avg[condit],black_bg=True,title=condit + ' average tractography',vmin=0,vmax=12)
+    plotting.plot_glass_brain(condit_avg[condit],black_bg=True,title=condit + ' average tractography',vmin=0,vmax=2)
     #plotting.plot_glass_brain(nibabel.Nifti1Image(np.median(np.sum(data_arr[:,0,:,:,:,:],axis=2),axis=0),affine=np.eye(4)))
 #%%
 diff_map = nilearn.image.math_img("np.abs(img1-img2)",img1=condit_avg['OnT'],img2=condit_avg['OffT'])
-plotting.plot_glass_brain(diff_map,black_bg=True,title=condit + ' average tractography',vmin=0,vmax=12,threshold=2)
+plotting.plot_glass_brain(diff_map,black_bg=True,title='Diff Tractography',vmin=0,vmax=1,threshold=0.5)
 #test = np.mean(np.array(dti_file),axis=0)
 #plotting.plot_img(test)

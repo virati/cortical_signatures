@@ -575,7 +575,9 @@ class proc_dEEG:
         if band == 'DSV':
             #lridge = [-0.00583578, -0.00279751,  0.00131825,  0.01770169,  0.01166687]
             #rridge = [-1.06586005e-02,  2.42700023e-05,  7.31445236e-03,  2.68723035e-03,-3.90440108e-06]
-            doridge = np.array([-0.00583578, -0.00279751,  0.00131825,  0.01770169,  0.01166687])/np.linalg.norm([-0.00583578, -0.00279751,  0.00131825,  0.01770169,  0.01166687])
+            doridge = np.array([-0.00583578, -0.00279751,  0.00131825,  0.01770169,  0.01166687])
+            #doridge = np.array([-1.06586005e-02,  2.42700023e-05,  7.31445236e-03,  2.68723035e-03,-3.90440108e-06])
+            doridge = doridge/np.linalg.norm(doridge)
             band_idx = np.array([0,1,2,3,4])
         else:
             band_idx = dbo.feat_order.index(band)
@@ -587,7 +589,7 @@ class proc_dEEG:
         
         for condit in self.condits:
             band_median[condit] = np.dot(self.Seg_Med[0][condit][:,:],doridge)
-            band_mad[condit] = np.dot(self.Seg_Med[1][condit][:,:],doridge)
+            band_mad[condit] = np.sum(self.Seg_Med[1][condit][:,band_idx],axis=1)
             band_segnum[condit] = self.Seg_Med[2][condit]
             
             #band_mad[condit] = self.Seg_Med[1][condit][:,band_idx]

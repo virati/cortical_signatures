@@ -96,8 +96,8 @@ Targeting['All'] = {
                 
             }
 
-Targetin['3mo'] = {'906':{'OnT':{'fname':''}}}
-Targetin['6mo'] = {}
+Targeting['3mo'] = {'906':{'OnT':{'fname':''}}}
+Targeting['6mo'] = {}
 
 class EEG_check:
     def __init__(self,pt='908',condit='OnT',ds_fact=1,fs=500,spotcheck=False):
@@ -216,7 +216,7 @@ class streamEEG:
             postpoly = dbo.poly_subtr(psd_vect,self.fvect)
             
             
-            out_vect = dbo.calc_feats(postpoly,self.fvect,dofeats=['Delta','Theta','Alpha','Beta','Gamma1','Stim'])
+            out_vect = dbo.calc_feats(postpoly,self.fvect,dofeats=['Delta','Theta','Alpha','Beta*','Gamma1','Stim'])
             
             
             self.osc_matr[:,ii,:] = out_vect[0:5,:].T

@@ -26,11 +26,11 @@ import pickle
 
 perf_dict = nestdict()
 
-#pts = ['906','907','908']
-#condits =  ['OnT','OffT']
+pts = ['906','907','908']
+condits =  ['OnT','OffT']
 
-pts = ['908']
-condits = ['OnT']
+#pts = ['908']
+#condits = ['OnT']
 
 
 

@@ -31,7 +31,8 @@ active_chann = [24,35,66,240,212]
 limit_chann = False
 
 #LOAD IN THE EEG FILE
-inFile = pickle.load(open('/home/virati/stream_intvs.pickle','rb'))
+#inFile = pickle.load(open('/home/virati/stream_intvs.pickle','rb'))
+inFile = pickle.load(open('/tmp/big_file.pickle','rb'))
 
 #IF WE ADD LFP HERE WE'RE AWESOME
 
@@ -53,17 +54,21 @@ labels = np.array([label_map[item] for item in labels])
 
 #do iteration of model a few times
 #clf = svm.LinearSVC(penalty='l2',dual=False)
-plt.figure()
-#plt.plot(labels)
-plt.imshow(raw_labels.reshape(1,-1),aspect='auto')
-#just for display
-ddXtr,ddXte,ddYtr,ddYte,ddbuffnum_tr,ddbuffnum_te = sklearn.model_selection.train_test_split(dsgn_X,raw_labels,times,test_size=0.33)
-plt.figure()
-plt.imshow(np.hstack((ddYtr,ddYte)).reshape(1,-1),aspect='auto')
-
 
 #%%
-Xtr,Xte,Ytr,Yte,buffnum_tr,buffnum_te = sklearn.model_selection.train_test_split(dsgn_X,labels,times,test_size=0.33)
+if 0:
+    plt.figure()
+    #plt.plot(labels)
+    plt.imshow(raw_labels.reshape(1,-1),aspect='auto')
+    #just for display
+    ddXtr,ddXte,ddYtr,ddYte,ddbuffnum_tr,ddbuffnum_te = sklearn.model_selection.train_test_split(dsgn_X,raw_labels,times,test_size=0.33)
+    plt.figure()
+    plt.imshow(np.hstack((ddYtr,ddYte)).reshape(1,-1),aspect='auto')
+    plt.suptitle('Shuffled segments - JUST FOR DISPLAY')
+
+#%%
+preshuff_ord = np.arange(0,labels.shape[0])
+Xtr,Xte,Ytr,Yte,buffnum_tr,buffnum_te,unshuff_ord_tr,unshuff_ord_te = sklearn.model_selection.train_test_split(dsgn_X,labels,times,preshuff_ord,test_size=0.33,shuffle=True)
 #NOW we do cross validation WITHIN the training set here
 
 #%%
@@ -149,16 +154,28 @@ preds[preds== 'OffTON'] = 2
 preds[preds== 'OnTON'] = 1
 preds[preds== 'OFF'] = 0
 
+
 plt.imshow(np.vstack((Yte.astype(np.int),preds.astype(np.int))),aspect='auto')
+plt.title('Stacked shuffled')
+plt.legend()
 #plt.plot(preds,label='Prediction')
 #plt.plot(Yte,label='Actual')
 
-plt.legend()
+
 plt.subplot(2,1,2)
-plt.stem((preds == Yte).astype(np.int),label='HITS')
+#plt.stem((preds == Yte).astype(np.int),label='HITS')
+#unshuffle the testing dataset
+buffnum_te = unshuff_ord_te
+unshuffYte = np.zeros(labels.shape[0])
+unshuffPreds = np.zeros(labels.shape[0])
+unshuffYte[buffnum_te] = Yte
+unshuffPreds[buffnum_te] = preds
+
+
+plt.imshow(np.vstack((unshuffYte.astype(np.int),unshuffPreds.astype(np.int))),aspect='auto')
 plt.legend()
 
-conf_matrix = confusion_matrix(preds,Yte)
+conf_matrix = confusion_matrix(Yte,preds)
 plt.figure()
 plt.imshow(conf_matrix)
 plt.yticks(np.arange(0,3),['OFF','OffT','OnT'])

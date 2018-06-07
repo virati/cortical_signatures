@@ -25,6 +25,10 @@ from sklearn.decomposition import PCA
 
 import scipy.stats as stats
 
+import sys
+sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
+import DBS_Osc as dbo
+
 import pickle
 
 font = {'family' : 'normal',
@@ -297,6 +301,9 @@ SGs['LFP'] = defaultdict()
 #set the Fs for LFPs here
 SGs['LFP']['Fs'] = 422
 
+do_DSV = np.array([[-0.00583578, -0.00279751,  0.00131825,  0.01770169,  0.01166687],[-1.06586005e-02,  2.42700023e-05,  7.31445236e-03,  2.68723035e-03,-3.90440108e-06]])
+
+do_DSV = do_DSV / np.linalg.norm(do_DSV)
 
 #Loop through the modalities and import the BR recording
 for mm, modal in enumerate(['LFP']):
@@ -318,6 +325,7 @@ for mm, modal in enumerate(['LFP']):
             SGs[modal][pt][condit]['Bands'] = BANDS
             SGs[modal][pt][condit]['BandMatrix'] = np.zeros((BANDS[0]['Alpha'].shape[0],2,5))
             SGs[modal][pt][condit]['BandSegments'] = []
+            SGs[modal][pt][condit]['DSV'] = np.zeros((BANDS[0]['Alpha'].shape[0],2,1))
             
             
     SGs[modal]['F'] = F
@@ -325,9 +333,10 @@ for mm, modal in enumerate(['LFP']):
 #%%
 #Segment the data based on prescribed segmentations
 #bands = ts.band_structs()
-do_bands = ['Delta','Theta','Alpha','Beta','Gamma']
+do_bands = dbo.feat_order
 
 Response_matrix = np.zeros((6,2,2,5))
+
 
 for mm, modal in enumerate(['LFP']):
     for pp, pt in enumerate(['901','903','905','906','907','908']):
@@ -336,6 +345,9 @@ for mm, modal in enumerate(['LFP']):
             for bb, bands in enumerate(do_bands):
                 for cc in range(2):
                     SGs[modal][pt][condit]['BandMatrix'][:,cc,bb] = SGs[modal][pt][condit]['Bands'][cc][bands]
+                    for seg in range(SGs[modal][pt][condit]['BandMatrix'].shape[0]):
+                        SGs[modal][pt][condit]['DSV'][seg,cc] = np.dot(SGs[modal][pt][condit]['BandMatrix'][seg,cc,:],do_DSV[cc,:])
+                        
             for sg, seg in enumerate(Ephys[modal][pt][condit]['segments'].keys()):
                 tbounds = [Ephys[modal][pt][condit]['segments'][seg][0],Ephys[modal][pt][condit]['segments'][seg][1]]
                 #extract from time vector the actual indices
@@ -347,6 +359,18 @@ for mm, modal in enumerate(['LFP']):
             SGs[modal][pt][condit]['Response'] = 10* np.log10(np.mean(SGs[modal][pt][condit]['BandSegments']['Bilat'][0,:,:,:],0)) - 10* np.log10(np.mean(SGs[modal][pt][condit]['BandSegments']['PreBilat'][0,:,:,:],0))
             Response_matrix[pp,co,:,:] = SGs[modal][pt][condit]['Response']
 
+
+#%%
+#Plot DSV directions/control theory
+for pt in ['901','903','905','906','907','908']:
+    plt.figure()
+    for cc,condit in enumerate(['OnTarget','OffTarget']):
+        plt.subplot(2,1,cc+1)
+        plt.plot(SGs[modal][pt][condit]['DSV'][:,0],label='Left LFP')
+        plt.plot(SGs[modal][pt][condit]['DSV'][:,1],label='Right LFP')
+        plt.ylim((-1e-3,1e-3))
+        plt.title(condit)
+    plt.suptitle(pt)
 #%%
 #Now, just plot in a boxplot format what we want
 condit = 0
@@ -631,7 +655,7 @@ tvect = SGs['LFP'][pt]['OnTarget']['TRaw']
 conv_tvect = np.linspace(0,tvect[-1],tl_ip.shape[0])
 plt.figure()
 plt.plot(conv_tvect,tl_ip)
-plt.legend(legend=['Channel 0','Channel 1'])
+plt.legend(['Channel 0','Channel 1'])
 
 
 

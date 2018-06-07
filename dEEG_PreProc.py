@@ -51,9 +51,10 @@ EEG_analysis.extract_feats(polyorder=0)
 EEG_analysis.gen_OSC_stack()
 EEG_analysis.simple_stats()
 
+#%%
 print('Calculating Population Medians')
 EEG_analysis.pop_meds()
-#%%
+
 for band in ['Alpha']:
     EEG_analysis.plot_meds(band=band,flatten=False)
 
