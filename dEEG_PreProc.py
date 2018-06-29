@@ -42,11 +42,11 @@ sns.set_context('paper')
 sns.set(font_scale=4)
 sns.set_style('white')
 
-all_pts = ['906','907','908']
+all_pts = ['908']#,'907','908']
 
         
 #UNIT TEST
-EEG_analysis = proc_dEEG(pts=all_pts,procsteps='liberal',condits=['OnT','OffT'])
+EEG_analysis = proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
 EEG_analysis.extract_feats(polyorder=0)
 EEG_analysis.gen_OSC_stack()
 EEG_analysis.simple_stats()
@@ -57,6 +57,10 @@ EEG_analysis.pop_meds()
 
 for band in ['Alpha']:
     EEG_analysis.plot_meds(band=band,flatten=False)
+
+
+#%%
+EEG_analysis.band_distr('OnT')
 
 
 #%%

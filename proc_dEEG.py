@@ -563,7 +563,35 @@ class proc_dEEG:
             plot_3d_scalp(self.ICA_x[:,cc],fig,animate=False,unwrap=True)
             plt.title('Plotting component ' + str(cc))
             plt.suptitle('ICA rotated results for OnT')
+    def band_distr(self,condit='OnT'):
+        print('Plotting Distribution for Bands')
+        
+        meds = nestdict()
+        mads = nestdict()
+        
+        marker=['o','s']
+        color = ['b','g']
+        plt.figure()
+        for cc,condit in enumerate(['OnT','OffT']):
+            for bb in range(5):
+                meds[condit] = self.Seg_Med[0][condit][:,:]
+                mads[condit] = self.Seg_Med[1][condit][:,:]
+                #band_segnum[condit] = self.Seg_Med[2][condit]
+                
+                
+                plt.scatter((bb+(cc-0.5)/10)*np.ones_like(meds[condit][:,bb]),meds[condit][:,bb],marker=marker[cc],color=color[cc],s=100,alpha=0.2)
+            plt.boxplot(meds[condit][:,:],positions=np.arange(5)+(cc-0.5)/10,labels=dbo.feat_order)
+            plt.ylim((-0.5,0.5))
+        
+        
+        for bb in range(5):
+            rsres = stats.ranksums(meds['OnT'][:,bb],meds['OffT'][:,bb])
+            print(rsres)
+        
+        #plt.suptitle(condit)
             
+        
+        
     def plot_meds(self,band='Alpha',flatten=True):
         print('Doing Population Level Medians and MADs')
         
@@ -589,7 +617,7 @@ class proc_dEEG:
         
         for condit in self.condits:
             band_median[condit] = np.dot(self.Seg_Med[0][condit][:,:],doridge)
-            band_mad[condit] = np.sum(self.Seg_Med[1][condit][:,band_idx],axis=1)
+            band_mad[condit] = self.Seg_Med[1][condit][:,band_idx]
             band_segnum[condit] = self.Seg_Med[2][condit]
             
             #band_mad[condit] = self.Seg_Med[1][condit][:,band_idx]

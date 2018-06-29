@@ -15,7 +15,7 @@ import scipy.signal as sig
 import matplotlib
 
 import matplotlib.pyplot as plt
-import MMDBS.TimeSeries as ts
+#import MMDBS.TimeSeries as ts
 
 from scipy.interpolate import interp1d
 
@@ -312,24 +312,27 @@ for mm, modal in enumerate(['LFP']):
         SGs[modal][pt] = defaultdict(dict)
         for cc, condit in enumerate(['OnTarget','OffTarget']):
             Data = []
-            Data = ts.import_BR(Ephys[modal][pt][condit]['Filename'],snip=(0,0))
+            #Data = ts.import_BR(Ephys[modal][pt][condit]['Filename'],snip=(0,0))
+            Data = dbo.load_BR_dict(Ephys[modal][pt][condit]['Filename'],sec_end=0)
             #Compute the TF representation of the above imported data
-            F,T,SG,BANDS = Data.compute_tf()
+            #F,T,SG,BANDS = Data.compute_tf()
+            SG_Dict = dbo.gen_SG(Data)
+            #Fvect = dbo.calc_feats()
             #for iv, interval in enumerate():
           
-            [datatv,dataraw] = Data.raw_ts()
+            #[datatv,dataraw] = Data.raw_ts()
             
-            SGs[modal][pt][condit]['SG'] = SG
-            SGs[modal][pt][condit]['Raw'] = dataraw
-            SGs[modal][pt][condit]['TRaw'] = datatv
-            SGs[modal][pt][condit]['T'] = T
-            SGs[modal][pt][condit]['Bands'] = BANDS
-            SGs[modal][pt][condit]['BandMatrix'] = np.zeros((BANDS[0]['Alpha'].shape[0],2,5))
-            SGs[modal][pt][condit]['BandSegments'] = []
-            SGs[modal][pt][condit]['DSV'] = np.zeros((BANDS[0]['Alpha'].shape[0],2,1))
+            SGs[modal][pt][condit]['SG'] = SG_Dict['SG']
+            #SGs[modal][pt][condit]['Raw'] = dataraw
+            #SGs[modal][pt][condit]['TRaw'] = datatv
+            SGs[modal][pt][condit]['T'] = SG_Dict['T']
+            #SGs[modal][pt][condit]['Bands'] = BANDS
+            #SGs[modal][pt][condit]['BandMatrix'] = np.zeros((BANDS[0]['Alpha'].shape[0],2,5))
+            #SGs[modal][pt][condit]['BandSegments'] = []
+            #SGs[modal][pt][condit]['DSV'] = np.zeros((BANDS[0]['Alpha'].shape[0],2,1))
             
             
-    SGs[modal]['F'] = F
+    SGs[modal]['F'] = SG_Dict['F']
     
 #%%
 #Segment the data based on prescribed segmentations
