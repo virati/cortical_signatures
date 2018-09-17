@@ -6,6 +6,8 @@ Created on Mon Feb  5 21:21:56 2018
 @author: virati
 This file loads in the preprocessed datafiles from AW preprocessing steps
 Either the conservative versions or the non-conservative (liberal/all) versions
+
+THIS IS THE VERSION THAT YOU RUN TO GET FIGURES
 """
 import sys
 sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
@@ -42,7 +44,8 @@ sns.set_context('paper')
 sns.set(font_scale=4)
 sns.set_style('white')
 
-all_pts = ['908']#,'907','908']
+all_pts = ['906','907','908']
+all_pts = ['906']
 
         
 #UNIT TEST
@@ -82,21 +85,31 @@ cSVM(EEG_analysis)
 
 #%%
 #Go across patients now
-
 def population_stuff(SegEEG):
     print('Doing population-level stats ROUTINE')
+    
+    
+    #Compute the DIFFERENCE or response to stimulation for both OnT and OffT
+    SegEEG.compute_diff()
     SegEEG.pop_response()
     
     SegEEG.do_pop_stats()
     #SegEEG.plot_pop_stats()
     
     SegEEG.plot_diff()
-
+    
 
 #population_stuff(EEG_analysis)
    
 #%%
-def do_similarity(SegEEG):
+# Here, we want to just LOOK at the PSDs of the data collected
+def raw_look(SegEEG):
+    SegEEG.view_PSDs()
+
+raw_look(EEG_analysis)
+
+#%%
+def OBSdo_similarity(SegEEG):
     print('Doing simple similarity routine')
     #generate covariance for each segments and find AVERAGE
     SegEEG.gen_GMM_dsgn(stack_bl=False)
@@ -320,7 +333,7 @@ if 0:
     for pp,pt in enumerate(all_pts):
         for cc,condit in enumerate(['OnT','OffT']):
             
-            #SegEEG.plot_diff(pt=pt,varweigh=False,condit=condit)
+            SegEEG.plot_diff(pt=pt,varweigh=False,condit=condit)
             SegEEG.plot_chann_var(pt=pt,condit=condit)
             pass
         ##SegEEG.plot_ontvsofft(pt=pt)

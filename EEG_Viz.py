@@ -128,4 +128,5 @@ def plot_3d_scalp(band,fig,n=1,clims=(0,0),label='generic',animate=False,unwrap=
                 strangl = '000' + str(angl)
                 plt.savefig('/tmp/'+ label + '_' + strangl[-3:] + '.png')
                 time.sleep(.3)
-    
+
+## DO UNIT TEST HERE

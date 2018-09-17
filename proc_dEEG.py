@@ -83,9 +83,13 @@ TargetingEXP['liberal'] = {
 keys_oi = {'OnT':["Off_3","BONT"],'OffT':["Off_3","BOFT"]}
 
 class proc_dEEG:
-    def __init__(self,pts,procsteps='liberal',condits=['OnT','OffT']):
+    def __init__(self,pts,procsteps='liberal',condits=['OnT','OffT'],pretty_mode=False,polyfix=0):
         #load in the procsteps files
         ts_data = defaultdict(dict)
+        
+        self.chann_dim = 257
+        self.polyorder = polyfix
+        self.pretty = pretty_mode
         
         for pt in pts:
             ts_data[pt] = defaultdict(dict)
@@ -148,7 +152,7 @@ class proc_dEEG:
                     for ss in range(seg_psds[0].shape[0]):
                     
                         try:
-                            state_return = dbo.calc_feats(middle_osc[:,ss,:],self.fvect).T
+                            state_return = dbo.calc_feats(middle_osc[:,ss,:],self.fvect)[0].T
                             OSC_matr[ss,:,:] = np.array([state_return[ch] for ch in range(257)])
                         except Exception as e:
                             print(e)
@@ -212,6 +216,10 @@ class proc_dEEG:
         
         self.big_stack_dict = big_stack
         return big_stack
+    
+    def band_stats(self,do_band='Alpha'):
+        self.pop_meds()
+        self.plot_meds(band=do_band,flatten=not self.pretty)
     
     def simple_stats(self):
         ref_stack = self.big_stack_dict
@@ -366,7 +374,7 @@ class proc_dEEG:
             
             for ss in range(num_segs):
                 
-                feat_out[condit][:,ss,:] = dbo.calc_feats(10**(GMM_stack[condit][:,ss,:]/10).squeeze(),fvect).T
+                feat_out[condit][:,ss,:] = dbo.calc_feats(10**(GMM_stack[condit][:,ss,:]/10).squeeze(),fvect)[0].T
                 
                 
         #THIS CURRENTLY HAS nans
@@ -623,7 +631,9 @@ class proc_dEEG:
             #band_mad[condit] = self.Seg_Med[1][condit][:,band_idx]
             #band_segnum[condit] = self.Seg_Med[2][condit]
         
+        #Plot the Medians across channels
         plt.figure()
+        plt.subplot(211)
         serr_med = {key:0 for key in self.condits}
         for condit in self.condits:
             
@@ -637,19 +647,21 @@ class proc_dEEG:
         plt.legend()
         plt.suptitle(band)
         
-        #plot EEG change for conditions
+        # This is the plot of MADs
+        plt.subplot(212)
+        plt.plot(serr_med['OnT'],label='OnT')
+        plt.plot(serr_med['OffT'],label='OffT')
+        plt.title('Normed MADs across Channels')
+        plt.legend()
+        
+        #plot EEG TOPOLOGICAL change for conditions
         for condit in self.condits:
             fig = plt.figure()
             #This is MEDS
             plot_3d_scalp(band_median[condit],fig,label=condit + '_med',animate=False,clims=(-0.2,0.2),unwrap=flatten)
             plt.suptitle('Median of Cortical Response across all ' + condit + ' segments | Band is ' + band)
         
-        plt.figure()
-        plt.plot(serr_med['OnT'],label='OnT')
-        plt.plot(serr_med['OffT'],label='OffT')
-        plt.title('Normed MADs across Channels')
-        plt.legend()
-        plt.suptitle(band)
+
         
         #plot the scalp EEG changes
         for condit in self.condits:
@@ -947,6 +959,7 @@ class proc_dEEG:
         
         
     def compute_diff(self,take_mean=True):
+        print('Computing Difference')
         assert len(self.condits) >= 2
         avg_psd = nestdict()
         avg_change = nestdict()
@@ -1009,11 +1022,11 @@ class proc_dEEG:
             
             avgOsc[condit] = dbo.calc_feats(10**(self.pop_psd_change[condit]['Mean']/10),self.fvect)
             varOsc[condit] = dbo.calc_feats(10**(self.pop_psd_change[condit]['Var']),self.fvect)
-            varOsc_mask[condit] = np.array(np.sqrt(varOsc[condit]) < threshold).astype(np.int)
+            #varOsc_mask[condit] = np.array(np.sqrt(varOsc[condit]) < threshold).astype(np.int)
             
         self.pop_osc_change = avgOsc
         self.pop_osc_var = varOsc
-        self.pop_osc_mask = varOsc_mask
+        #self.pop_osc_mask = varOsc_mask
 
     def do_pop_mask(self,threshold):
         cMask = nestdict()
@@ -1114,7 +1127,6 @@ class proc_dEEG:
             np.save('/tmp/' + condit + '_sig.npy',signature)
     
     def plot_diff(self):
-        
         for pt in self.pts:
             plt.figure()
             plt.subplot(221)
@@ -1127,10 +1139,11 @@ class proc_dEEG:
             
             plt.subplot(223)
             plt.plot(self.fvect,10*np.log10(self.psd_var[pt]['OnT']['BONT'].T))
-            
+            plt.title('BONT Variance')
             
             plt.subplot(224)
             plt.plot(self.fvect,10*np.log10(self.psd_var[pt]['OffT']['BOFT'].T))
+            plt.title('BOFT Variance')
             
    
             plt.suptitle(pt)
@@ -1258,9 +1271,86 @@ class proc_dEEG:
     #This function quickly gets the power for all channels in each band
     def Full_feat_band(self):
         pass
+    
+    def extract_coher_feats(self):
+        pts=self.pts
+        coher_dict = nestdict()
         
+        for pt in pts:
+            for condit in self.condits:
+                for epoch in keys_oi[condit]:
+                    data_matr = self.ts_data[pt][condit][epoch]
+                    data_dict = {ch:data_matr[ch,:,:].squeeze() for ch in range(self.chann_dim)}
+                    coher_dict[pt][condit][epoch] = dbo.gen_coher(data_dict,Fs=self.fs,nfft=2**10,polyord=self.polyorder)
+        print('Done with coherence... I guess...')
+        return coher_dict
         
+
+    
+    #This is the main wrapper function that leads us to the MNE python plot_topomap
+    # The topomap is very misleading, so we try not to use it due to its strange interpolation
     def plot_topo(self,vect,vmax=2,vmin=-2,label='',):
         plt.figure()
         mne.viz.plot_topomap(vect,pos=self.eeg_locs.pos[:,[0,1]],vmax=vmax,vmin=vmin,image_interp='none')
         plt.suptitle(label)
+        
+    
+    #Here, we'll plot the PSDs for channels of interest for the conditions of interest
+    def psd_stats(self,chann_list=[]):
+        self.view_PSDs(chann_list=chann_list)
+        
+    #This function is to just show the raw PSDs of each of the experimental conditions collected
+    def view_PSDs(self,low_lim=True,chann_list=[],plot_var=False):
+        print('Showing raw PSDs')
+        avg_psd = nestdict()
+        var_psd = nestdict()
+        
+        if chann_list == []:
+            chann_list = np.arange(256)
+        else:
+            chann_list = np.array(chann_list)
+            
+        f_vect = np.linspace(0,500,2**10+1)
+        
+        for pt in self.pts:
+            #avg_psd[pt] = defaultdict(dict)
+            #avg_change[pt] = defaultdict(dict)
+            for condit in self.condits:
+               #average all the epochs together
+                avg_psd[pt][condit] = {epoch:np.median(self.feat_dict[pt][condit][epoch],axis=1) for epoch in self.feat_dict[pt][condit].keys()}
+                if plot_var:
+                    var_psd[pt][condit] = {epoch:robust.mad(self.feat_dict[pt][condit][epoch],axis=1) for epoch in self.feat_dict[pt][condit].keys()}
+                
+            
+            psd_fig =  plt.figure()
+            plt.subplot(2,2,1)
+            plt.plot(f_vect,10*np.log10(avg_psd[pt]['OnT']['Off_3'][chann_list,:].T))
+            plt.title('OnT-Pre')
+            
+            plt.subplot(2,2,2)
+            plt.plot(f_vect,10*np.log10(avg_psd[pt]['OffT']['Off_3'][chann_list,:].T))
+            plt.title('OffT-Pre')
+            
+            plt.subplot(2,2,3)
+            plt.plot(f_vect,10*np.log10(avg_psd[pt]['OnT']['BONT'][chann_list,:].T))
+            plt.title('BONT')
+            
+            plt.subplot(2,2,4)
+            plt.plot(f_vect,10*np.log10(avg_psd[pt]['OffT']['BOFT'][chann_list,:].T))
+            plt.title('BOFT')
+            
+            if plot_var:
+                plt.figure(psd_fig.number)
+                plt.subplot(2,2,1)
+                plt.fill_between(f_vect,10*np.log10(var_psd[pt]['OnT']['Off_3'][chann_list,:].T))
+            
+            if low_lim:
+                for ii in range(1,5):
+                    plt.subplot(2,2,ii)
+                    plt.xlim(0,40)
+                    plt.ylim(-20,10)
+            
+            plt.suptitle(pt)
+            
+    def coher_stat(self,chann_list=[]):
+        return self.extract_coher_feats()

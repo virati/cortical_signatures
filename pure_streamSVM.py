@@ -6,6 +6,10 @@ Created on Mon Apr 16 22:17:00 2018
 @author: virati
 PURE streaming classifier SVM
 Trained and tested on the streamed, locally reference EEG data
+This is the SECOND step in the streaming/online EEG pipeline
+
+YOU HAVE TO FIRST RUN dEEG_streaming
+
 """
 
 
@@ -73,10 +77,10 @@ Xtr,Xte,Ytr,Yte,buffnum_tr,buffnum_te,unshuff_ord_tr,unshuff_ord_te = sklearn.mo
 
 #%%
 #Learning curve
-#tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False),Xtr,Ytr,train_sizes=np.linspace(0.05,1,20),shuffle=True)
-#plt.figure()
-#plt.plot(tsize,np.mean(tscore,axis=1))
-#plt.plot(tsize,np.mean(vscore,axis=1))
+tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False),Xtr,Ytr,train_sizes=np.linspace(0.05,1,20),shuffle=True)
+plt.figure()
+plt.plot(tsize,np.mean(tscore,axis=1))
+plt.plot(tsize,np.mean(vscore,axis=1))
 
 #%%    
 multi_accuracy = np.zeros((100,1))

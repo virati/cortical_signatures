@@ -78,6 +78,17 @@ Targeting['All'] = {
                         'lfp':''
                         }
                 },
+        '910':{
+                'OnT':{
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS910_TurnOn_OnTarget_20180530_022545.mat',
+                        'lfp':''
+                        
+                        },
+                'OffT':{
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS910_TurnOn_OffTarget_TO_20180530_014051.mat',
+                        'lfp':''},
+                'Volt':{}
+                },
         '901':{
             'OnT':{
                     'fname':'/tmp/DBS901-02 Eyes 20140520 1600.mat',
@@ -97,14 +108,56 @@ Targeting['All'] = {
             }
 
 Targeting['3mo'] = {'906':{'OnT':{'fname':''}}}
-Targeting['6mo'] = {}
+Targeting['6mo'] = {'906':{
+                'OnT':{
+                        #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/DS500/DBS906_TurnOn_Day1_Sess1_20150827_024013_tds.mat'
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess1_20150827_024013_OnTarget.mat',
+                        'lfp':''
+                        },
+                'OffT':{
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess2_20150827_041726_OffTarget.mat',
+                        'lfp':''
+                        },
+                
+                'Volt':{
+                        #
+                        #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS906_TurnOn_Day2_Sess3_Sess4_20150828_043231_VoltageAndFreq.mat'
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS906_TurnOn_Day2_Sess2_20150828_032515_CurrentSweep.mat',
+                        'lfp':''
+                        }
+                },
+        '908':{
+                'OnT':{
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS908/DBS908_TurnOn_Day1_onTARGET_20160210_125231.mat',
+                        },
+                'OffT':{
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS908/DBS908_TurnOn_Day2_offTARGET_20160211_123540.mat',
+                        },
+                'Volt':{'fname':'',
+                        'lfp':''
+                        }
+                },
+        '907':{
+                'OnT':{
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day1_onTARGET_20151216_105913.mat',
+                        'lfp':''
+                        },
+                'OffT':{
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_offTARGET_20151217_094245.mat',
+                        'lfp':''
+                        },
+                'Volt':{
+                        #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_Voltage_20151217_102952.mat'
+                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day3_Current_20151218_092443.mat',
+                        'lfp':''
+                        }
+                }}
 
 class EEG_check:
     def __init__(self,pt='908',condit='OnT',ds_fact=1,fs=500,spotcheck=False):
         pass
 
 class streamEEG:
-        
     def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False):
         #self.data_dict = {ev:{condit:[] for condit in do_condits} for ev in do_pts}
         
@@ -121,6 +174,7 @@ class streamEEG:
         #THIS IS FINE SINCE it's like a highpass with a DCish cutoff
         #10 * 60 * fs:18*60*fs
         snippet = True
+        start_time=0
         if snippet:
             #906
             if pt == '906' and condit == 'OnT':
@@ -137,6 +191,8 @@ class streamEEG:
                 start_time = 0
             elif pt == '901':
                 start_time = 0
+            elif pt == '910':
+                start_time = 5
             tlim = np.array((start_time,start_time + 16)) * 60 #in seconds
                         
                         
@@ -216,8 +272,7 @@ class streamEEG:
             postpoly = dbo.poly_subtr(psd_vect,self.fvect)
             
             
-            out_vect = dbo.calc_feats(postpoly,self.fvect,dofeats=['Delta','Theta','Alpha','Beta*','Gamma1','Stim'])
-            
+            out_vect = dbo.calc_feats(postpoly,self.fvect,dofeats=['Delta','Theta','Alpha','Beta*','Gamma1','Stim'])[0]
             
             self.osc_matr[:,ii,:] = out_vect[0:5,:].T
             

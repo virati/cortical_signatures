@@ -6,6 +6,7 @@ Created on Mon Feb  5 21:24:09 2018
 @author: virati
 dEEG Continuous
 Load in continuous, raw dEEG from the mat converted files
+This is the FIRST step in the streaming EEG pipeline
 """
 
 from stream_dEEG import streamEEG
@@ -27,6 +28,7 @@ import pickle
 perf_dict = nestdict()
 
 pts = ['906','907','908']
+#pts = ['910']
 condits =  ['OnT','OffT']
 
 #pts = ['908']
@@ -75,12 +77,12 @@ for pp,pt in enumerate(pts):
 #%%
 with open('/tmp/big_file.pickle','wb') as file:
     pickle.dump({'States':pt_test,'Labels':pt_test_labels,'Times':pt_test_times},file)
-    
+    print('Successful Write of big pickle')    
 
 #%%
 
 results_matrix = [np.array((perf_dict[pt][condit][0],perf_dict[pt][condit][1])) for condit,pt in itertools.product(condits,pts)]
-results_matrix = np.concatenate(results_matrix,axis=1)
+results_matrix = np.concatenate(results_matrix,axis=0)
 
 #index 0 is pred, 1 is true
 
