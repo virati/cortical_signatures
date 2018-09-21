@@ -4,7 +4,7 @@
 Created on Sun Jul  1 20:06:36 2018
 
 @author: virati
-Tractography Class
+Tractography Class to preprocess and package DTI data relevant to project
 """
 
 class DTI:

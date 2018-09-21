@@ -15,7 +15,9 @@ import scipy.signal as sig
 import matplotlib
 
 import matplotlib.pyplot as plt
-#import MMDBS.TimeSeries as ts
+
+sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/MMDBS/')
+import TimeSeries as ts
 
 from scipy.interpolate import interp1d
 
@@ -312,10 +314,10 @@ for mm, modal in enumerate(['LFP']):
         SGs[modal][pt] = defaultdict(dict)
         for cc, condit in enumerate(['OnTarget','OffTarget']):
             Data = []
-            #Data = ts.import_BR(Ephys[modal][pt][condit]['Filename'],snip=(0,0))
-            Data = dbo.load_BR_dict(Ephys[modal][pt][condit]['Filename'],sec_end=0)
+            Data = ts.import_BR(Ephys[modal][pt][condit]['Filename'],snip=(0,0))
+            #Data = dbo.load_BR_dict(Ephys[modal][pt][condit]['Filename'],sec_end=0)
             #Compute the TF representation of the above imported data
-            #F,T,SG,BANDS = Data.compute_tf()
+            F,T,SG,BANDS = Data.compute_tf()
             SG_Dict = dbo.gen_SG(Data)
             #Fvect = dbo.calc_feats()
             #for iv, interval in enumerate():
@@ -326,8 +328,8 @@ for mm, modal in enumerate(['LFP']):
             #SGs[modal][pt][condit]['Raw'] = dataraw
             #SGs[modal][pt][condit]['TRaw'] = datatv
             SGs[modal][pt][condit]['T'] = SG_Dict['T']
-            #SGs[modal][pt][condit]['Bands'] = BANDS
-            #SGs[modal][pt][condit]['BandMatrix'] = np.zeros((BANDS[0]['Alpha'].shape[0],2,5))
+            SGs[modal][pt][condit]['Bands'] = BANDS
+            SGs[modal][pt][condit]['BandMatrix'] = np.zeros((BANDS[0]['Alpha'].shape[0],2,5))
             #SGs[modal][pt][condit]['BandSegments'] = []
             #SGs[modal][pt][condit]['DSV'] = np.zeros((BANDS[0]['Alpha'].shape[0],2,1))
             

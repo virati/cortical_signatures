@@ -201,22 +201,43 @@ class proc_dEEG:
             
         return (OnT_sim, OffT_sim)
     
-    #this function will generate a big stack of all observations for a given condition across all patients
+
     
-    def gen_OSC_stack(self,stack_type='all'):
-        remap = {'Off_3':'OF','BONT':'ON','BOFT':'ON'}
-        #big_stack = {key:0 for key in self.condits}
-        big_stack = nestdict()
-        for condit in self.condits:
-            #want a stack for OnT and a stack for OffT
-            big_stack[condit] = {remap[epoch]:{pt:self.osc_dict[pt][condit][epoch] for pt in self.pts} for epoch in keys_oi[condit]}
-            
-        if stack_type == 'all':
-            pass
+    def interval_stats(self,do_band='Alpha'):
+        big_stack = self.osc_dict
+        band_idx = dbo.feat_order.index(do_band)
+        plag = nestdict()
         
-        self.big_stack_dict = big_stack
-        return big_stack
-    
+        for pt in self.pts:
+            for condit in self.condits:
+                plag[pt][condit] = big_stack[pt][condit][keys_oi[condit][1]][:,:,band_idx] - np.median(big_stack[pt][condit]['Off_3'][:,:,band_idx],axis=0)
+        
+            sig_chann_list = []
+        
+            plt.figure()
+            bins = np.linspace(-10,10,20)
+            for ch in range(257):
+                #Unfortunately, wilxocon won't work since we're not matched :(
+                #wrst = stats.wilcoxon(plag[pt]['OnT'][:,ch],plag[pt]['OffT'][:,ch])
+                #mwut = stats.mannwhitneyu(plag[pt]['OnT'][:,ch],plag[pt]['OffT'][:,ch]) #to compare OnT with OffT
+                mwut = stats.wilcoxon(plag[pt]['OnT'][:,ch])
+                #kstest = stats.kstest(plag[pt]['OnT'][:,ch],'norm')
+                
+                
+                usestat = mwut
+                if usestat[1] < 0.05/256:
+                    sig_chann_list.append(ch)
+                    print(str(ch) + ' ' + str(usestat))
+                    plt.hist(plag[pt]['OnT'][:,ch],bins,alpha=1)
+                    
+            #now we want 3d plot of significant channels!
+            sig_chann_list = np.array(sig_chann_list) 
+            sig_stat_mask = np.zeros((257,))
+            sig_stat_mask[sig_chann_list] = 1
+            
+            fig = plt.figure()
+            plot_3d_scalp(sig_stat_mask,fig,animate=False,unwrap=True)
+        
     def band_stats(self,do_band='Alpha'):
         self.pop_meds()
         self.plot_meds(band=do_band,flatten=not self.pretty)
@@ -631,6 +652,8 @@ class proc_dEEG:
             #band_mad[condit] = self.Seg_Med[1][condit][:,band_idx]
             #band_segnum[condit] = self.Seg_Med[2][condit]
         
+        
+        
         #Plot the Medians across channels
         plt.figure()
         plt.subplot(211)
@@ -646,6 +669,11 @@ class proc_dEEG:
         plt.title('Medians across Channels')
         plt.legend()
         plt.suptitle(band)
+        
+        ##
+        # Do Wilcoxon signed rank test
+        WCSRtest = stats.wilcoxon(band_median['OnT'],band_median['OffT'])
+        print(WCSRtest)
         
         # This is the plot of MADs
         plt.subplot(212)
@@ -1152,6 +1180,24 @@ class proc_dEEG:
         #gnerate our big matrix of observations; Should be 256(chann)x4(feats)x(segxpatients)(observations)
         pass
     
+    
+    
+        #this function will generate a big stack of all observations for a given condition across all patients
+    
+    def DEPRgen_OSC_stack(self,stack_type='all'):
+        remap = {'Off_3':'OF','BONT':'ON','BOFT':'ON'}
+        #big_stack = {key:0 for key in self.condits}
+        big_stack = nestdict()
+        for condit in self.condits:
+            #want a stack for OnT and a stack for OffT
+            big_stack[condit] = {remap[epoch]:{pt:self.osc_dict[pt][condit][epoch] for pt in self.pts} for epoch in keys_oi[condit]}
+            
+        if stack_type == 'all':
+            pass
+        
+        self.big_stack_dict = big_stack
+        return big_stack
+    
     def DEPRextract_feats(self):
         donfft = self.donfft
         pts = self.pts
@@ -1272,16 +1318,28 @@ class proc_dEEG:
     def Full_feat_band(self):
         pass
     
-    def extract_coher_feats(self):
-        pts=self.pts
+    def extract_coher_feats(self,do_pts=[],do_condits=['OnT'],epochs=['BONT']):
+        if do_pts == []:
+            do_pts=self.pts
+            
         coher_dict = nestdict()
         
-        for pt in pts:
-            for condit in self.condits:
-                for epoch in keys_oi[condit]:
+        if do_condits == []:
+            do_condits = self.condits
+
+        for pt in do_pts:
+            for condit in do_condits:
+                if epochs == 'all':
+                    do_epochs = keys_oi[condit]
+                else:
+                    do_epochs = epochs
+                    
+                for epoch in do_epochs:
+                    print('Doing ' + pt + condit + epoch)
                     data_matr = self.ts_data[pt][condit][epoch]
                     data_dict = {ch:data_matr[ch,:,:].squeeze() for ch in range(self.chann_dim)}
-                    coher_dict[pt][condit][epoch] = dbo.gen_coher(data_dict,Fs=self.fs,nfft=2**10,polyord=self.polyorder)
+                    coher_dict[pt][condit][epoch] = dbo.gen_coher(data_dict,Fs=self.fs,nfft=2**10,polyord=self.polyorder,band='Alpha')
+                    
         print('Done with coherence... I guess...')
         return coher_dict
         
@@ -1352,5 +1410,5 @@ class proc_dEEG:
             
             plt.suptitle(pt)
             
-    def coher_stat(self,chann_list=[]):
-        return self.extract_coher_feats()
+    def coher_stat(self,pt_list=[],chann_list=[]):
+        return self.extract_coher_feats(do_pts=pt_list,do_condits=['OnT'],epochs=['Off_3','BONT'])
