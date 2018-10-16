@@ -269,8 +269,7 @@ class streamEEG:
             
             #subtract out the polynom
             
-            postpoly = dbo.poly_subtr(psd_vect,self.fvect)
-            
+            postpoly = dbo.poly_subtr(psd_vect,self.fvect)[0]
             
             out_vect = dbo.calc_feats(postpoly,self.fvect,dofeats=['Delta','Theta','Alpha','Beta*','Gamma1','Stim'])[0]
             

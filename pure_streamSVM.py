@@ -72,12 +72,16 @@ if 0:
 
 #%%
 preshuff_ord = np.arange(0,labels.shape[0])
-Xtr,Xte,Ytr,Yte,buffnum_tr,buffnum_te,unshuff_ord_tr,unshuff_ord_te = sklearn.model_selection.train_test_split(dsgn_X,labels,times,preshuff_ord,test_size=0.33,shuffle=True)
+#Xtr,Xte,Ytr,Yte,buffnum_tr,buffnum_te,unshuff_ord_tr,unshuff_ord_te = sklearn.model_selection.train_test_split(dsgn_X,labels,times,preshuff_ord,test_size=0.33,shuffle=True)
+Xtr,Xte,Ytr,Yte,unshuff_ord_tr,unshuff_ord_te = sklearn.model_selection.train_test_split(dsgn_X,labels,preshuff_ord,test_size=0.33,shuffle=True)
+
 #NOW we do cross validation WITHIN the training set here
 
 #%%
 #Learning curve
 tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False),Xtr,Ytr,train_sizes=np.linspace(0.05,1,20),shuffle=True)
+
+#%%
 plt.figure()
 plt.plot(tsize,np.mean(tscore,axis=1))
 plt.plot(tsize,np.mean(vscore,axis=1))
@@ -136,9 +140,9 @@ print(accuracy)
 
 #%%
 #Analyse the error segments heres
-wrong_buffers = np.where(preds != Yte)
-plt.figure()
-plt.hist(buffnum_tr[wrong_buffers[0]],bins=20)
+#wrong_buffers = np.where(preds != Yte)
+#plt.figure()
+#plt.hist(buffnum_tr[wrong_buffers[0]],bins=20)
 
 #%%
 
@@ -177,6 +181,7 @@ unshuffPreds[buffnum_te] = preds
 
 
 plt.imshow(np.vstack((unshuffYte.astype(np.int),unshuffPreds.astype(np.int))),aspect='auto')
+plt.title('Unshuffled Segments')
 plt.legend()
 
 conf_matrix = confusion_matrix(Yte,preds)

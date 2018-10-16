@@ -45,14 +45,18 @@ sns.set(font_scale=4)
 sns.set_style('white')
 
 all_pts = ['906','907','908']
-all_pts = ['906']
+#all_pts = ['906']
 
         
 #UNIT TEST
 EEG_analysis = proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
 EEG_analysis.extract_feats(polyorder=0)
-EEG_analysis.gen_OSC_stack()
+EEG_analysis.DEPRgen_OSC_stack()
 EEG_analysis.simple_stats()
+
+#%%
+EEG_analysis.assess_binSVM()
+
 
 #%%
 print('Calculating Population Medians')
@@ -208,7 +212,8 @@ def do_DYN_assess(pEEG,band='Alpha'):
     
 do_DYN_assess(EEG_analysis,band='Alpha')
 
-
+#%%
+EEG_analysis.assess_binSVM()
 
 #%%
 def do_binSVM(SegEEG):
@@ -247,8 +252,7 @@ def do_binSVM(SegEEG):
         plot_3d_scalp(rotX[:,cc],fig,animate=False,unwrap=True)
         plt.title('Plotting component ' + str(cc))
         plt.suptitle('PCA rotated results for ' + pca_condit)
-    
-    
+
 do_binSVM(EEG_analysis)
 
 

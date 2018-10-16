@@ -40,8 +40,8 @@ from sklearn import mixture
 from sklearn.decomposition import PCA, FastICA
 from sklearn import svm
 import sklearn
-from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import learning_curve
+from sklearn.metrics import confusion_matrix, roc_curve, auc
+from sklearn.model_selection import learning_curve, StratifiedKFold
 
 import pickle
 
@@ -50,7 +50,7 @@ import pickle
 TargetingEXP = defaultdict(dict)
 #TargetingEXP['conservative'] = {'905':0,'906':0,'907':0,'908':0}
 TargetingEXP['conservative'] = {
-        '905':{'OnT':'','OffT':''},
+        '905':{'OnT':'/home/extend/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS905_B4_OnTarget_HP_LP_seg_mff_cln_ref_con.mat','OffT':'/home/extend/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS905_B4_OffTar_HP_LP_seg_mff_cln_ref_con.mat'},
         '906':{
                 'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS906_TO_onTAR_MU_HP_LP_seg_mff_cln_ref_1.mat',
                 'OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS906_TO_offTAR_bcr_LP_HP_seg_bcr_ref.mat'
@@ -65,7 +65,7 @@ TargetingEXP['conservative'] = {
                 }
         }
 TargetingEXP['liberal'] = {
-        '905':{'OnT':'','OffT':''},
+        '905':{'OnT':'/home/extend/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS905_B4_OnTarget_HP_LP_seg_mff_cln_ref_lib.mat','OffT':'/home/extend/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS905_B4_OffTar_HP_LP_seg_mff_cln_ref_lib.mat'},
         '906':{
                 'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS906_TO_onTAR_MU_HP_LP_seg_mff_cln_ref.mat',
                 'OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS906_TO_offTAR_LP_seg_mff_cln_ref_1.mat'
@@ -150,11 +150,11 @@ class proc_dEEG:
                     
                     #have to go to each segment due to code
                     for ss in range(seg_psds[0].shape[0]):
-                    
                         try:
                             state_return = dbo.calc_feats(middle_osc[:,ss,:],self.fvect)[0].T
                             OSC_matr[ss,:,:] = np.array([state_return[ch] for ch in range(257)])
                         except Exception as e:
+                            print('CRAP')
                             print(e)
                             pdb.set_trace()
                     
@@ -672,15 +672,16 @@ class proc_dEEG:
         
         ##
         # Do Wilcoxon signed rank test
-        WCSRtest = stats.wilcoxon(band_median['OnT'],band_median['OffT'])
-        print(WCSRtest)
+        if 'OffT' in band_median.keys():
+            WCSRtest = stats.wilcoxon(band_median['OnT'],band_median['OffT'])
+            print(WCSRtest)
         
-        # This is the plot of MADs
-        plt.subplot(212)
-        plt.plot(serr_med['OnT'],label='OnT')
-        plt.plot(serr_med['OffT'],label='OffT')
-        plt.title('Normed MADs across Channels')
-        plt.legend()
+            # This is the plot of MADs
+            plt.subplot(212)
+            plt.plot(serr_med['OnT'],label='OnT')
+            plt.plot(serr_med['OffT'],label='OffT')
+            plt.title('Normed MADs across Channels')
+            plt.legend()
         
         #plot EEG TOPOLOGICAL change for conditions
         for condit in self.condits:
@@ -877,6 +878,37 @@ class proc_dEEG:
         self.SVM_dsgn_X = dsgn_X
         self.SVM_test_labels = predlabels
     
+    def assess_binSVM(self,mask=False):
+        num_segs = self.SVM_stack.shape[0]
+        print('DOING BINARY')
+        #generate a mask
+        if mask:
+            #what mask do we want?
+            #self.SVM_Mask = self.median_mask
+            self.SVM_Mask = np.zeros((257,)).astype(bool)
+            self.SVM_Mask[np.arange(216,239)] = True
+            
+            sub_X = self.SVM_stack[:,self.SVM_Mask,:]
+            dsgn_X = sub_X.reshape(num_segs,-1,order='C')
+        else:
+            dsgn_X = self.SVM_stack.reshape(num_segs,-1,order='C')
+        
+        #doing a one class SVM
+        #clf = svm.OneClassSVM(nu=0.1,kernel="rbf", gamma=0.1)
+    
+        #get rid of ALL OFF, and only do two labels
+        OFFs = np.where(self.SVM_labels == 'OFF')
+        dsgn_X = np.delete(dsgn_X,OFFs,0)
+        SVM_labels = np.delete(self.SVM_labels,OFFs,0)
+
+        #Just doing a learning curve on the training data
+        tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False,C=1),dsgn_X,SVM_labels,train_sizes=np.linspace(0.1,1,20),shuffle=True,cv=5,random_state=12342)
+        plt.figure()
+        plt.plot(tsize,np.mean(tscore,axis=1))
+        plt.plot(tsize,np.mean(vscore,axis=1))
+        plt.legend(['Training Score','Cross-validation Score'])
+        
+        
     def train_binSVM(self,mask=False):
         num_segs = self.SVM_stack.shape[0]
         print('DOING BINARY')
@@ -894,13 +926,7 @@ class proc_dEEG:
         
         #doing a one class SVM
         #clf = svm.OneClassSVM(nu=0.1,kernel="rbf", gamma=0.1)
-        
-        
-
-        
-        
-        
-        
+    
         #get rid of ALL OFF, and only do two labels
         OFFs = np.where(self.SVM_labels == 'OFF')
         dsgn_X = np.delete(dsgn_X,OFFs,0)
@@ -917,9 +943,11 @@ class proc_dEEG:
                
         
         #split out into test and train
-        testing_size = 0.9
-        print(testing_size)
-        Xtr,Xte,Ytr,Yte = sklearn.model_selection.train_test_split(dsgn_X,SVM_labels,test_size=testing_size,random_state=0)
+        testing_size = 200/310
+        print('Total segments: ' + str(dsgn_X.shape))
+       
+        Xtr,Xte,Ytr,Yte = sklearn.model_selection.train_test_split(dsgn_X,SVM_labels,test_size=testing_size,random_state=1230,shuffle=True)
+        print('Training size ' + str(Xtr.shape))
         
         plt.figure()
         trYall = np.zeros(Ytr.shape[0]).astype(np.float)
@@ -932,20 +960,43 @@ class proc_dEEG:
         
         plt.imshow(np.hstack((trYall,teYall)).reshape(1,-1),aspect='auto')
         
-        
+        #THIS HAS BEEN MOVED TO SEPARATE FUNCTION/METHOD IN THIS CLASS
         #Just doing a learning curve on the training data
-        tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False,C=1),Xtr,Ytr,train_sizes=np.linspace(0.4,1,10),shuffle=True,cv=5,random_state=0)
-        plt.figure()
-        plt.plot(tsize,np.mean(tscore,axis=1))
-        plt.plot(tsize,np.mean(vscore,axis=1))
-        
-        #go into TRAINING set only to do CV five fold
-        
+        #tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False,C=1),Xtr,Ytr,train_sizes=np.linspace(0.4,1,10),shuffle=True,cv=5,random_state=0)
+        #plt.figure()
+        #plt.plot(tsize,np.mean(tscore,axis=1))
+        #plt.plot(tsize,np.mean(vscore,axis=1))
+
         
         #classifier time itself
         clf = svm.LinearSVC(penalty='l2',dual=False,C=1)
         #Fit the actual algorithm
-        clf.fit(Xtr,Ytr)
+        
+        big_score = []
+        coeffs = []
+        nfold = 50
+        cv = StratifiedKFold(n_splits=nfold)
+        for train,test in cv.split(Xtr,Ytr):
+            probas = clf.fit(Xtr[train],Ytr[train]).score(Xtr[test],Ytr[test])
+            coeffs.append(clf.coef_)
+            #fpr,tpr,threshold = roc_curve(Ytr[test],probas)
+            #roc_auc = auc(fpr,tpr)
+            big_score.append(probas)
+        coeffs = np.array(coeffs).squeeze().reshape(nfold,5,-1)
+        
+        print('CV Scores: ' + str(big_score))
+        plt.figure()
+        #pdb.set_trace()
+        #plt.plot(np.mean(coeffs,axis=0))
+        for ii in range(nfold):
+            plt.plot(coeffs[ii,:,:].T,alpha=0.2)
+        plt.legend(['Delta','Theta','Alpha','Beta','Gamma'])
+        plt.plot(np.mean(coeffs,axis=0).T,alpha=1)
+        
+        
+        #%% Now do fit on the full training set
+            
+        #clf.fit(Xtr,Ytr)
         
         #predict IN training set
         predlabels = clf.predict(Xte)
@@ -973,7 +1024,9 @@ class proc_dEEG:
         
         pickle.dump(clf,open('/tmp/SVMModel_l2','wb'))
         
-        plt.subplot(2,1,2)
+        plt.subplot(2,2,3)
+        plt.plot(clf.coef_.reshape(5,-1).T)
+        plt.subplot(2,2,4)
         conf_matrix = confusion_matrix(predlabels,Yte)
         plt.imshow(conf_matrix)
         plt.yticks(np.arange(0,2),['OffT','OnT'])
@@ -1318,12 +1371,12 @@ class proc_dEEG:
     def Full_feat_band(self):
         pass
     
-    def extract_coher_feats(self,do_pts=[],do_condits=['OnT'],epochs=['BONT']):
+    def extract_coher_feats(self,do_pts=[],do_condits=['OnT'],epochs='all'):
         if do_pts == []:
             do_pts=self.pts
             
-        coher_dict = nestdict()
-        
+        PLV_dict = nestdict()
+        CSD_dict = nestdict()
         if do_condits == []:
             do_condits = self.condits
 
@@ -1338,10 +1391,10 @@ class proc_dEEG:
                     print('Doing ' + pt + condit + epoch)
                     data_matr = self.ts_data[pt][condit][epoch]
                     data_dict = {ch:data_matr[ch,:,:].squeeze() for ch in range(self.chann_dim)}
-                    coher_dict[pt][condit][epoch] = dbo.gen_coher(data_dict,Fs=self.fs,nfft=2**10,polyord=self.polyorder,band='Alpha')
+                    CSD_dict[pt][condit][epoch], PLV_dict[pt][condit][epoch] = dbo.gen_coher(data_dict,Fs=self.fs,nfft=2**10,polyord=self.polyorder,band='Alpha')
                     
         print('Done with coherence... I guess...')
-        return coher_dict
+        return CSD_dict,PLV_dict
         
 
     
@@ -1411,4 +1464,4 @@ class proc_dEEG:
             plt.suptitle(pt)
             
     def coher_stat(self,pt_list=[],chann_list=[]):
-        return self.extract_coher_feats(do_pts=pt_list,do_condits=['OnT'],epochs=['Off_3','BONT'])
+        return self.extract_coher_feats(do_pts=pt_list,do_condits=['OnT','OffT'])

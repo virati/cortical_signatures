@@ -12,6 +12,8 @@ sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
 import DBS_Osc as dbo
 from DBS_Osc import nestdict
 
+win_list = ['Bilat','PreBilat']
+
 #%%
 #File and meta info
 class sweep_lfp:
@@ -26,7 +28,6 @@ class sweep_lfp:
         #Anything else we need to do here
         
         if sweep_type == 'Targeting':
-       
             self.condits = ['OnTarget','OffTarget']
             self.pts = ['901','903','905','906','907','908']
         
@@ -37,6 +38,11 @@ class sweep_lfp:
             LFP_List = {pt:{condit:dbo.load_BR_dict(base_element[pt][condit]['Filename'],sec_end=0) for condit in self.condits} for pt in self.pts}
             
         self.LFP_Data = LFP_List
+        
+    def impose_frames(self):
+        #this function will impose a "topology" of frames, with the basic sets being the null and the full recording
+        window_list = {pt:{win_name:{condit:self.meta_data['LFP'][pt][condit]['segments'][win_name] for condit in self.condits} for win_name in win_list} for pt in self.pts}
+        self.frames = window_list
         
     def load_meta_data(self):
         Ephys = nestdict()
@@ -91,11 +97,24 @@ class sweep_lfp:
         self.meta_data = Ephys
         
 
+    def plot_tdom(self,window='Bilat',do_pt=[]):
+        if do_pt == []:
+            do_pt = self.pts
+            
+        plt.figure()
+        for pt in do_pt:
+            plt.plot()
+            
+    def time_to_idx(self,rec,twin):
+        
+        
 
 
 
 #%%
 TResp = sweep_lfp()
+TResp.load_LFP()
+TResp.impose_frames()
 
 
 # The end structure we want
