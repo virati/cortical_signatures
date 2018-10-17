@@ -40,7 +40,7 @@ from sklearn import mixture
 from sklearn.decomposition import PCA, FastICA
 from sklearn import svm
 import sklearn
-from sklearn.metrics import confusion_matrix, roc_curve, auc
+from sklearn.metrics import confusion_matrix, roc_curve, auc, roc_auc_score
 from sklearn.model_selection import learning_curve, StratifiedKFold
 
 import pickle
@@ -976,14 +976,36 @@ class proc_dEEG:
         coeffs = []
         nfold = 50
         cv = StratifiedKFold(n_splits=nfold)
+        
+        rocs = []
+        aucs = []
+        plt.figure()
         for train,test in cv.split(Xtr,Ytr):
-            probas = clf.fit(Xtr[train],Ytr[train]).score(Xtr[test],Ytr[test])
+            mod_score = clf.fit(Xtr[train],Ytr[train]).score(Xtr[test],Ytr[test])
+            outpred = clf.predict(Xtr[test])
+            
+            Ytestr = np.zeros(Ytr[test].shape[0]).astype(np.float)
+            Ytestr[Ytr[test] == 'OffTON'] = 0
+            Ytestr[Ytr[test] == 'OnTON'] = 1
+            
+            outpred[outpred == 'OffTON'] = 0
+            outpred[outpred == 'OnTON'] = 1
+            
+            #pdb.set_trace()
+            outpred = outpred.astype(np.float)
+            fpr,tpr,thresholds = roc_curve(Ytestr,outpred)
+            auc_perf = roc_auc_score(Ytestr,outpred)
+            #rocs.append(roc_perf)
+            aucs.append(auc_perf)
+            plt.plot(fpr,tpr)
+            
             coeffs.append(clf.coef_)
             #fpr,tpr,threshold = roc_curve(Ytr[test],probas)
             #roc_auc = auc(fpr,tpr)
-            big_score.append(probas)
+            big_score.append(mod_score)
+        plt.ylim((0,1))
         coeffs = np.array(coeffs).squeeze().reshape(nfold,5,-1)
-        
+        print(aucs)
         print('CV Scores: ' + str(big_score))
         plt.figure()
         #pdb.set_trace()
