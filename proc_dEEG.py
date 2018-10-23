@@ -9,7 +9,7 @@ Main Class for Processed dEEG Data
 
 import sys
 sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
-import DBS_Osc as dbo
+import DBSpace as dbo
 
 from collections import defaultdict
 import mne
@@ -32,7 +32,7 @@ sns.set(font_scale=4)
 sns.set_style('white')
 
 
-from DBS_Osc import nestdict
+from DBSpace import nestdict
 
 from statsmodels import robust
 
@@ -42,6 +42,7 @@ from sklearn import svm
 import sklearn
 from sklearn.metrics import confusion_matrix, roc_curve, auc, roc_auc_score
 from sklearn.model_selection import learning_curve, StratifiedKFold
+
 
 import pickle
 
