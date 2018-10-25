@@ -9,9 +9,9 @@ Either the conservative versions or the non-conservative (liberal/all) versions
 
 THIS IS THE VERSION THAT YOU RUN TO GET FIGURES
 """
-import sys
-sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
-import DBS_Osc as dbo
+#import sys
+#sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
+import DBSpace as dbo
 
 # from collections import defaultdict
 # import mne
@@ -68,6 +68,7 @@ for band in ['Alpha']:
 
 #%%
 EEG_analysis.band_distr('OnT')
+#Do stats here; paired 
 
 
 #%%
@@ -103,7 +104,7 @@ def population_stuff(SegEEG):
     SegEEG.plot_diff()
     
 
-#population_stuff(EEG_analysis)
+population_stuff(EEG_analysis)
    
 #%%
 # Here, we want to just LOOK at the PSDs of the data collected
@@ -131,14 +132,15 @@ def OBSdo_similarity(SegEEG):
 
 pca_condit = 'OnT'
 
-def do_PCA_stuff(SegEEG):
-    print('Doing NON-BASELINE PCA routine')
+pca_approach = 'rpca'
+def do_PCA_stuff(SegEEG,approach='rpca'):
+    print('Doing BASELINE PCA routine')
     #do PCA routines now
-    SegEEG.pca_decomp(direction='channels',condit=pca_condit,bl_correct=False)
+    SegEEG.pca_decomp(direction='channels',condit=pca_condit,bl_correct=True,pca_type=approach)
 
-do_PCA_stuff(EEG_analysis)
-
-def plot_PCA_stuff(SegEEG):
+do_PCA_stuff(EEG_analysis,approach=pca_approach)
+#%%
+def plot_PCA_stuff(SegEEG,approach='rpca'):
     plt.figure();
     plt.subplot(221)
     plt.imshow(SegEEG.PCA_d.components_,cmap=plt.cm.jet,vmax=1,vmin=-1)
@@ -157,8 +159,8 @@ def plot_PCA_stuff(SegEEG):
         fig=plt.figure()
         plot_3d_scalp(SegEEG.PCA_x[:,cc],fig,animate=False,unwrap=True)
         plt.title('Plotting component ' + str(cc))
-        plt.suptitle('PCA rotated results for ' + pca_condit)
-plot_PCA_stuff(EEG_analysis)
+        plt.suptitle(approach + ' rotated results for ' + pca_condit)
+plot_PCA_stuff(EEG_analysis,pca_approach)
 
 #%%
 #This section does MEDIANS and MADs on the data/big segment stack
@@ -178,8 +180,9 @@ EEG_analysis.plot_PCA_stuff()
 #%%
 #Check Dynamics within segments
 #THIS ASSESSED WHICH CHANNELS ARE DYNAMIC indirectly through calculating variance across OnT and OffT for all patients.
+EEG_analysis.assess_dynamics()
 
-def do_DYN_assess(pEEG,band='Alpha'):
+def DEPRdo_DYN_assess(pEEG,band='Alpha'):
     band_idx = dbo.feat_order.index(band)
     pEEG.OnT_v_OffT_MAD()
     for stat in ['Med','MAD']:
@@ -210,16 +213,20 @@ def do_DYN_assess(pEEG,band='Alpha'):
     plt.title('Distributions of MADs')
     plt.legend()
     
-do_DYN_assess(EEG_analysis,band='Alpha')
+#do_DYN_assess(EEG_analysis,band='Alpha')
 
 #%%
 EEG_analysis.assess_binSVM()
 
 #%%
-def do_binSVM(SegEEG):
-    print('Doing Binary SVM routine')
-    SegEEG.train_binSVM(mask=False)
-    
+EEG_analysis.train_binSVM(mask=False)
+EEG_analysis.analyse_binSVM(approach='rpca')
+
+
+
+#%%
+
+def DEPRbinSVM_coeff_analysis(SegEEG):
     bin_coeff = SegEEG.binSVM.coef_.reshape(-1,5) #this can now go into the PCA
     for bb,band in enumerate(dbo.feat_order):
         fig = plt.figure()
@@ -253,7 +260,8 @@ def do_binSVM(SegEEG):
         plt.title('Plotting component ' + str(cc))
         plt.suptitle('PCA rotated results for ' + pca_condit)
 
-do_binSVM(EEG_analysis)
+#binSVM_coeff_analysis(EEG_analysis)
+
 
 
 

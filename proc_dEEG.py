@@ -5,11 +5,13 @@ Created on Sun Feb 25 21:02:09 2018
 
 @author: virati
 Main Class for Processed dEEG Data
+
 """
 
 import sys
 sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
 import DBSpace as dbo
+from DBSpace import simple_pca
 
 from collections import defaultdict
 import mne
@@ -45,6 +47,9 @@ from sklearn.model_selection import learning_curve, StratifiedKFold
 
 
 import pickle
+
+sys.path.append('/home/virati/Dropbox/projects/libs/robust-pca/')
+import r_pca
 
 #%%
 
@@ -329,8 +334,44 @@ class proc_dEEG:
         
         self.Var_Meas = {'OnT':{'Med':np.median(X_onT,axis=0),'MAD':OnT_MAD},'OffT':{'Med':np.median(X_offT,axis=0),'MAD':OffT_MAD},'OFF':{'Med':np.median(X_NONE,axis=0),'MAD':NONE_MAD}}
         
-    
-    def pca_decomp(self,direction='channels',band='Alpha',condit='OnT',bl_correct=False):
+    def plot_pca_decomp(self,pca_condit='OnT',approach = 'rpca'):
+        self.pca_decomp(direction='channels',condit=pca_condit,bl_correct=True,pca_type=approach,plot_distr=True)
+        
+        plt.figure();
+        plt.subplot(221)
+        plt.imshow(self.PCA_d.components_,cmap=plt.cm.jet,vmax=1,vmin=-1)
+        plt.colorbar()
+        plt.subplot(222)
+        plt.plot(self.PCA_d.components_)
+        plt.ylim((-1,1))
+        plt.legend(['PC0','PC1','PC2','PC3','PC4'])
+        plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma1'])
+        plt.subplot(223)
+        
+        plt.plot(self.PCA_d.explained_variance_ratio_)
+        plt.ylim((0,1))
+        
+        for cc in range(2):
+            
+            #plot the boring views first
+            plt.figure()
+            plt.subplot(211)
+            plt.plot(self.PCA_x[:,cc])
+            plt.subplot(212)
+            plt.hist(self.PCA_x[:,cc],bins=np.linspace(-1,1,50))
+            #find the top mode
+            chann_high = np.where(np.abs(self.PCA_x[:,cc]) > 0.7)
+            print(chann_high)
+            
+            #Plot the 3d scalp distribution
+            fig=plt.figure()
+            plot_3d_scalp(self.PCA_x[:,cc],fig,animate=False,unwrap=True,highlight=chann_high)
+            plt.title('Plotting component ' + str(cc))
+            plt.suptitle(approach + ' rotated results for ' + pca_condit)
+
+            
+            
+    def pca_decomp(self,direction='channels',band='Alpha',condit='OnT',bl_correct=False,pca_type='pca',plot_distr=False):
         print('Doing PCA on the SVM Oscillatory Stack')
         #check to see if we have what variables we need
         Xdsgn = self.SVM_stack
@@ -338,10 +379,7 @@ class proc_dEEG:
         
         lblsdo = lbls == condit + 'ON'
         
-        
         Xdo = Xdsgn[lblsdo,:,:]
-        
-        
         
         #what do we want to do with this now?
         #spatiotemporal PCA
@@ -359,17 +397,54 @@ class proc_dEEG:
         PCAdsgn = sig.detrend(Xdo,axis=0,type='constant')
         PCAdsgn = sig.detrend(PCAdsgn,axis=1,type='constant')
         
-        pca = PCA()
         
-        pca.fit(PCAdsgn)
+        #%%
+        bins = np.linspace(-3,3,50)
         
+        # If we want to do PCA here
+        if pca_type == 'pca':
+            pca = PCA()
+            pca.fit(PCAdsgn)
+            
+            if plot_distr:
+                plt.figure()
+                for bb in range(5):
+                    plt.hist(PCAdsgn[:,bb],bins=bins,alpha=0.2)
+                plt.suptitle('PCA inputs')
+    
+            self.PCA_d = pca
+            self.PCA_inX = Xdo
+            
+            PCA_X = pca.fit_transform(PCAdsgn)
+            self.PCA_x = PCA_X
+        elif pca_type == 'rpca':
+            # if we want to do rPCA here
+            rpca = r_pca.R_pca(PCAdsgn)
+            L,S = rpca.fit()
+            
+            if plot_distr:
+                plt.figure()
+                for bb in range(5):
+                    plt.hist(L[:,bb],bins=bins,alpha=0.2)
+                plt.suptitle('rPCA outputs')
+            ##We treated rpca as a filtering step, so now we work solely with the low-rank component using the same procedure as above in the 'pca' block
+            #definitely a more elegant way of merging these steps, good luck next grad student
+            
+            #Srcomp, Srevals, Srevecs = simple_pca(S)
+            #Lrcomp, Lrevals, Lrevecs = simple_pca(L)
+            pca = PCA()
+            pca.fit(L)
+#            
+#            print('Using fit-transformed L')
+            #Below shouldn't actually DO anything, since L is already from the output of rPCA and should already be aligned along its principal axes
+            #But need pca() wrapper to get the coefficients, since I don't think r_pca includes it
+            PCA_L = pca.fit_transform(L)
+            
+            self.PCA_d = pca
+            self.PCA_inX = Xdo
+            
+            self.PCA_x = PCA_L
         
-        self.PCA_d = pca
-        self.PCA_inX = Xdo
-        
-        PCA_X = pca.fit_transform(PCAdsgn)
-        self.PCA_x = PCA_X
-               
         
     
     def gen_GMM_priors(self,condit='OnT',mask_chann=False,band='Alpha'):
@@ -877,7 +952,40 @@ class proc_dEEG:
         
         self.SVM = clf
         self.SVM_dsgn_X = dsgn_X
-        self.SVM_test_labels = predlabels
+        self.SVM_test_labels = predlabels\
+    
+    def assess_dynamics(self,band='Alpha'):
+        band_idx = dbo.feat_order.index(band)
+        self.OnT_v_OffT_MAD()
+        
+        
+        # Now, move on to plotting
+        for stat in ['Med','MAD']:
+            fig = plt.figure()
+            plot_3d_scalp(self.Var_Meas['OnT'][stat][:,band_idx],fig,clims=(0,0),label='OnT '+ stat,unwrap=True)
+            plt.suptitle('Non-normalized Power ' + stat + ' in ' + band + ' OnT')
+            
+            plt.figure()
+            plt.bar(np.arange(1,258),self.Var_Meas['OnT'][stat][:,band_idx])
+            
+            fig = plt.figure()
+            plot_3d_scalp(self.Var_Meas['OffT'][stat][:,band_idx],fig,clims=(0,0),label='OffT ' + stat,unwrap=True)
+            plt.suptitle('Non-normalized Power ' + stat + ' in ' + band + ' OffT')
+            fig = plt.figure()
+            plot_3d_scalp(self.Var_Meas['OFF'][stat][:,band_idx],fig,clims=(0,0),label='OFF ' + stat,unwrap=True)
+            plt.suptitle('Non-normalized Power ' + stat + ' in ' + band + ' OFF')
+            
+            plt.figure()
+            plt.subplot(211)
+            plt.hist(self.Var_Meas['OnT']['Med'][:,band_idx],label='OnT',bins=30)
+            plt.hist(self.Var_Meas['OFF']['Med'][:,band_idx],label='OFF',bins=30)
+            plt.title('Distributions of Medians')
+            
+            plt.subplot(212)
+            plt.hist([self.Var_Meas['OnT']['MAD'][:,band_idx],self.Var_Meas['OFF']['MAD'][:,band_idx]],label=['OnT','OFF'],bins=30)
+            #plt.hist(self.Var_Meas['OFF']['MAD'][:,band_idx],label='OFF',bins=30)
+            plt.title('Distributions of MADs')
+            plt.legend()
     
     def assess_binSVM(self,mask=False):
         num_segs = self.SVM_stack.shape[0]
@@ -909,6 +1017,64 @@ class proc_dEEG:
         plt.plot(tsize,np.mean(vscore,axis=1))
         plt.legend(['Training Score','Cross-validation Score'])
         
+    def analyse_binSVM(self,approach='rpca'):
+        bin_coeff = self.binSVM.coef_.reshape(-1,5)
+        # First, we'll plot the coefficients for each band
+        for bb,band in enumerate(dbo.feat_order):
+            fig = plt.figure()
+            plot_3d_scalp(bin_coeff[:,bb],fig,label=band + ' SVM Coefficients',unwrap=True,animate=False)
+            
+        # next, we plot the l2 energy of each channel's coefficient, to see which one is "largest"
+        fig = plt.figure()
+        plot_3d_scalp(np.linalg.norm(bin_coeff[:,:],axis=1,ord=2),fig,label=band + ' SVM Coefficients',unwrap=False,animate=False)
+        plt.suptitle('L2 of all bands')
+        
+        # next, we'll do a pca rotation
+        if approach == 'rpca':
+            #we first do a rpca step to rid ourselves of outliers in the original 2d coefficient plot
+            rpca = r_pca.R_pca(bin_coeff)
+            L,S = rpca.fit()
+            
+            ##We treated rpca as a filtering step, so now we work solely with the low-rank component using the same procedure as above in the 'pca' block
+            #definitely a more elegant way of merging these steps, good luck next grad student
+            
+            #Srcomp, Srevals, Srevecs = simple_pca(S)
+            #Lrcomp, Lrevals, Lrevecs = simple_pca(L)
+        else:
+            L = bin_coeff
+            
+        svm_pca = PCA()
+        svm_pca.fit(L)
+        SVM_coeff_L = svm_pca.fit_transform(L)
+        
+        plt.figure();
+        plt.subplot(221)
+        plt.imshow(svm_pca.components_,cmap=plt.cm.jet,vmax=1,vmin=-1)
+        plt.colorbar()
+        plt.subplot(222)
+        plt.plot(svm_pca.components_)
+        plt.ylim((-1,1))
+        plt.legend(['PC0','PC1','PC2','PC3','PC4'])
+        plt.xticks(np.arange(0,5),['Delta','Theta','Alpha','Beta','Gamma1'])
+        plt.subplot(223)
+        
+        plt.plot(svm_pca.explained_variance_ratio_)
+        plt.ylim((0,1))
+        
+        
+        #plt.figure()
+        #plt.hist(SVM_coeff_L[:,0],bins=np.linspace(-0.05,0.05,100))
+        
+
+        
+        for cc in range(2):
+            fig=plt.figure()
+            big_coeffs = np.where(np.abs(SVM_coeff_L[:,cc]) > 0.007)
+            print(big_coeffs)
+            plot_3d_scalp(SVM_coeff_L[:,cc],fig,animate=False,unwrap=True,highlight=big_coeffs)
+            plt.title('Plotting component ' + str(cc))
+            plt.suptitle(approach + ' rotated results')
+            
         
     def train_binSVM(self,mask=False):
         num_segs = self.SVM_stack.shape[0]

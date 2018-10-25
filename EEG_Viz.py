@@ -56,7 +56,7 @@ def DEPRplot_flat_scalp(band,clims=(0,0),unwrap=True):
     sc = plt.scatter(flat_etrodes[:,0],flat_etrodes[:,1],c=np.arange(257),vmin=clims[0],vmax=clims[1],cmap=cm)
     plt.colorbar(sc)
 
-def plot_3d_scalp(band,fig,n=1,clims=(0,0),label='generic',animate=False,unwrap=False,sparse_labels = True):
+def plot_3d_scalp(band,fig,n=1,clims=(0,0),label='generic',animate=False,unwrap=False,sparse_labels = True,highlight=[]):
     #fig = plt.figure()
     
     egipos = mne.channels.read_montage('/home/virati/Dropbox/GSN-HydroCel-257.sfp')
@@ -78,7 +78,13 @@ def plot_3d_scalp(band,fig,n=1,clims=(0,0),label='generic',animate=False,unwrap=
         flat_etrodes[:,1] = flat_etrodes[:,1] * -10*(flat_etrodes[:,2] + 3*1/(flat_etrodes[:,2] - 0.6) + 0.5)
         
         ax = fig.add_subplot(1,1,n)
-        sc = plt.scatter(flat_etrodes[:,0],flat_etrodes[:,1],c=band,vmin=clims[0],vmax=clims[1],s=300,cmap=cm,alpha=0.5)
+        
+        linewidths = 1 * np.ones_like(flat_etrodes[:,0])
+        linewidths[highlight] = 3
+        #below changes can be: linewidth to only do the highlights, or fixed at 2 or something
+        sc = plt.scatter(flat_etrodes[:,0],flat_etrodes[:,1],c=band,vmin=clims[0],vmax=clims[1],s=300,cmap=cm,alpha=0.5,linewidth=linewidths,marker='o')
+        #this adds x's over the highlights
+        #plt.scatter(flat_etrodes[:,0],flat_etrodes[:,1],c=None,vmin=clims[0],vmax=clims[1],s=300,cmap=cm,alpha=1,linewidth=linewidths,marker='x')
         
         #Which channels are above two stds?
         zsc_band = stats.zscore(band)
@@ -99,7 +105,9 @@ def plot_3d_scalp(band,fig,n=1,clims=(0,0),label='generic',animate=False,unwrap=
         
     else:
         ax = fig.add_subplot(1,1,n,projection='3d')
-        sc = ax.scatter(etrodes[:,0],etrodes[:,1],10*etrodes[:,2],c=band,vmin=clims[0],vmax=clims[1],s=300,cmap=cm)
+        linewidths = np.ones_like(etrodes[:,0])
+        linewidths[highlight] = 5
+        sc = ax.scatter(etrodes[:,0],etrodes[:,1],10*etrodes[:,2],c=band,vmin=clims[0],vmax=clims[1],s=300,cmap=cm,linewidth=linewidths)
     
         try:plt.colorbar(sc)
         except: pdb.set_trace()

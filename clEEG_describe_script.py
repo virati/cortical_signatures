@@ -25,17 +25,28 @@ sns.set_style('white')
 import pickle
 import cmocean
 #%%
-pt_list = ['907']
+pt_list = ['906','907','908']
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)
 
+
+## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
 eFrame.extract_feats(polyorder=0)
-#eFrame.gen_OSC_stack()
+eFrame.DEPRgen_OSC_stack()
 
+#%%
+eFrame.simple_stats()
 #%%
 eFrame.band_stats(do_band='Alpha')
 
+#eFrame.pca_decomp(direction='channels',condit='OnT',bl_correct=True,pca_type='rpca')
+#%%
+eFrame.plot_pca_decomp(approach='rpca')
+#%%
+eFrame.train_binSVM()
+#eFrame.assess_binSVM()
+eFrame.analyse_binSVM(approach='rpca')
 #%%
 #eFrame.interval_stats(do_band='Alpha')
 #eFrame.psd_stats(chann_list=[])
@@ -43,11 +54,11 @@ eFrame.band_stats(do_band='Alpha')
 #%%
 ## Do some coherence measures here
 
-CSD_dict,PLV_dict = eFrame.coher_stat(pt_list=pt_list,chann_list=[])
+#CSD_dict,PLV_dict = eFrame.coher_stat(pt_list=pt_list,chann_list=[])
 
 
 #%%
-#Package for pickle
+#Package for pickle, this needs to be folded into the coher_stat method
 coh_measures = {'CSD':CSD_dict,'PLV':PLV_dict}
 with open('/tmp/DBS'+pt_list[0]+'_coh_dict.pickle','wb') as handle:
     pickle.dump(coh_measures,handle,protocol=pickle.HIGHEST_PROTOCOL)
