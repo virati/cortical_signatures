@@ -8,8 +8,6 @@ Main Class for Processed dEEG Data
 
 """
 
-import sys
-sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
 import DBSpace as dbo
 from DBSpace import simple_pca
 
@@ -25,7 +23,11 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 plt.close('all')
 
-from EEG_Viz import plot_3d_scalp
+from DBSpace.visualizations import EEG_Viz
+#import DBSpace.visualizations.EEG_Viz.EEG_Viz.plot_3d_scalp as EEG_Viz.plot_3d_scalp
+
+#import EEG_Viz.EEG_Viz.plot_3d_scalp as EEG_Viz.plot_3d_scalp
+#from EEG_Viz import EEG_Viz.plot_3d_scalp
 
 import seaborn as sns
 
@@ -48,6 +50,7 @@ from sklearn.model_selection import learning_curve, StratifiedKFold
 
 import pickle
 
+import sys
 sys.path.append('/home/virati/Dropbox/projects/libs/robust-pca/')
 import r_pca
 
@@ -242,7 +245,7 @@ class proc_dEEG:
             sig_stat_mask[sig_chann_list] = 1
             
             fig = plt.figure()
-            plot_3d_scalp(sig_stat_mask,fig,animate=False,unwrap=True)
+            EEG_Viz.plot_3d_scalp(sig_stat_mask,fig,animate=False,unwrap=True)
         
     def band_stats(self,do_band='Alpha'):
         self.pop_meds()
@@ -365,7 +368,7 @@ class proc_dEEG:
             
             #Plot the 3d scalp distribution
             fig=plt.figure()
-            plot_3d_scalp(self.PCA_x[:,cc],fig,animate=False,unwrap=True,highlight=chann_high)
+            EEG_Viz.plot_3d_scalp(self.PCA_x[:,cc],fig,animate=False,unwrap=True,highlight=chann_high)
             plt.title('Plotting component ' + str(cc))
             plt.suptitle(approach + ' rotated results for ' + pca_condit)
 
@@ -645,7 +648,7 @@ class proc_dEEG:
         
         for cc in range(2):
             fig=plt.figure()
-            plot_3d_scalp(self.PCA_x[:,cc],fig,animate=False,unwrap=True)
+            EEG_Viz.plot_3d_scalp(self.PCA_x[:,cc],fig,animate=False,unwrap=True)
             plt.title('Plotting component ' + str(cc))
             plt.suptitle('PCA rotated results for OnT')
 
@@ -665,7 +668,7 @@ class proc_dEEG:
         
         for cc in range(2):
             fig=plt.figure()
-            plot_3d_scalp(self.ICA_x[:,cc],fig,animate=False,unwrap=True)
+            EEG_Viz.plot_3d_scalp(self.ICA_x[:,cc],fig,animate=False,unwrap=True)
             plt.title('Plotting component ' + str(cc))
             plt.suptitle('ICA rotated results for OnT')
     def band_distr(self,condit='OnT'):
@@ -763,7 +766,7 @@ class proc_dEEG:
         for condit in self.condits:
             fig = plt.figure()
             #This is MEDS
-            plot_3d_scalp(band_median[condit],fig,label=condit + '_med',animate=False,clims=(-0.2,0.2),unwrap=flatten)
+            EEG_Viz.plot_3d_scalp(band_median[condit],fig,label=condit + '_med',animate=False,clims=(-0.2,0.2),unwrap=flatten)
             plt.suptitle('Median of Cortical Response across all ' + condit + ' segments | Band is ' + band)
         
 
@@ -772,7 +775,7 @@ class proc_dEEG:
         for condit in self.condits:
             fig = plt.figure()
             #this is MADs
-            plot_3d_scalp(band_mad[condit],fig,label=condit + '_mad',animate=False,unwrap=flatten,clims=(0,1.0))
+            EEG_Viz.plot_3d_scalp(band_mad[condit],fig,label=condit + '_mad',animate=False,unwrap=flatten,clims=(0,1.0))
             plt.suptitle('MADs of Cortical Response across all ' + condit + ' segments | Band is ' + band)
         
         plt.suptitle(band)
@@ -784,7 +787,7 @@ class proc_dEEG:
                 weigh_mad = 0.4
                 fig = plt.figure()
                 masked_median = self.Seg_Med[0][condit][:,band_idx] * (np.abs(self.Seg_Med[0][condit][:,band_idx]) - weigh_mad*self.Seg_Med[1][condit][:,band_idx] >= 0).astype(np.int)
-                plot_3d_scalp(masked_median,fig,label=condit + '_masked_median',animate=False,clims=(-0.1,0.1))
+                EEG_Viz.plot_3d_scalp(masked_median,fig,label=condit + '_masked_median',animate=False,clims=(-0.1,0.1))
                 plt.suptitle('Medians with small variances (' + str(weigh_mad) + ') ' + condit + ' segments | Band is ' + band)
             
         
@@ -962,17 +965,17 @@ class proc_dEEG:
         # Now, move on to plotting
         for stat in ['Med','MAD']:
             fig = plt.figure()
-            plot_3d_scalp(self.Var_Meas['OnT'][stat][:,band_idx],fig,clims=(0,0),label='OnT '+ stat,unwrap=True)
+            EEG_Viz.plot_3d_scalp(self.Var_Meas['OnT'][stat][:,band_idx],fig,clims=(0,0),label='OnT '+ stat,unwrap=True)
             plt.suptitle('Non-normalized Power ' + stat + ' in ' + band + ' OnT')
             
             plt.figure()
             plt.bar(np.arange(1,258),self.Var_Meas['OnT'][stat][:,band_idx])
             
             fig = plt.figure()
-            plot_3d_scalp(self.Var_Meas['OffT'][stat][:,band_idx],fig,clims=(0,0),label='OffT ' + stat,unwrap=True)
+            EEG_Viz.plot_3d_scalp(self.Var_Meas['OffT'][stat][:,band_idx],fig,clims=(0,0),label='OffT ' + stat,unwrap=True)
             plt.suptitle('Non-normalized Power ' + stat + ' in ' + band + ' OffT')
             fig = plt.figure()
-            plot_3d_scalp(self.Var_Meas['OFF'][stat][:,band_idx],fig,clims=(0,0),label='OFF ' + stat,unwrap=True)
+            EEG_Viz.plot_3d_scalp(self.Var_Meas['OFF'][stat][:,band_idx],fig,clims=(0,0),label='OFF ' + stat,unwrap=True)
             plt.suptitle('Non-normalized Power ' + stat + ' in ' + band + ' OFF')
             
             plt.figure()
@@ -1022,11 +1025,11 @@ class proc_dEEG:
         # First, we'll plot the coefficients for each band
         for bb,band in enumerate(dbo.feat_order):
             fig = plt.figure()
-            plot_3d_scalp(bin_coeff[:,bb],fig,label=band + ' SVM Coefficients',unwrap=True,animate=False)
+            EEG_Viz.plot_3d_scalp(bin_coeff[:,bb],fig,label=band + ' SVM Coefficients',unwrap=True,animate=False)
             
         # next, we plot the l2 energy of each channel's coefficient, to see which one is "largest"
         fig = plt.figure()
-        plot_3d_scalp(np.linalg.norm(bin_coeff[:,:],axis=1,ord=2),fig,label=band + ' SVM Coefficients',unwrap=False,animate=False)
+        EEG_Viz.plot_3d_scalp(np.linalg.norm(bin_coeff[:,:],axis=1,ord=2),fig,label=band + ' SVM Coefficients',unwrap=False,animate=False)
         plt.suptitle('L2 of all bands')
         
         # next, we'll do a pca rotation
@@ -1071,7 +1074,7 @@ class proc_dEEG:
             fig=plt.figure()
             big_coeffs = np.where(np.abs(SVM_coeff_L[:,cc]) > 0.007)
             print(big_coeffs)
-            plot_3d_scalp(SVM_coeff_L[:,cc],fig,animate=False,unwrap=True,highlight=big_coeffs)
+            EEG_Viz.plot_3d_scalp(SVM_coeff_L[:,cc],fig,animate=False,unwrap=True,highlight=big_coeffs)
             plt.title('Plotting component ' + str(cc))
             plt.suptitle(approach + ' rotated results')
             
@@ -1347,10 +1350,10 @@ class proc_dEEG:
         mainfig = plt.figure()
         
         if not mask:
-            plot_3d_scalp(self.pop_osc_change[condit][dbo.feat_order.index(band)],mainfig,animate=animate,label=label,clims=(-1,1))
+            EEG_Viz.plot_3d_scalp(self.pop_osc_change[condit][dbo.feat_order.index(band)],mainfig,animate=animate,label=label,clims=(-1,1))
         else:
             try:
-                plot_3d_scalp(self.pop_osc_mask[condit][dbo.feat_order.index(band)] * self.pop_osc_change[condit][dbo.feat_order.index(band)],mainfig,clims=(-1,1),animate=animate,label=label)
+                EEG_Viz.plot_3d_scalp(self.pop_osc_mask[condit][dbo.feat_order.index(band)] * self.pop_osc_change[condit][dbo.feat_order.index(band)],mainfig,clims=(-1,1),animate=animate,label=label)
             except:
                 pdb.set_trace()
         
@@ -1381,7 +1384,7 @@ class proc_dEEG:
                 plot_vect = np.median(self.feat_diff[pt][condit][:,band_idxs].squeeze(),axis=1)
                 
             
-            plot_3d_scalp(plot_vect,mainfig,clims=(-3,3),label=condit+label,animate=animate)
+            EEG_Viz.plot_3d_scalp(plot_vect,mainfig,clims=(-3,3),label=condit+label,animate=animate)
             plt.title(condit + ' ' + pt + ' ' + str(var_fixed))
             plt.suptitle(label)
             

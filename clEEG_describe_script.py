@@ -12,20 +12,22 @@ A REWRITE of the Cleaned EEG-Descriptive Pipeline (SCRIPT)
 #import DBS_Osc as dbo
 
 from proc_dEEG import proc_dEEG
-from EEG_Viz import plot_3d_scalp
+from DBSpace.visualizations import EEG_Viz
+#from EEG_Viz import plot_3d_scalp
 
 import scipy.stats as stats
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_context('paper')
-sns.set(font_scale=4)
+sns.set(font_scale=3)
 sns.set_style('white')
 
 import pickle
 import cmocean
 #%%
 pt_list = ['906','907','908']
+pt_list=['908']
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)
 

@@ -21,7 +21,8 @@ import pickle
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import confusion_matrix
-from EEG_Viz import plot_3d_scalp
+from sklearn.utils import shuffle
+from DBSpace.visualizations import EEG_Viz
 
 from sklearn.model_selection import learning_curve
 
@@ -36,11 +37,11 @@ limit_chann = False
 
 #LOAD IN THE EEG FILE
 #inFile = pickle.load(open('/home/virati/stream_intvs.pickle','rb'))
-inFile = pickle.load(open('/tmp/big_file.pickle','rb'))
+inFile = pickle.load(open('/home/virati/Dropbox/Data/streaming_EEG.pickle','rb'))
 
 #IF WE ADD LFP HERE WE'RE AWESOME
 
-
+do_null = False
 
 rec = inFile['States']
 lab = inFile['Labels']
@@ -71,6 +72,7 @@ if 0:
     plt.suptitle('Shuffled segments - JUST FOR DISPLAY')
 
 #%%
+# Do the actualy train test split here
 preshuff_ord = np.arange(0,labels.shape[0])
 #Xtr,Xte,Ytr,Yte,buffnum_tr,buffnum_te,unshuff_ord_tr,unshuff_ord_te = sklearn.model_selection.train_test_split(dsgn_X,labels,times,preshuff_ord,test_size=0.33,shuffle=True)
 Xtr,Xte,Ytr,Yte,unshuff_ord_tr,unshuff_ord_te = sklearn.model_selection.train_test_split(dsgn_X,labels,preshuff_ord,test_size=0.33,shuffle=True)
@@ -79,25 +81,30 @@ Xtr,Xte,Ytr,Yte,unshuff_ord_tr,unshuff_ord_te = sklearn.model_selection.train_te
 
 #%%
 #Learning curve
-tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False),Xtr,Ytr,train_sizes=np.linspace(0.05,1,20),shuffle=True)
+tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l1',dual=False),Xtr,Ytr,train_sizes=np.linspace(0.1,1,10),shuffle=True)
 
-#%%
 plt.figure()
 plt.plot(tsize,np.mean(tscore,axis=1))
 plt.plot(tsize,np.mean(vscore,axis=1))
 
 #%%    
+# Learn several models from train-test splitting
 multi_accuracy = np.zeros((100,1))
 multi_model = [None] * 100
 
 
-
-for ii in range(1):
+# This needs to be converted to CV
+for ii in range(10):
     #split our training set into 90% and 10% and do it 100 times
-    print(ii)
     X_cvtr,X_cvte,Y_cvtr,Y_cvte = sklearn.model_selection.train_test_split(Xtr,Ytr,test_size=0.10)
 
-    clf = svm.LinearSVC(penalty='l2',dual=False)
+    clf = svm.LinearSVC(penalty='l1',dual=False)
+    
+    # Do some null-testing through shuffling here
+    if do_null:
+        Y_cvtr = shuffle(Y_cvtr)
+    
+    # Fit the SVM
     clf.fit(X_cvtr,Y_cvtr)
     #cvtePreds = clf.predict(X_cvte)
     #multi_accuracy[ii] = sum(cvtePreds == Y_cvte) / len(cvtePreds)
@@ -109,10 +116,20 @@ for ii in range(1):
 iimodel_max = np.argmax(multi_accuracy)
 
 
+'''
+This should all be made into a simple:
+learn model
+plot model
+
+in a loop
+
+
+'''
+
 #%%
 clf = multi_model[iimodel_max]
 
-
+# If we want to limit the channels we're looking at
 if limit_chann:
     #NOW let's do an artificial MASK!!! coup de grace
     fold_dsgn_X = Xte.reshape(-1,257,5,order='C')
@@ -204,5 +221,5 @@ for stimclass in range(3):
     coeff_mag[stimclass] = np.linalg.norm(coeffs[stimclass,:,:],axis=1)
     
     mainfig = plt.figure()
-    plot_3d_scalp(coeff_mag[stimclass],mainfig,clims=(0,0.06),animate=False,label=label_map[stimclass],unwrap=True)
+    EEG_Viz.plot_3d_scalp(coeff_mag[stimclass],mainfig,clims=(0,0.06),animate=False,label=label_map[stimclass],unwrap=True)
     plt.title(label_map[stimclass])
