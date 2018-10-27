@@ -25,16 +25,15 @@ import numpy as np
 
 import pickle
 
-perf_dict = nestdict()
+#%%
 
 pts = ['906','907','908','910']
-#pts = ['910']
 condits =  ['OnT','OffT']
 
-#pts = ['908']
-#condits = ['OnT']
 
+#%%
 
+perf_dict = nestdict()
 
 class_type = 'l2'
 do_classif = False

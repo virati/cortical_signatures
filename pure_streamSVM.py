@@ -32,6 +32,11 @@ sns.set_context('paper')
 sns.set(font_scale=4)
 sns.set_style('white')
 
+
+
+#%%
+
+# If we want to do channel masking
 active_chann = [24,35,66,240,212]
 limit_chann = False
 
