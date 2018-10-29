@@ -27,7 +27,7 @@ import pickle
 import cmocean
 #%%
 pt_list = ['906','907','908']
-pt_list=['908']
+#pt_list=['908']
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)
 
@@ -51,7 +51,7 @@ eFrame.train_binSVM()
 eFrame.analyse_binSVM(approach='rpca')
 #%%
 #eFrame.interval_stats(do_band='Alpha')
-#eFrame.psd_stats(chann_list=[])
+eFrame.psd_stats(chann_list=[])
 
 #%%
 ## Do some coherence measures here

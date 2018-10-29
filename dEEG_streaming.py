@@ -7,6 +7,9 @@ Created on Mon Feb  5 21:24:09 2018
 dEEG Continuous
 Load in continuous, raw dEEG from the mat converted files
 This is the FIRST step in the streaming EEG pipeline
+
+This file is essentially the file that loads in the raw EEG data, re-references, and presents the data in a format ready for pure_streamSVM to actually train and validate a classifier
+
 """
 
 from stream_dEEG import streamEEG
@@ -77,47 +80,3 @@ for pp,pt in enumerate(pts):
 with open('/tmp/big_file.pickle','wb') as file:
     pickle.dump({'States':pt_test,'Labels':pt_test_labels,'Times':pt_test_times},file)
     print('Successful Write of big pickle')    
-
-#%%
-
-results_matrix = [np.array((perf_dict[pt][condit][0],perf_dict[pt][condit][1])) for condit,pt in itertools.product(condits,pts)]
-results_matrix = np.concatenate(results_matrix,axis=0)
-
-#index 0 is pred, 1 is true
-
-conf_matrix = confusion_matrix(results_matrix[1,:],results_matrix[0,:])
-
-plt.figure()
-plt.subplot(1,2,1)
-plt.plot(results_matrix[1,:],label='True')
-plt.plot(results_matrix[0,:],label='Predicted')
-
-plt.subplot(1,2,2)
-plt.imshow(conf_matrix)
-plt.yticks(np.arange(0,3),['OFF','OffT','OnT'])
-plt.xticks(np.arange(0,3),['OFF','OffT','OnT'])
-plt.xlabel('Predicted')
-plt.ylabel('True')
-plt.colorbar()
-
-np.save('/home/virati/pre_conf_matrix_'+class_type,results_matrix)
-
-
-
-#%%
-
-
-
-#%%
-#sEEG.re_ref(scheme='local')
-
-#%%
-#DO STREAMING, SEGMENTED Osc Band Calculations
-
-#sEEG.re_ref()
-#%%
-#sEEG.SG_Transform(nperseg=2**11,noverlap=2**11-50,ctype='virtual')
-#sEEG.SG_Transform(nperseg=2**11,noverlap=2**11-50,ctype='real')
-
-        
-

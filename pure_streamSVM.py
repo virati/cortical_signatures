@@ -32,7 +32,9 @@ sns.set_context('paper')
 sns.set(font_scale=4)
 sns.set_style('white')
 
-
+#%%
+regularization = 'l1'
+do_null = False
 
 #%%
 
@@ -46,7 +48,7 @@ inFile = pickle.load(open('/home/virati/Dropbox/Data/streaming_EEG.pickle','rb')
 
 #IF WE ADD LFP HERE WE'RE AWESOME
 
-do_null = False
+
 
 rec = inFile['States']
 lab = inFile['Labels']
@@ -86,7 +88,7 @@ Xtr,Xte,Ytr,Yte,unshuff_ord_tr,unshuff_ord_te = sklearn.model_selection.train_te
 
 #%%
 #Learning curve
-tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l1',dual=False),Xtr,Ytr,train_sizes=np.linspace(0.1,1,10),shuffle=True)
+tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty=regularization,dual=False,max_iter=10000),Xtr,Ytr,train_sizes=np.linspace(0.1,1,10),shuffle=True)
 
 plt.figure()
 plt.plot(tsize,np.mean(tscore,axis=1))
@@ -103,7 +105,7 @@ for ii in range(10):
     #split our training set into 90% and 10% and do it 100 times
     X_cvtr,X_cvte,Y_cvtr,Y_cvte = sklearn.model_selection.train_test_split(Xtr,Ytr,test_size=0.10)
 
-    clf = svm.LinearSVC(penalty='l1',dual=False)
+    clf = svm.LinearSVC(penalty=regularization,dual=False,max_iter=10000)
     
     # Do some null-testing through shuffling here
     if do_null:
@@ -169,9 +171,11 @@ print(accuracy)
 #%%
 
 #Save the classifier here
-pickle.dump(clf,open('/tmp/Stream_SVMModel_l2','wb'))
+pickle.dump(clf,open('/tmp/Stream_SVMModel_'+regularization,'wb'))
 
 #%%
+
+## We'll plot the segments
 
 plt.figure()
 plt.subplot(2,1,1)
@@ -215,16 +219,25 @@ plt.colorbar()
 
 
 #%%
+
+# Plot the coefficients here
 coeffs = clf.coef_.reshape(3,257,-1,order='C')
 
 coeff_mag = [None] * 3
+choose_band = 4
 for stimclass in range(3):
     plt.figure()
     #plt.subplot(1,2,stimcla)
     plt.imshow(coeffs[stimclass,:,:])
     
-    coeff_mag[stimclass] = np.linalg.norm(coeffs[stimclass,:,:],axis=1)
+    #coeff_mag[stimclass] = np.linalg.norm(coeffs[stimclass,:,:],axis=1)
+    coeff_mag[stimclass] = coeffs[stimclass,:,choose_band]
     
     mainfig = plt.figure()
     EEG_Viz.plot_3d_scalp(coeff_mag[stimclass],mainfig,clims=(0,0.06),animate=False,label=label_map[stimclass],unwrap=True)
     plt.title(label_map[stimclass])
+    
+    
+#%%
+# need to do rPCA here for coefficients
+    

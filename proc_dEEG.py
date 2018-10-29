@@ -1600,10 +1600,10 @@ class proc_dEEG:
     
     #Here, we'll plot the PSDs for channels of interest for the conditions of interest
     def psd_stats(self,chann_list=[]):
-        self.view_PSDs(chann_list=chann_list)
+        self.view_PSDs(chann_list=chann_list,zoom_in=True)
         
     #This function is to just show the raw PSDs of each of the experimental conditions collected
-    def view_PSDs(self,low_lim=True,chann_list=[],plot_var=False):
+    def view_PSDs(self,zoom_in=True,chann_list=[],plot_var=False):
         print('Showing raw PSDs')
         avg_psd = nestdict()
         var_psd = nestdict()
@@ -1647,7 +1647,7 @@ class proc_dEEG:
                 plt.subplot(2,2,1)
                 plt.fill_between(f_vect,10*np.log10(var_psd[pt]['OnT']['Off_3'][chann_list,:].T))
             
-            if low_lim:
+            if zoom_in:
                 for ii in range(1,5):
                     plt.subplot(2,2,ii)
                     plt.xlim(0,40)
