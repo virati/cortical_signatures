@@ -89,7 +89,7 @@ Xtr,Xte,Ytr,Yte,unshuff_ord_tr,unshuff_ord_te = sklearn.model_selection.train_te
 #%%
 #Learning curve
 tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty=regularization,dual=False,max_iter=10000),Xtr,Ytr,train_sizes=np.linspace(0.1,1,10),shuffle=True)
-
+#%%
 plt.figure()
 plt.plot(tsize,np.mean(tscore,axis=1))
 plt.plot(tsize,np.mean(vscore,axis=1))
@@ -100,7 +100,7 @@ multi_accuracy = np.zeros((100,1))
 multi_model = [None] * 100
 
 
-# This needs to be converted to CV
+# TODO This needs to be converted to CV
 for ii in range(10):
     #split our training set into 90% and 10% and do it 100 times
     X_cvtr,X_cvte,Y_cvtr,Y_cvte = sklearn.model_selection.train_test_split(Xtr,Ytr,test_size=0.10)

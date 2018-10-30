@@ -158,7 +158,7 @@ class EEG_check:
         pass
 
 class streamEEG:
-    def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False):
+    def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False,do_L_reref=True):
         #self.data_dict = {ev:{condit:[] for condit in do_condits} for ev in do_pts}
         
         self.donfft = 2**10
@@ -206,9 +206,16 @@ class streamEEG:
                 
         #self.data_dict[pt][condit] = data_dict
         self.data_matr = data_matr
+        
+        # Make a random timeseries for 256.... for some reason...?
         self.data_matr[256,:] = np.random.normal(size=self.data_matr[256,:].shape)
-        self.re_ref()
-        self.data_matr = self.re_ref_data
+        
+        
+        
+        # Do local re-referencing and set the datamatrix to the re-referenced data
+        if do_L_reref:
+            print('Doing Local Re-referencing...')
+            self.data_matr = self.re_ref(scheme='local')
         
         #can add LFP and interpolate HERE?!
         
@@ -224,8 +231,6 @@ class streamEEG:
         self.condit = condit
         
     def re_ref(self,scheme='local'):
-        print('Local Referencing...')
-        
         #do a very simple lowpass filter at 1Hz
         hpf_cutoff=1/(self.fs/2)
         bc,ac = sig.butter(3,hpf_cutoff,btype='highpass',output='ba')
@@ -237,7 +242,8 @@ class streamEEG:
             post_ref = neigh_mont.reref_data(dataref,dist_matr)        
             
         
-        self.re_ref_data = post_ref
+        #self.re_ref_data = post_ref
+        return post_ref
                 
     def Osc_state(self):
         pass
@@ -285,22 +291,30 @@ class streamEEG:
         elif train_type == 'stream':
             self.clf = pickle.load(open('/home/virati/Stream_SVMModel_' + ctype,'rb'))
     
-    def calc_baseline(self):
+    def calc_baseline(self,baseline_calibration = True):
         #go to every stim_feat segment WITHOUT stimulation and average them together. This is like a calibration
         
         no_stim_segs = self.stim_feat < 10
         stim_segs = np.logical_not( no_stim_segs)
         
         self.label_time = np.zeros((self.osc_matr.shape[1]))
-        
-        self.no_stim_median = np.median(self.osc_matr[:,no_stim_segs,:],axis=1)
         self.stim_matr = np.zeros_like(self.osc_matr)
-        for ss in range(self.osc_matr.shape[1]):
-            self.stim_matr[:,ss,:] = self.osc_matr[:,ss,:] - self.no_stim_median
-            self.label_time[ss] = ss
+        self.true_labels = np.zeros((self.osc_matr.shape[1])) # setup our labels
         
+        # Find the median of the segments without stimulation along the axis of segments
+        self.no_stim_median = np.median(self.osc_matr[:,no_stim_segs,:],axis=1)
         
-        self.true_labels = np.zeros((self.osc_matr.shape[1]))
+        #Go through each segment and subtract out the median of the stim
+        if baseline_calibration:
+            for ss in range(self.osc_matr.shape[1]):
+                self.stim_matr[:,ss,:] = self.osc_matr[:,ss,:] - self.no_stim_median
+                self.label_time[ss] = ss
+                self.stim_matr_calibrated = True
+        else:
+            self.stim_matr = self.osc_matr
+            for ss in range(self.osc_matr.shape[1]): self.label_time[ss] = ss
+            
+            self.stim_matr_calibrated = False
         
         if self.condit == 'OnT':
             label_val = 2
@@ -308,17 +322,25 @@ class streamEEG:
             label_val = 1
         elif self.condit == 'Volt':
             label_val = 2
-            
+        
+        # Transform from our labels to the integer labels
         self.label_val = label_val
         
+        # label each segment with the condition of its time
         self.true_labels[stim_segs] = label_val
         
         
     def gen_test_matrix(self):
+        #We copy the STIM matrix here, not the osc matrix.... TODO
         test_matr = np.copy(self.stim_matr)
+        
+        #Swap the 0 and 1's axes, I think to give us...?
         test_matr = np.swapaxes(test_matr,0,1)
+        
+        # Reshape to flatten our features TODO CHECK THE ORDER OF THIS AND MAKE SURE WE'RE KOSHER
         test_matr = test_matr.reshape(-1,257*5,order='F')
         
+        # Directly return to us our matrix of interest
         return test_matr
     
     def classify_segs(self,ctype='l2',train_type='cleaned'):

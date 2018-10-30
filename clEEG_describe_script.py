@@ -13,7 +13,6 @@ A REWRITE of the Cleaned EEG-Descriptive Pipeline (SCRIPT)
 
 from proc_dEEG import proc_dEEG
 from DBSpace.visualizations import EEG_Viz
-#from EEG_Viz import plot_3d_scalp
 
 import scipy.stats as stats
 import numpy as np
@@ -37,26 +36,27 @@ eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
 eFrame.extract_feats(polyorder=0)
 eFrame.DEPRgen_OSC_stack()
 
-#%%
-eFrame.simple_stats()
-#%%
-eFrame.band_stats(do_band='Alpha')
-
-#eFrame.pca_decomp(direction='channels',condit='OnT',bl_correct=True,pca_type='rpca')
-#%%
-eFrame.plot_pca_decomp(approach='rpca')
-#%%
-eFrame.train_binSVM()
-#eFrame.assess_binSVM()
-eFrame.analyse_binSVM(approach='rpca')
-#%%
-#eFrame.interval_stats(do_band='Alpha')
-eFrame.psd_stats(chann_list=[])
+if 0:
+    #%%
+    eFrame.simple_stats()
+    #%%
+    eFrame.band_stats(do_band='Alpha')
+    
+    #eFrame.pca_decomp(direction='channels',condit='OnT',bl_correct=True,pca_type='rpca')
+    #%%
+    eFrame.plot_pca_decomp(approach='rpca')
+    #%%
+    eFrame.train_binSVM()
+    #eFrame.assess_binSVM()
+    eFrame.analyse_binSVM(approach='rpca')
+    #%%
+    #eFrame.interval_stats(do_band='Alpha')
+    eFrame.psd_stats(chann_list=[])
 
 #%%
 ## Do some coherence measures here
 
-#CSD_dict,PLV_dict = eFrame.coher_stat(pt_list=pt_list,chann_list=[])
+CSD_dict,PLV_dict = eFrame.coher_stat(pt_list=pt_list,chann_list=[])
 
 
 #%%

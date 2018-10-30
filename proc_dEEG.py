@@ -1583,7 +1583,7 @@ class proc_dEEG:
                     print('Doing ' + pt + condit + epoch)
                     data_matr = self.ts_data[pt][condit][epoch]
                     data_dict = {ch:data_matr[ch,:,:].squeeze() for ch in range(self.chann_dim)}
-                    CSD_dict[pt][condit][epoch], PLV_dict[pt][condit][epoch] = dbo.gen_coher(data_dict,Fs=self.fs,nfft=2**10,polyord=self.polyorder,band='Alpha')
+                    CSD_dict[pt][condit][epoch], PLV_dict[pt][condit][epoch] = dbo.gen_coher(data_dict,Fs=self.fs,nfft=2**9,polyord=self.polyorder)
                     
         print('Done with coherence... I guess...')
         return CSD_dict,PLV_dict
