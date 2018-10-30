@@ -21,7 +21,7 @@ import string
 
 import umap
 import pdb
-
+import cmocean
 
 #%%
 def umap_display():
@@ -52,12 +52,23 @@ for pt in pt_list:
             
         #plot the average through segments
         plt.figure()
-        plt.subplot(1,2,1)
-        plt.imshow(np.median(np.abs(csd_matrix[clabel[condit]][:,:,:,2]),axis=2) - np.median(np.abs(csd_matrix['Off_3'][:,:,:,2]),axis=2))
-        plt.subplot(1,2,2)
-        plt.imshow(np.median(np.angle(csd_matrix[clabel[condit]][:,:,:,2]),axis=2) - np.median(np.angle(csd_matrix['Off_3'][:,:,:,2]),axis=2))
+        plt.subplot(2,2,1)
+        mag_diff = np.median(np.abs(csd_matrix[clabel[condit]][:,:,:,2]),axis=2) - np.median(np.abs(csd_matrix['Off_3'][:,:,:,2]),axis=2)
+        plt.imshow(mag_diff,vmax=0.5,vmin=-0.5)
+        plt.colorbar()
+        plt.subplot(2,2,3)
+        plt.hist(mag_diff.flatten(),bins=np.linspace(-0.5,0.5,20))
+        plt.subplot(2,2,2)
+        angle_diff = np.median(np.angle(csd_matrix[clabel[condit]][:,:,:,2]),axis=2) - np.median(np.angle(csd_matrix['Off_3'][:,:,:,2]),axis=2)
+        
+        angle_diff = (angle_diff + np.pi) % (2 * np.pi ) - np.pi
+        
+        plt.imshow(angle_diff,cmap=cmocean.cm.phase)
         plt.colorbar()
         plt.suptitle(pt + ' ' + condit + ' difference')
+        
+        plt.subplot(2,2,4)
+        plt.hist(angle_diff.flatten())
             
 
 #%%

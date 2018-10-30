@@ -29,7 +29,7 @@ pt_list = ['906','907','908']
 #pt_list=['908']
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)
-
+do_coherence = False
 
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
@@ -56,11 +56,12 @@ if 0:
 #%%
 ## Do some coherence measures here
 
-CSD_dict,PLV_dict = eFrame.coher_stat(pt_list=pt_list,chann_list=[])
-
-
-#%%
-#Package for pickle, this needs to be folded into the coher_stat method
-coh_measures = {'CSD':CSD_dict,'PLV':PLV_dict}
-with open('/tmp/DBS'+pt_list[0]+'_coh_dict.pickle','wb') as handle:
-    pickle.dump(coh_measures,handle,protocol=pickle.HIGHEST_PROTOCOL)
+if do_coherence:
+    CSD_dict,PLV_dict = eFrame.coher_stat(pt_list=pt_list,chann_list=[])
+    
+    
+    #%%
+    #Package for pickle, this needs to be folded into the coher_stat method
+    coh_measures = {'CSD':CSD_dict,'PLV':PLV_dict}
+    with open('/tmp/DBS'+pt_list[0]+'_coh_dict.pickle','wb') as handle:
+        pickle.dump(coh_measures,handle,protocol=pickle.HIGHEST_PROTOCOL)
