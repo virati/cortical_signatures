@@ -157,8 +157,28 @@ class streamLFP:
     This should return the timeseries associated with a particular segment
     '''
     def time_series(self,epoch_name='All'):
+
+        #Find the indices we need
         rec_idxs = np.where(np.logical_and(self.tvect < self.epochs[epoch_name][1],self.tvect > self.epochs[epoch_name][0]))
-        return self.data_dict['Left'][rec_idxs]
+        
+        return {key:self.data_dict[key][rec_idxs] for key in self.data_dict}
+    
+    
+    '''
+    Plots and transforms below
+    '''
+    def osc_plot(self,epoch_name='All'):
+        Osc_state = self.osc_transform(epoch_name)
+        
+    def osc_transform(self,epoch_name):
+        ensemble_state = dbo.osc_state(self.time_series(epoch_name = epoch_name))
+    
+    def tf_plot(self,epoch_name='All'):
+        TF_dict = self.tf_transform(epoch_name)
+        
+    def tf_transform(self,epoch_name):
+        T,F,SG = dbo.gen_SG(self.time_series(epoch_name = epoch_name))
+        
         
         
         

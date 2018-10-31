@@ -40,8 +40,10 @@ pt_list = ['906','907','908']
 condit_list = ['OnT','OffT']
 clabel = {'OnT':'BONT','OffT':'BOFT'}
 #epochs = ['Off_3',clabel[condit]]
-
-
+with open('/home/virati/big_coher_matrix.pickle','rb') as handle:
+    import_dict = pickle.load(handle)
+csd_dict = import_dict['CSD']
+plv_dict = import_dict['PLV']
 #%% Reshape the inputs into matrices for each patient x condition
 band_idx = 2
 for pt in pt_list:
@@ -58,7 +60,7 @@ for pt in pt_list:
         #plot the average through segments
         plt.figure(conn_plots.number)
         plt.subplot(2,2,2*cc+1)
-        mag_diff = np.median(np.abs(csd_matrix[clabel[condit]][:,:,:,band_idx]),axis=2) - np.median(np.abs(csd_matrix['Off_3'][:,:,:,band_idx]),axis=2)
+        mag_diff = np.log10(np.median(np.abs(csd_matrix[clabel[condit]][:,:,:,band_idx]),axis=2)) - np.log10(np.median(np.abs(csd_matrix['Off_3'][:,:,:,band_idx]),axis=2))
         plt.imshow(mag_diff,vmax=0.5,vmin=-0.5)
         plt.colorbar()
         
@@ -85,24 +87,24 @@ for pt in pt_list:
         
 #%%
 # Compare OnTarget to No Stim
-band_idx=2
+band_idx=1
 for pt in pt_list:
     bins = np.linspace(-4,4,100)
     plt.figure()
     plt.subplot(2,2,1)
     csd_matrix = np.array([[csd_dict[pt]['OnT']['Off_3'][ii][jj] for jj in range(257)] for ii in range(257)])
-    plt.imshow(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2)))
+    plt.imshow(np.log10(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2))))
     plt.colorbar()
     
     plt.subplot(2,1,2)
-    plt.hist(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2)).flatten(),alpha=0.2,bins=bins,label='OFF')
+    plt.hist(np.log10(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2)).flatten()),alpha=0.2,bins=bins,label='OFF')
     
     plt.subplot(2,2,2)
     csd_matrix = np.array([[csd_dict[pt]['OnT']['BONT'][ii][jj] for jj in range(257)] for ii in range(257)])
-    plt.imshow(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2)))
+    plt.imshow(np.log10(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2))))
     
     plt.subplot(2,1,2)
-    plt.hist(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2)).flatten(),alpha=0.2,bins=bins,label='BONT')
+    plt.hist(np.log10(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2)).flatten()),alpha=0.2,bins=bins,label='BONT')
     plt.legend()
             
 
