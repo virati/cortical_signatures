@@ -43,32 +43,67 @@ clabel = {'OnT':'BONT','OffT':'BOFT'}
 
 
 #%% Reshape the inputs into matrices for each patient x condition
+band_idx = 2
 for pt in pt_list:
-    for condit in condit_list:
+    hist_plots = plt.figure()
+    conn_plots = plt.figure()
+    
+    for cc,condit in enumerate(condit_list):
         csd_matrix = {'Off_3':[], clabel[condit]:[]}
         for epoch in ['Off_3',clabel[condit]]:
             csd_matrix[epoch] = np.array([[csd_dict[pt][condit][epoch][ii][jj] for jj in range(257)] for ii in range(257)])
             
-            
+        
+        #lim_time = range()
         #plot the average through segments
-        plt.figure()
-        plt.subplot(2,2,1)
-        mag_diff = np.median(np.abs(csd_matrix[clabel[condit]][:,:,:,2]),axis=2) - np.median(np.abs(csd_matrix['Off_3'][:,:,:,2]),axis=2)
+        plt.figure(conn_plots.number)
+        plt.subplot(2,2,2*cc+1)
+        mag_diff = np.median(np.abs(csd_matrix[clabel[condit]][:,:,:,band_idx]),axis=2) - np.median(np.abs(csd_matrix['Off_3'][:,:,:,band_idx]),axis=2)
         plt.imshow(mag_diff,vmax=0.5,vmin=-0.5)
         plt.colorbar()
-        plt.subplot(2,2,3)
-        plt.hist(mag_diff.flatten(),bins=np.linspace(-0.5,0.5,20))
-        plt.subplot(2,2,2)
-        angle_diff = np.median(np.angle(csd_matrix[clabel[condit]][:,:,:,2]),axis=2) - np.median(np.angle(csd_matrix['Off_3'][:,:,:,2]),axis=2)
+        
+        plt.subplot(2,2,2*(cc)+2)
+        angle_diff = np.median(np.angle(csd_matrix[clabel[condit]][:,:,:,band_idx]),axis=2) - np.median(np.angle(csd_matrix['Off_3'][:,:,:,band_idx]),axis=2)
         
         angle_diff = (angle_diff + np.pi) % (2 * np.pi ) - np.pi
         
         plt.imshow(angle_diff,cmap=cmocean.cm.phase)
         plt.colorbar()
-        plt.suptitle(pt + ' ' + condit + ' difference')
+        plt.title(pt + ' ' + condit + ' difference')
         
+        
+        ## Plot histograms now
+        plt.figure(hist_plots.number)
+        plt.subplot(2,2,3)
+        plt.hist(mag_diff.flatten(),bins=np.linspace(-0.5,0.5,20),alpha=0.4)
+        plt.ylim((0,256*256/2))
+    
         plt.subplot(2,2,4)
-        plt.hist(angle_diff.flatten())
+        plt.hist(angle_diff.flatten(),alpha=0.4)
+        plt.ylim((0,256*256/2))
+        
+        
+#%%
+# Compare OnTarget to No Stim
+band_idx=2
+for pt in pt_list:
+    bins = np.linspace(-4,4,100)
+    plt.figure()
+    plt.subplot(2,2,1)
+    csd_matrix = np.array([[csd_dict[pt]['OnT']['Off_3'][ii][jj] for jj in range(257)] for ii in range(257)])
+    plt.imshow(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2)))
+    plt.colorbar()
+    
+    plt.subplot(2,1,2)
+    plt.hist(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2)).flatten(),alpha=0.2,bins=bins,label='OFF')
+    
+    plt.subplot(2,2,2)
+    csd_matrix = np.array([[csd_dict[pt]['OnT']['BONT'][ii][jj] for jj in range(257)] for ii in range(257)])
+    plt.imshow(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2)))
+    
+    plt.subplot(2,1,2)
+    plt.hist(np.abs(np.mean(csd_matrix[:,:,:,band_idx],axis=2)).flatten(),alpha=0.2,bins=bins,label='BONT')
+    plt.legend()
             
 
 #%%
