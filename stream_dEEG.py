@@ -37,43 +37,43 @@ Targeting['All'] = {
                 'OnT':{
                         'fname':'',
                         'lfp':'/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_17_10_31__MR_0.txt',
-                        'segments':{'Bilat':(600,630),'PreBilat':(500,530)}
+                        'epochs':{'Bilat':(600,630),'PreBilat':(500,530)},
                 'OffT':{
                         'fname':'',
                         'lfp':'/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_16_25_07__MR_0.txt',
-                        'segments':{'Bilat':(600,630),'PreBilat':(480,510)}
-                'Volt':{}}}}},
+                        'epochs':{'Bilat':(600,630),'PreBilat':(480,510)},
+                'Volt':{}}}},
         '903':{
                 'OnT':{
                         'fname':'',
                         'lfp':'/home/virati/MDD_Data/BR/903/Session_2014_09_03_Wednesday/DBS903_2014_09_03_14_16_57__MR_0.txt',
-                        'segments':{'Bilat':(550,580),'PreBilat':(501,531)}
+                        'epochs':{'Bilat':(550,580),'PreBilat':(501,531)},
                 'OffT':{
                         'fname':'',
                         'lfp':'/home/virati/MDD_Data/BR/903/Session_2014_09_04_Thursday/DBS903_2014_09_04_12_53_09__MR_0.txt' ,
-                        'segments':{'Bilat':(550,580),'PreBilat':(501,531)}
-                'Volt':{}}}}},
+                        'epochs':{'Bilat':(550,580),'PreBilat':(501,531)},
+                'Volt':{}}}},
         '905':{
                 'OnT':{
                         'fname':'',
-                        'lfp':'/home/virati/MDD_Data/BR/905/Session_2015_09_28_Monday/Dbs905_2015_09_28_13_51_42__MR_0.txt' 
-                        'segments':{'Bilat':(610,640),'PreBilat':(561,591)}
+                        'lfp':'/home/virati/MDD_Data/BR/905/Session_2015_09_28_Monday/Dbs905_2015_09_28_13_51_42__MR_0.txt',
+                        'epochs':{'Bilat':(610,640),'PreBilat':(561,591)},
                 'OffT':{
                         'fname':'',
                         'lfp':'/home/virati/MDD_Data/BR/905/Session_2015_09_29_Tuesday/Dbs905_2015_09_29_12_32_47__MR_0.txt' ,
-                        'segments':{'Bilat':(610,640),'PreBilat':(561,591)}},
-                'Volt':{}}}}},
+                        'epochs':{'Bilat':(610,640),'PreBilat':(561,591)}},
+                'Volt':{}}},
         '906':{
                 'OnT':{
                         #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/DS500/DBS906_TurnOn_Day1_Sess1_20150827_024013_tds.mat'
                         'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess1_20150827_024013_OnTarget.mat',
                         'lfp':'/home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_15_10_44__MR_0.txt',
-                        'segments':{'Bilat':(610,640),'PreBilat':(561,591)}
+                        'epochs':{'Bilat':(610,640),'PreBilat':(561,591)},
                         },
                 'OffT':{
                         'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess2_20150827_041726_OffTarget.mat',
                         'lfp':'/home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_16_20_23__MR_0.txt',
-                        'segments':{'Bilat':(610,640),'PreBilat':(561,591)}
+                        'epochs':{'Bilat':(610,640),'PreBilat':(561,591)},
                         },
                 
                 'Volt':{
@@ -87,12 +87,12 @@ Targeting['All'] = {
                 'OnT':{
                         'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day1_onTARGET_20151216_105913.mat',
                         'lfp':'/home/virati/MDD_Data/BR/907/Session_2015_12_16_Wednesday/DBS907_2015_12_16_12_09_04__MR_0.txt',
-                        'segments':{'Bilat':(640,670),'PreBilat':(590,620)}
+                        'epochs':{'Bilat':(640,670),'PreBilat':(590,620)},
                         },
                 'OffT':{
                         'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_offTARGET_20151217_094245.mat',
                         'lfp':'/home/virati/MDD_Data/BR/907/Session_2015_12_17_Thursday/DBS907_2015_12_17_10_53_08__MR_0.txt',
-                        'segments':{'Bilat':(625,655),'PreBilat':(560,590)}
+                        'epochs':{'Bilat':(625,655),'PreBilat':(560,590)},
                         },
                 'Volt':{
                         #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_Voltage_20151217_102952.mat'
@@ -104,13 +104,11 @@ Targeting['All'] = {
                 'OnT':{
                         'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS908/DBS908_TurnOn_Day1_onTARGET_20160210_125231.mat',
                         'lfp':'/home/virati/MDD_Data/BR/908/Session_2016_02_10_Wednesday/DBS908_2016_02_10_13_03_10__MR_0.txt',
-                        'segments':{'Bilat':(611,641),'PreBilat':(551,581)
-                        },
+                        'epochs':{'Bilat':(611,641),'PreBilat':(551,581)}},
                 'OffT':{
                         'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS908/DBS908_TurnOn_Day2_offTARGET_20160211_123540.mat',
                         'lfp':'/home/virati/MDD_Data/BR/908/Session_2016_02_11_Thursday/DBS908_2016_02_11_12_34_21__MR_0.txt',
-                        'segments':{'Bilat':(611,641),'PreBilat':(551,581)
-                                }
+                        'epochs':{'Bilat':(611,641),'PreBilat':(551,581)},
                         },
                 'Volt':{'fname':'',
                         'lfp':''
@@ -126,75 +124,44 @@ Targeting['All'] = {
                         'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS910_TurnOn_OffTarget_TO_20180530_014051.mat',
                         'lfp':''},
                 'Volt':{}
-                },
-        '901':{
-            'OnT':{
-                    'fname':'/tmp/DBS901-02 Eyes 20140520 1600.mat',
-                    'lfp':''
-                    },
-            'OffT':{
-                    'fname':'',
-                    'lfp':''
-                    },
-            'Volt':{
-                    'fname':'',
-                    'lfp':''
-                    }
+                }
             }
-                
-                
-            }
-
-Targeting['3mo'] = {'906':{'OnT':{'fname':''}}}
-Targeting['6mo'] = {'906':{
-                'OnT':{
-                        #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/DS500/DBS906_TurnOn_Day1_Sess1_20150827_024013_tds.mat'
-                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess1_20150827_024013_OnTarget.mat',
-                        'lfp':''
-                        },
-                'OffT':{
-                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess2_20150827_041726_OffTarget.mat',
-                        'lfp':''
-                        },
-                
-                'Volt':{
-                        #
-                        #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS906_TurnOn_Day2_Sess3_Sess4_20150828_043231_VoltageAndFreq.mat'
-                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS906_TurnOn_Day2_Sess2_20150828_032515_CurrentSweep.mat',
-                        'lfp':''
-                        }
-                },
-        '908':{
-                'OnT':{
-                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS908/DBS908_TurnOn_Day1_onTARGET_20160210_125231.mat',
-                        },
-                'OffT':{
-                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS908/DBS908_TurnOn_Day2_offTARGET_20160211_123540.mat',
-                        },
-                'Volt':{'fname':'',
-                        'lfp':''
-                        }
-                },
-        '907':{
-                'OnT':{
-                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day1_onTARGET_20151216_105913.mat',
-                        'lfp':''
-                        },
-                'OffT':{
-                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_offTARGET_20151217_094245.mat',
-                        'lfp':''
-                        },
-                'Volt':{
-                        #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_Voltage_20151217_102952.mat'
-                        'fname':'/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day3_Current_20151218_092443.mat',
-                        'lfp':''
-                        }
-                }}
 
 class EEG_check:
     def __init__(self,pt='908',condit='OnT',ds_fact=1,fs=500,spotcheck=False):
         pass
-
+    
+class streamLFP:
+    def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False):
+        self.donfft=2**10
+        
+        self.pt = pt
+        self.condit = condit
+        
+        container = dbo.load_BR_dict(Targeting['All'][pt][condit]['lfp'],sec_offset=0)
+        fs = 422
+        
+        rec_length = container['Left'].shape
+        
+        self.tvect = np.linspace(0,rec_length[0]* 1/fs,rec_length[0])
+        self.data_dict = container
+        
+        self.gen_epochs()
+        
+    def gen_epochs(self):
+        #Go in and generate the epochs associated with this recording
+        self.epochs = Targeting['All'][self.pt][self.condit]['epochs']
+        self.epochs['ALL'] = (0,-1)
+        
+    '''
+    This should return the timeseries associated with a particular segment
+    '''
+    def time_series(self,epoch_name='All'):
+        rec_idxs = np.where(np.logical_and(self.tvect < self.epochs[epoch_name][1],self.tvect > self.epochs[epoch_name][0]))
+        return self.data_dict['Left'][rec_idxs]
+        
+        
+        
 class streamEEG:
     def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False,do_L_reref=True):
         #self.data_dict = {ev:{condit:[] for condit in do_condits} for ev in do_pts}
@@ -286,7 +253,7 @@ class streamEEG:
     def Osc_state(self):
         pass
     
-    def make_segments(self):
+    def make_epochs(self):
         pass
         
     def seg_PSDs(self):
@@ -339,7 +306,7 @@ class streamEEG:
         self.stim_matr = np.zeros_like(self.osc_matr)
         self.true_labels = np.zeros((self.osc_matr.shape[1])) # setup our labels
         
-        # Find the median of the segments without stimulation along the axis of segments
+        # Find the median of the epochs without stimulation along the axis of epochs
         self.no_stim_median = np.median(self.osc_matr[:,no_stim_segs,:],axis=1)
         
         #Go through each segment and subtract out the median of the stim
