@@ -10,6 +10,7 @@ Display script for coherence measures and etc.
 #import sys
 #sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
 import DBSpace as dbo
+from DBSpace import nestdict
 
 import matplotlib.pyplot as plt
 import pickle
@@ -46,6 +47,9 @@ csd_dict = import_dict['CSD']
 plv_dict = import_dict['PLV']
 #%% Reshape the inputs into matrices for each patient x condition
 band_idx = 2
+msCoh = nestdict()
+
+coh_stack = nestdict()
 for pt in pt_list:
     hist_plots = plt.figure()
     conn_plots = plt.figure()
@@ -55,6 +59,7 @@ for pt in pt_list:
         for epoch in ['Off_3',clabel[condit]]:
             csd_matrix[epoch] = np.array([[csd_dict[pt][condit][epoch][ii][jj] for jj in range(257)] for ii in range(257)])
             
+        coh_stack[pt][condit] = csd_matrix
         
         #lim_time = range()
         #plot the average through segments
@@ -73,18 +78,63 @@ for pt in pt_list:
         plt.colorbar()
         plt.title(pt + ' ' + condit + ' difference')
         
+        # TODO do masks so we focus just on the most important channels
         
         ## Plot histograms now
         plt.figure(hist_plots.number)
         plt.subplot(2,2,3)
-        plt.hist(mag_diff.flatten(),bins=np.linspace(-0.5,0.5,20),alpha=0.4)
+        plt.hist(mag_diff.flatten(),bins=np.linspace(-0.5,0.5,20),alpha=0.4,label=condit)
         plt.ylim((0,256*256/2))
+        plt.legend()
     
         plt.subplot(2,2,4)
         plt.hist(angle_diff.flatten(),alpha=0.4)
         plt.ylim((0,256*256/2))
+        plt.legend()
+        
+        # Do a mask
+        
+        msCoh[pt][condit] = mag_diff
         
         
+#%%
+#work directly with the full stack across patients
+# rPCA
+coh_tensor = np.concatenate([np.abs(np.swapaxes(coh_stack[pt][condit][epoch],2,3)) for pt in pt_list for condit in condit_list for epoch in ['Off_3',clabel[condit]]],axis=3)[:,:,2,:]
+#coh_tensor = np.append([[([np.swapaxes(coh_stack[pt][condit][epoch],3,2) for epoch in ['Off_3',clabel[condit]]]) for condit in condit_list] for pt in pt_list],axis=3)
+
+#%%
+# UMAP
+import umap
+udim = umap.UMAP().fit_transform(coh_tensor.reshape(257*257,-1))
+#%%
+wrap_chann_udim = udim.reshape(257,257,2)
+use_map = matplotlib.cm.get_cmap('Spectral')
+plt.figure()
+for ii in range(257):
+    plt.scatter(wrap_chann_udim[ii,ii:,0],wrap_chann_udim[ii,ii:,1],color=use_map(ii/257),alpha=0.1)
+
+#%%
+stat_coh = nestdict()
+var_coh = nestdict()
+for condit in condit_list:
+    stat_coh[condit] = np.mean([coh[condit] for pt,coh in msCoh.items()],axis=0)
+    var_coh[condit] = np.std([coh[condit] for pt,coh in msCoh.items()],axis=0)
+    
+    
+plt.figure()
+plt.subplot(1,2,1)
+#plt.imshow(stat_coh['OnT'] / var_coh['OnT'],vmin=-100,vmax=100);plt.colorbar()
+plt.hist((stat_coh['OnT']).flatten(),bins=np.linspace(-1,1,100))
+
+
+plt.title('OnT')
+plt.subplot(1,2,2)
+#plt.imshow(stat_coh['OffT'] / var_coh['OffT'],vmin=-100,vmax=100);plt.colorbar()
+plt.hist((stat_coh['OffT']).flatten(),bins=np.linspace(-1,1,100))
+
+plt.title('OffT')
+            
 #%%
 # Compare OnTarget to No Stim
 band_idx=1
