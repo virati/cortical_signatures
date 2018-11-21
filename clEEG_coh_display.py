@@ -24,6 +24,10 @@ import umap
 import pdb
 import cmocean
 
+import sys
+sys.path.append('/home/virati/Dropbox/projects/libs/robust-pca/')
+import r_pca
+
 #%%
 def umap_display():
     with open('/home/virati/Dropbox/Data/DBS'+pt+'_coh_dict.pickle','rb') as handle:
@@ -57,7 +61,11 @@ for pt in pt_list:
     for cc,condit in enumerate(condit_list):
         csd_matrix = {'Off_3':[], clabel[condit]:[]}
         for epoch in ['Off_3',clabel[condit]]:
-            csd_matrix[epoch] = np.array([[csd_dict[pt][condit][epoch][ii][jj] for jj in range(257)] for ii in range(257)])
+            csd_matrix[epoch] = np.swapaxes(np.array([[csd_dict[pt][condit][epoch][ii][jj] for jj in range(257)] for ii in range(257)]),2,3)
+        
+        # Actually, let's return the baseline (Off_3) median subtracted versions of all stim-conditions
+        for ss in range(csd_matrix[clabel[condit]].shape[3]):
+            csd_matrix[clabel[condit]][:,:,:,ss] = csd_matrix[clabel[condit]][:,:,:,ss] - np.median(csd_matrix['Off_3'],axis=-1)
             
         coh_stack[pt][condit] = csd_matrix
         
@@ -100,20 +108,32 @@ for pt in pt_list:
 #%%
 #work directly with the full stack across patients
 # rPCA
-coh_tensor = np.concatenate([np.abs(np.swapaxes(coh_stack[pt][condit][epoch],2,3)) for pt in pt_list for condit in condit_list for epoch in ['Off_3',clabel[condit]]],axis=3)[:,:,2,:]
+band_idx = 1
+coh_tensor = np.concatenate([np.abs((coh_stack[pt][condit][epoch])) for pt in pt_list for condit in condit_list for epoch in [clabel[condit]]],axis=3)[:,:,band_idx,:]
 #coh_tensor = np.append([[([np.swapaxes(coh_stack[pt][condit][epoch],3,2) for epoch in ['Off_3',clabel[condit]]]) for condit in condit_list] for pt in pt_list],axis=3)
+#%%
+def do_pca():
+    rpca = r_pca.R_pca(coh_tensor)
+    L,S = rpca.fit()
+
+
 
 #%%
 # UMAP
-import umap
-udim = umap.UMAP().fit_transform(coh_tensor.reshape(257*257,-1))
+def do_umap():
+    import umap
+    udim = umap.UMAP().fit_transform(coh_tensor.reshape(257*257,-1))
+    return udim
+udim = do_umap()
 #%%
-wrap_chann_udim = udim.reshape(257,257,2)
-use_map = matplotlib.cm.get_cmap('Spectral')
-plt.figure()
-for ii in range(257):
-    plt.scatter(wrap_chann_udim[ii,ii:,0],wrap_chann_udim[ii,ii:,1],color=use_map(ii/257),alpha=0.1)
-
+def plot_umap(udim):
+    wrap_chann_udim = udim.reshape(257,257,2)
+    use_map = matplotlib.cm.get_cmap('Spectral')
+    plt.figure()
+    for ii in range(257):
+        sc = plt.scatter(wrap_chann_udim[ii,ii:,0],wrap_chann_udim[ii,ii:,1],color=use_map(ii/257),alpha=0.1,cmap=use_map)
+    plt.colorbar(sc)
+plot_umap(udim)
 #%%
 stat_coh = nestdict()
 var_coh = nestdict()

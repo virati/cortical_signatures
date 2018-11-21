@@ -249,6 +249,8 @@ class proc_dEEG:
         
     def band_stats(self,do_band='Alpha'):
         self.pop_meds()
+        
+    def plot_band_stats(self,do_band='Alpha'):
         self.plot_meds(band=do_band,flatten=not self.pretty)
     
     def simple_stats(self):
@@ -671,7 +673,9 @@ class proc_dEEG:
             EEG_Viz.plot_3d_scalp(self.ICA_x[:,cc],fig,animate=False,unwrap=True)
             plt.title('Plotting component ' + str(cc))
             plt.suptitle('ICA rotated results for OnT')
-    def band_distr(self,condit='OnT'):
+            
+            
+    def band_distr(self):
         print('Plotting Distribution for Bands')
         
         meds = nestdict()
@@ -680,6 +684,7 @@ class proc_dEEG:
         marker=['o','s']
         color = ['b','g']
         plt.figure()
+        ax2 = plt.subplot(111)
         for cc,condit in enumerate(['OnT','OffT']):
             for bb in range(5):
                 meds[condit] = self.Seg_Med[0][condit][:,:]
@@ -687,8 +692,14 @@ class proc_dEEG:
                 #band_segnum[condit] = self.Seg_Med[2][condit]
                 
                 
-                plt.scatter((bb+(cc-0.5)/10)*np.ones_like(meds[condit][:,bb]),meds[condit][:,bb],marker=marker[cc],color=color[cc],s=100,alpha=0.2)
-            plt.boxplot(meds[condit][:,:],positions=np.arange(5)+(cc-0.5)/10,labels=dbo.feat_order)
+                #plt.scatter((bb+(cc-0.5)/10)*np.ones_like(meds[condit][:,bb]),meds[condit][:,bb],marker=marker[cc],color=color[cc],s=100,alpha=0.2)
+            #plt.boxplot(meds[condit][:,:],positions=np.arange(5)+(cc-0.5)/10,labels=dbo.feat_order)
+            parts = ax2.violinplot(meds[condit][:,:],positions=np.arange(5)+(cc-0.5)/10)
+            for pc in parts['bodies']:
+                pc.set_facecolor(color[cc])
+                pc.set_edgecolor(color[cc])
+                #pc.set_linecolor(color[cc])
+                                 
             plt.ylim((-0.5,0.5))
         
         
@@ -768,6 +779,16 @@ class proc_dEEG:
             #This is MEDS
             EEG_Viz.plot_3d_scalp(band_median[condit],fig,label=condit + '_med',animate=False,clims=(-0.2,0.2),unwrap=flatten)
             plt.suptitle('Median of Cortical Response across all ' + condit + ' segments | Band is ' + band)
+            
+        
+        
+        for condit in self.condits:
+            #let's plot the exterior matrix for this
+            fig = plt.figure()
+            band_corr_matr = band_median[condit].reshape(-1,1) * band_median[condit].reshape(-1,1).T
+            #pdb.set_trace()
+            plt.imshow(band_corr_matr,vmin=-0.01,vmax=0.05)
+            plt.colorbar()
         
 
         

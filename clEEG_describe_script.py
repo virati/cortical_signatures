@@ -36,14 +36,19 @@ eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
 eFrame.extract_feats(polyorder=0)
 eFrame.DEPRgen_OSC_stack()
 
-if 0:
-    #%%
+if 1:
     eFrame.simple_stats()
-    #%%
-    eFrame.band_stats(do_band='Alpha')
+
+    eFrame.band_stats()
     
-    #eFrame.pca_decomp(direction='channels',condit='OnT',bl_correct=True,pca_type='rpca')
     #%%
+    eFrame.plot_band_stats(do_band='Delta')
+    
+    
+    #%%
+    eFrame.band_distr() # this does the violin plots
+    #eFrame.pca_decomp(direction='channels',condit='OnT',bl_correct=True,pca_type='rpca')
+    
     eFrame.plot_pca_decomp(approach='rpca')
     #%%
     eFrame.train_binSVM()

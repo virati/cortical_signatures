@@ -34,7 +34,7 @@ sns.set_style('white')
 
 #%%
 regularization = 'l1'
-do_null = True
+do_null = False
 
 #%%
 
