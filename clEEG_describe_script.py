@@ -37,12 +37,14 @@ eFrame.extract_feats(polyorder=0)
 eFrame.DEPRgen_OSC_stack()
 
 if 1:
+    #
     eFrame.simple_stats()
 
+    #
     eFrame.band_stats()
     
-    #%%
-    eFrame.plot_band_stats(do_band='Delta')
+    # This plots the oscillatory topomaps of a particular band
+    eFrame.plot_band_stats(do_band='Alpha')
     
     
     #%%

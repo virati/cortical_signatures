@@ -1,10 +1,13 @@
+'''
+OBSOLETE
+'''
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Sun Jul  1 20:07:53 2018
 
 @author: virati
-This script does the voltages sweep analyses
+This script does the voltages sweep analyses with the DTI images for our patients
 """
 
 import numpy as np
@@ -59,7 +62,7 @@ for pp,pt in enumerate(pt_list):
 
 #%%
 # Plot just an image transformed from matrix
-vv = 5
+vv = 0
 new_img = nilearn.image.new_img_like(data[pt][condit][vstim]['L'],np.sum(data_arr[pp,cc,vv,:,:,:,:],axis=0))
 plotting.plot_glass_brain(new_img)
 

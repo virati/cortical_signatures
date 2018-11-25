@@ -17,7 +17,7 @@ import pickle
 import numpy as np
 import cmocean
 
-from sklearn.decomposition import PCA, SparsePCA
+from sklearn.decomposition import PCA, SparsePCA, FastICA
 import string
 
 import umap
@@ -103,8 +103,16 @@ for pt in pt_list:
         # Do a mask
         
         msCoh[pt][condit] = mag_diff
+     
         
-        
+#%%
+#Fast ICA method
+print('Doing ICA of pt x condit stack')
+
+#%%
+ica = FastICA(n_components=10)
+ica_data = ica.fit_transform(coh_stack['906']['OnT']['BONT'][:,:,:,0])
+
 #%%
 #work directly with the full stack across patients
 # rPCA
@@ -116,15 +124,13 @@ def do_pca():
     rpca = r_pca.R_pca(coh_tensor)
     L,S = rpca.fit()
 
-
-
 #%%
 # UMAP
 def do_umap():
     import umap
     udim = umap.UMAP().fit_transform(coh_tensor.reshape(257*257,-1))
     return udim
-udim = do_umap()
+#udim = do_umap()
 #%%
 def plot_umap(udim):
     wrap_chann_udim = udim.reshape(257,257,2)
