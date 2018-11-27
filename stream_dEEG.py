@@ -161,12 +161,15 @@ class streamLFP:
     '''
     This should return the timeseries associated with a particular segment
     '''
-    def time_series(self,epoch_name='All'):
+    def time_series(self,epoch_name='All',full_stim=False):
 
         #Find the indices we need
         # Do adjustments here if you want LARGER or SMALLER epochs
-        rec_idxs = np.where(np.logical_and(self.tvect < self.epochs[epoch_name][1]+140,self.tvect > self.epochs[epoch_name][0]-5))
-        
+        if full_stim:
+            rec_idxs = np.where(np.logical_and(self.tvect < self.epochs[epoch_name][1]+140,self.tvect > self.epochs[epoch_name][0]-5))
+        else:
+            rec_idxs = np.where(np.logical_and(self.tvect < self.epochs[epoch_name][1],self.tvect > self.epochs[epoch_name][0]))
+
         return {key:self.data_dict[key][rec_idxs] for key in self.data_dict}
     
     def tf_transform(self,epoch_name):

@@ -95,12 +95,15 @@ for cc,chann in enumerate(['Left','Right']):
     for bb in range(5):
         print(bb)
         #rsres = stats.ranksums(distr['OnT'][:,bb],distr['OffT'][:,bb])
-        rsres = stats.wilcoxon(distr['OnT'][:,bb],distr['OffT'][:,bb])
-        rsres = stats.ttest_ind(distr['OnT'][:,bb],distr['OffT'][:,bb])
+        rsres = stats.ks_2samp(distr['OnT'][:,bb],distr['OffT'][:,bb])
+        #rsres = stats.wilcoxon(distr['OnT'][:,bb],distr['OffT'][:,bb])
+        #rsres = stats.ttest_ind(distr['OnT'][:,bb],distr['OffT'][:,bb])
         print(rsres)
         
-        ontres = stats.wilcoxon(distr['OnT'][:,bb])
-        #ontres = stats.ttest_ind(distr['OnT'][:,bb])
+        #ontres = stats.ranksums(distr['OnT'][:,bb])
+        #ontres = stats.kstest(distr['OnT'][:,bb],cdf='norm')
+        #ontres = stats.mannwhitneyu(distr['OnT'][:,bb])
+        ontres = stats.ttest_1samp(distr['OnT'][:,bb],np.zeros((5,1)))
         print(ontres)
     
     plt.ylim((-30,50))
