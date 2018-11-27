@@ -37,39 +37,38 @@ Targeting['All'] = {
                 'OnT':{
                         'fname':'',
                         'lfp':'/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_17_10_31__MR_0.txt',
-                        'epochs':{'Bilat':(600,630),'PreBilat':(500,530)},
+                        'epochs':{'Bilat':(600,630),'PreBilat':(500,530)}},
                 'OffT':{
                         'fname':'',
                         'lfp':'/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_16_25_07__MR_0.txt',
                         'epochs':{'Bilat':(600,630),'PreBilat':(480,510)},
-                'Volt':{}}}},
+                'Volt':{}}},
         '903':{
                 'OnT':{
                         'fname':'',
                         'lfp':'/home/virati/MDD_Data/BR/903/Session_2014_09_03_Wednesday/DBS903_2014_09_03_14_16_57__MR_0.txt',
-                        'epochs':{'Bilat':(550,580),'PreBilat':(501,531)},
+                        'epochs':{'Bilat':(550,580),'PreBilat':(501,531)}},
                 'OffT':{
                         'fname':'',
                         'lfp':'/home/virati/MDD_Data/BR/903/Session_2014_09_04_Thursday/DBS903_2014_09_04_12_53_09__MR_0.txt' ,
                         'epochs':{'Bilat':(550,580),'PreBilat':(501,531)},
-                'Volt':{}}}},
+                'Volt':{}}},
         '905':{
                 'OnT':{
                         'fname':'',
                         'lfp':'/home/virati/MDD_Data/BR/905/Session_2015_09_28_Monday/Dbs905_2015_09_28_13_51_42__MR_0.txt',
-                        'epochs':{'Bilat':(610,640),'PreBilat':(561,591)},
+                        'epochs':{'Bilat':(610,640),'PreBilat':(561,591)}},
                 'OffT':{
                         'fname':'',
                         'lfp':'/home/virati/MDD_Data/BR/905/Session_2015_09_29_Tuesday/Dbs905_2015_09_29_12_32_47__MR_0.txt' ,
                         'epochs':{'Bilat':(610,640),'PreBilat':(561,591)}},
-                'Volt':{}}},
+                'Volt':{}},
         '906':{
                 'OnT':{
                         #'fname':'/home/virati/MDD_Data/hdEEG/Continuous/DS500/DBS906_TurnOn_Day1_Sess1_20150827_024013_tds.mat'
                         'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess1_20150827_024013_OnTarget.mat',
                         'lfp':'/home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_15_10_44__MR_0.txt',
-                        'epochs':{'Bilat':(610,640),'PreBilat':(561,591)},
-                        },
+                        'epochs':{'Bilat':(610,640),'PreBilat':(561,591)}},
                 'OffT':{
                         'fname':'/home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess2_20150827_041726_OffTarget.mat',
                         'lfp':'/home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_16_20_23__MR_0.txt',
@@ -130,7 +129,11 @@ Targeting['All'] = {
 class EEG_check:
     def __init__(self,pt='908',condit='OnT',ds_fact=1,fs=500,spotcheck=False):
         pass
-    
+
+class responseLFP:
+    def __init__(self):
+        pass
+
 class streamLFP:
     def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False):
         self.donfft=2**10
@@ -138,14 +141,16 @@ class streamLFP:
         self.pt = pt
         self.condit = condit
         
-        container = dbo.load_BR_dict(Targeting['All'][pt][condit]['lfp'],sec_offset=0)
+        try: container = dbo.load_BR_dict(Targeting['All'][pt][condit]['lfp'],sec_offset=0)
+        except: pdb.set_trace()
         fs = 422
+        
         
         rec_length = container['Left'].shape
         
         self.tvect = np.linspace(0,rec_length[0]* 1/fs,rec_length[0])
         self.data_dict = container
-        
+        self.Fs = fs
         self.gen_epochs()
         
     def gen_epochs(self):
@@ -159,11 +164,17 @@ class streamLFP:
     def time_series(self,epoch_name='All'):
 
         #Find the indices we need
-        rec_idxs = np.where(np.logical_and(self.tvect < self.epochs[epoch_name][1],self.tvect > self.epochs[epoch_name][0]))
+        # Do adjustments here if you want LARGER or SMALLER epochs
+        rec_idxs = np.where(np.logical_and(self.tvect < self.epochs[epoch_name][1]+140,self.tvect > self.epochs[epoch_name][0]-5))
         
         return {key:self.data_dict[key][rec_idxs] for key in self.data_dict}
     
-    
+    def tf_transform(self,epoch_name):
+        ts_dict = self.time_series(epoch_name)
+        
+        SG = dbo.gen_SG(ts_dict,Fs=422,overlap=False)
+        
+        return SG
     '''
     Plots and transforms below
     '''
@@ -171,14 +182,33 @@ class streamLFP:
         Osc_state = self.osc_transform(epoch_name)
         
     def osc_transform(self,epoch_name):
-        ensemble_state = dbo.osc_state(self.time_series(epoch_name = epoch_name))
+        #psds = dbo.gen_psd()
+        firstpsds = dbo.gen_SG(self.time_series(epoch_name = epoch_name),Fs=self.Fs,nfft=self.donfft,overlap=False)
+        fvect = np.linspace(0,self.Fs/2,firstpsds['Left']['F'].shape[0])
+        psds = {chann:firstpsds[chann]['SG'] for chann in firstpsds.keys()}
+        
+        out_vect = nestdict()
+        #need to manually go into segments
+        for seg in range(psds['Left'].shape[1]):
+            try:
+                calcpsds = {chann:psds[chann][:,seg] for chann in ['Left','Right']}
+            except: pdb.set_trace()
+            out_vect[seg] = dbo.calc_feats(calcpsds,fvect,dofeats=['Delta','Theta','Alpha','Beta*','Gamma1'],modality='lfp')
+        try:
+            ret_vect = {chann: np.array([out_vect[seg][0][:,cc] for seg in range(psds[chann].shape[1])]) for cc,chann in enumerate(['Left','Right'])}
+        except:
+            pdb.set_trace()
+        return ret_vect
     
-    def tf_plot(self,epoch_name='All'):
+    def plot_tf(self,epoch_name='All'):
+        TF_dict = self.tf_transform(epoch_name) 
+        
+        dbo.plot_TF(TF_dict)
+        
+    def plot_f(self,epoch_name='All'):
         TF_dict = self.tf_transform(epoch_name)
         
-    def tf_transform(self,epoch_name):
-        T,F,SG = dbo.gen_SG(self.time_series(epoch_name = epoch_name))
-        
+        dbo.plot_F_fromTF(TF_dict)
         
         
         
