@@ -154,6 +154,7 @@ class streamLFP:
         self.gen_epochs()
         
     def gen_epochs(self):
+        print('Generating Epochs...')
         #Go in and generate the epochs associated with this recording
         self.epochs = Targeting['All'][self.pt][self.condit]['epochs']
         self.epochs['ALL'] = (0,-1)
