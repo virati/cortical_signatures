@@ -28,6 +28,8 @@ from sklearn.model_selection import learning_curve
 
 import seaborn as sns
 
+from sklearn.decomposition import PCA
+
 sns.set_context('paper')
 sns.set(font_scale=4)
 sns.set_style('white')
@@ -139,7 +141,8 @@ clf = multi_model[iimodel_max]
 # If we want to limit the channels we're looking at
 if limit_chann:
     #NOW let's do an artificial MASK!!! coup de grace
-    fold_dsgn_X = Xte.reshape(-1,257,5,order='C')
+    # TODO CHECK THE RESULTS WITH RESPECT TO ORDERING SINCE I THINK THIS NEEDS TO BE F!!!
+    fold_dsgn_X = Xte.reshape(-1,257,5,order='F')
     sub_X = np.zeros_like(fold_dsgn_X)
     
     sub_X[:,active_chann] = fold_dsgn_X[:,active_chann]
@@ -221,7 +224,8 @@ plt.colorbar()
 #%%
 
 # Plot the coefficients here
-coeffs = clf.coef_.reshape(3,257,-1,order='C')
+#DOUBLE CHECK THIS!!
+coeffs = clf.coef_.reshape(3,257,-1,order='F')
 
 coeff_mag = [None] * 3
 choose_band = 4
@@ -231,10 +235,16 @@ for stimclass in range(3):
     plt.imshow(coeffs[stimclass,:,:])
     
     #coeff_mag[stimclass] = np.linalg.norm(coeffs[stimclass,:,:],axis=1)
+    #Here, we'll CHOOSE a coefficient
     coeff_mag[stimclass] = coeffs[stimclass,:,choose_band]
     
+    #Here, we'll do PCA to find the components across all bands
+    pca = PCA()
+    pca.fit(coeffs[stimclass,:,:])
+    rot_coeff = pca.fit_transform(coeffs[stimclass,:,:])
+    
     mainfig = plt.figure()
-    EEG_Viz.plot_3d_scalp(coeff_mag[stimclass],mainfig,clims=(0,0.06),animate=False,label=label_map[stimclass],unwrap=True)
+    EEG_Viz.plot_3d_scalp(rot_coeff[:,1],mainfig,clims=(0,0.06),animate=False,label=label_map[stimclass],unwrap=True)
     plt.title(label_map[stimclass])
     
     

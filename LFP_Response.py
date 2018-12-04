@@ -53,11 +53,16 @@ for pt,condit in cart_prod(do_pts,['OnT','OffT']):
             Osc_response[pt][condit][chann][seg,:] -= Osc_baseline[pt][condit][cc]
 
 #%%
+# THIS IS WHAT GIVES US THE POP LEVEL STUFF
+            
 # Let's do the patient=specific median changes and do ensemble there
+
+            
 Osc_indiv_marg = {pt:{condit:np.array((Osc_response[pt][condit]['Left'],Osc_response[pt][condit]['Right']))for condit in ['OnT','OffT']} for pt in do_pts}
 Osc_indiv_med = {pt:{condit:np.median(Osc_indiv_marg[pt][condit],axis=1) for condit in ['OnT','OffT']} for pt in do_pts}
 Osc_indiv_pop = {side:{condit:np.array([Osc_indiv_med[pt][condit][ss,:] for pt in do_pts]) for condit in ['OnT','OffT']} for ss,side in enumerate(['Left','Right'])}
 
+color = ['b','g']
 
 for cc,chann in enumerate(['Left','Right']):
     plt.figure()
@@ -79,7 +84,8 @@ for cc,chann in enumerate(['Left','Right']):
             pc.set_facecolor(color[co])
             pc.set_edgecolor(color[co])
             #pc.set_linecolor(color[co])
-            
+        
+        plt.ylim((-6,30))
         distr[condit] = distr_to_plot
             
     for bb in range(5):
@@ -117,11 +123,13 @@ for cc,chann in enumerate(['Left','Right']):
     ax2 = plt.subplot(111)
     color = ['b','g']
     distr = nestdict()
+    
     for co,condit in enumerate(['OnT','OffT']):
         #how many segments?
         segNum = Osc_pt_marg[condit].shape[2]
         distr_to_plot = Osc_pt_marg[condit].swapaxes(1,2).reshape(len(do_pts)*segNum,2,5)[:,cc,:]
         parts = ax2.violinplot(distr_to_plot,positions=np.array([1,2,3,4,5]) + 0.2*co,showmedians=True)
+        
         for partname in ('cbars','cmins','cmaxes','cmedians'):
             vp = parts[partname]
             vp.set_edgecolor(color[co])

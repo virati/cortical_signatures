@@ -25,7 +25,7 @@ sns.set_style('white')
 import pickle
 import cmocean
 #%%
-pt_list = ['906','907','908']
+pt_list = ['905','906','907','908']
 #pt_list=['908']
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)
@@ -42,7 +42,7 @@ if 1:
 
     #
     eFrame.band_stats()
-    
+    #%%
     # This plots the oscillatory topomaps of a particular band
     eFrame.plot_band_stats(do_band='Alpha')
     

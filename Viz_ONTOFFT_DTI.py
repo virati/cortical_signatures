@@ -74,7 +74,7 @@ for pp,pt in enumerate(all_pts):
 condit_avg = nestdict()
 for cc, condit in enumerate(['OnT','OffT']):
     #condit_avg[condit] = image.math_img("np.mean(np.array([img4,img5,img6]),axis=0)",img1=combined['901'][condit],img2=combined['903'][condit],img3=combined['905'][condit],img4=combined['906'][condit],img5=combined['907'][condit],img6=combined['908'][condit])
-    condit_avg[condit] = image.math_img("np.mean(np.array([img1,img2,img3,img4,img5,img6]),axis=0)",img1=combined['901'][condit],img2=combined['903'][condit],img3=combined['905'][condit],img4=combined['906'][condit],img5=combined['907'][condit],img6=combined['908'][condit])
+    condit_avg[condit] = image.math_img("np.median(np.array([img1,img2,img3,img4,img5,img6]),axis=0)",img1=combined['901'][condit],img2=combined['903'][condit],img3=combined['905'][condit],img4=combined['906'][condit],img5=combined['907'][condit],img6=combined['908'][condit])
     #condit_avg[condit] = nilearn.image.math_img("img1+img2+img3+img4+img5+img6",img1=combined['901'][condit],img2=combined['903'][condit],img3=combined['905'][condit],img4=combined['906'][condit],img5=combined['907'][condit],img6=combined['908'][condit])
     plotting.plot_glass_brain(condit_avg[condit],black_bg=True,title=condit + ' average tractography',vmin=0,vmax=2)
     #plotting.plot_glass_brain(nibabel.Nifti1Image(np.median(np.sum(data_arr[:,0,:,:,:,:],axis=2),axis=0),affine=np.eye(4)))

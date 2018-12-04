@@ -21,7 +21,7 @@ sns.set_style('white')
 import pickle
 import cmocean
 #%%
-pt_list = ['906','907','908']
+pt_list = ['905','906','907','908']
 #pt_list=['908']
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)
@@ -38,3 +38,6 @@ eFrame.simple_stats()
 
 #%%
 eFrame.band_stats()
+
+#%%
+eFrame.plot_band_stats(do_band='Alpha')
