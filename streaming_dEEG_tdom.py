@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Feb  5 21:24:09 2018
+Created on 12-04-2018
 
 @author: virati
 dEEG Continuous
-Load in continuous, raw dEEG from the mat converted files
-This is the FIRST step in the streaming EEG pipeline
 
-This file is essentially the file that loads in the raw EEG data, re-references, and presents the data in a format ready for pure_streamSVM to actually train and validate a classifier
+Time domain analysis of dEEG data; simple ICA stuff for now
 
 """
 
@@ -63,25 +61,3 @@ for pp,pt in enumerate(pts):
         print('Doing ' + pt + ' ' + condit)
         sEEG = streamEEG(ds_fact=2,pt=pt,condit=condit,spotcheck=True,do_L_reref=local_reref)
         
-        sEEG.seg_PSDs()
-        
-        #%%
-        sEEG.calc_baseline(baseline_calibration = baseline_calibrate)
-        
-        #This will display our experimental conditions, but from the presence of stimulation artifact
-        #plt.figure()
-        #plt.plot(sEEG.true_labels,label=pt + condit)
-        
-        #%%
-        # We write the data to a dictionary with patient keys
-
-        pt_test[pp].append(sEEG.gen_test_matrix())
-        pt_test_labels[pp].append(sEEG.true_labels)
-        pt_test_times[pp].append(sEEG.label_time)
-            
-#%%
-#Finally, we pickle the dictionaries
-        
-with open('/tmp/big_file.pickle','wb') as file:
-    pickle.dump({'States':pt_test,'Labels':pt_test_labels,'Times':pt_test_times},file)
-    print('Successful Write of big pickle')    

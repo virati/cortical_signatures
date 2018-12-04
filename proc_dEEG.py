@@ -531,18 +531,29 @@ class proc_dEEG:
         
         #Here we're averaging across axis zero which corresponds to 'averaging' across SEGMENTS
         for condit in self.condits:
+            # this version does jackknifing of the median estimate
+            ensemble_med = dbo.jk_median(dsgn_X[condit])
+            X_med[condit] = np.median(ensemble_med,axis=0)
             
-            X_med[condit]= np.median(dsgn_X[condit],axis=0)
+            #Old version just does one shot median
+            #X_med[condit]= np.median(dsgn_X[condit],axis=0)
             #X_med[condit]= np.mean(dsgn_X[condit],axis=0)
-            X_mad[condit] = robust.mad(dsgn_X[condit],axis=0)
+            
+            
+            # VARIANCE HERE
+            X_mad[condit] = np.var(ensemble_med,axis=0)
+            #X_mad[condit] = robust.mad(dsgn_X[condit],axis=0)
             #X_mad[condit] = np.var(dsgn_X[condit],axis=0)
             X_segnum[condit] = dsgn_X[condit].shape[0]
         
         self.Seg_Med = (X_med,X_mad,X_segnum)
         
         weigh_mad = 0.3
-        self.median_mask = (np.abs(self.Seg_Med[0]['OnT'][:,2]) - weigh_mad*self.Seg_Med[1]['OnT'][:,2] >= 0)
-        
+        try:
+            self.median_mask = (np.abs(self.Seg_Med[0]['OnT'][:,2]) - weigh_mad*self.Seg_Med[1]['OnT'][:,2] >= 0)
+        except:
+            pdb.set_trace()
+            
         #Do a quick zscore to zero out the problem channels
         chann_patt_zs = stats.zscore(X_med['OnT'],axis=0)
         outlier_channs = np.where(chann_patt_zs > 3)
@@ -570,7 +581,7 @@ class proc_dEEG:
         self.ICA_x = ica.fit_transform(ICA_inX)
         
         
-    def gen_GMM_stack(self,stack_bl=''):
+    def DEPRgen_GMM_stack(self,stack_bl=''):
         state_stack = nestdict()
         state_labels = nestdict()
         
@@ -704,7 +715,9 @@ class proc_dEEG:
         
         
         for bb in range(5):
-            rsres = stats.ranksums(meds['OnT'][:,bb],meds['OffT'][:,bb])
+            #rsres = stats.ranksums(meds['OnT'][:,bb],meds['OffT'][:,bb])
+            #rsres = stats.wilcoxon(meds['OnT'][:,bb],meds['OffT'][:,bb])
+            rsres = stats.ttest_ind(10**(meds['OnT'][:,bb]/10),10**(meds['OffT'][:,bb]/10))
             print(rsres)
         
         #plt.suptitle(condit)

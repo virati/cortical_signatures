@@ -28,7 +28,7 @@ fvect = np.linspace(0,500,513)
 do_coherence = False
 
 ## Basic initialization methods, need to suppress figures from these and clean these up
-eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
+eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
 eFrame.extract_feats(polyorder=0)
 eFrame.DEPRgen_OSC_stack()
 

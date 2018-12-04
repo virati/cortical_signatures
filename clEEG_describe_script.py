@@ -25,7 +25,7 @@ sns.set_style('white')
 import pickle
 import cmocean
 #%%
-pt_list = ['905','906','907','908']
+pt_list = ['906','907','908']
 #pt_list=['908']
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)
@@ -36,7 +36,17 @@ eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
 eFrame.extract_feats(polyorder=0)
 eFrame.DEPRgen_OSC_stack()
 
-if 1:
+
+#%%
+eFrame.simple_stats()
+eFrame.band_stats()
+
+#%%
+eFrame.band_distr()
+
+
+#%%
+if 0:
     #
     eFrame.simple_stats()
 
