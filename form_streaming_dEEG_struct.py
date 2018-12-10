@@ -30,11 +30,11 @@ import pickle
 
 #%%
 
-pts = ['906','907','908','910']
+pts = ['905','906','907','908','910']
 condits =  ['OnT','OffT']
-baseline_calibrate = False
-local_reref = False
-
+baseline_calibrate = True
+#local_reref = False
+reref_class='avg'
 
 #%%
 
@@ -61,7 +61,7 @@ for pp,pt in enumerate(pts):
     
     for condit in condits:
         print('Doing ' + pt + ' ' + condit)
-        sEEG = streamEEG(ds_fact=2,pt=pt,condit=condit,spotcheck=True,do_L_reref=local_reref)
+        sEEG = streamEEG(ds_fact=2,pt=pt,condit=condit,spotcheck=True,reref_class=reref_class)
         
         sEEG.seg_PSDs()
         

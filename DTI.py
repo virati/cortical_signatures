@@ -23,6 +23,9 @@ import DBSpace as dbo
 from DBSpace import nestdict
 
 
+Etrode_map = {'OnT':{'901':(2,1),'903':(2,2),'905':(2,1),'906':(2,2),'907':(1,1),'908':(2,1)},'OffT':{'901':(1,2),'903':(1,1),'905':(1,2),'906':(1,1),'907':(2,2),'908':(1,2)}}
+chirp_lib = {'OnT':{'901':{'BL':()}}}
+
 
 class DTI:
     def __init__(self,do_pts=['901','903','905','906','907','908']):
@@ -82,8 +85,8 @@ class DTI:
             new_img = nilearn.image.new_img_like(self.data[pt][condit][v_select]['L'],(self.middle_idx))
             plotting.plot_glass_brain(new_img)
 
-
-
-V_DTI = DTI(do_pts=['906'])
-V_DTI.load_data()
-V_DTI.plot_V_DTI()
+if __name__ == '__main__':
+    
+    V_DTI = DTI(do_pts=['906'])
+    V_DTI.load_data()
+    V_DTI.plot_V_DTI()

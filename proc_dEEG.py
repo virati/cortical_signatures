@@ -176,6 +176,14 @@ class proc_dEEG:
         #THIS IS THE PSDs RAW, not log transformed
         self.feat_dict = feat_dict
         self.osc_dict = osc_dict
+        
+    def pool_patients(self):
+        self.osc_bl_norm = {pt:{condit:self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for condit in self.condits} for pt in self.pts}
+        self.osc_bl_norm['POOL'] = {condit:np.concatenate([self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for pt in self.pts]) for condit in self.condits}
+    
+    def med_stats(self,pt='POOL'):
+        middle = {condit:np.median(self.osc_bl_norm[pt][condit],axis=0) for condit in self.condits}
+        return middle
     
     def train_simple(self):
         #Train our simple classifier that just finds the shortest distance
@@ -252,7 +260,8 @@ class proc_dEEG:
         
     def plot_band_stats(self,do_band='Alpha'):
         self.plot_meds(band=do_band,flatten=not self.pretty)
-    
+        
+
     def simple_stats(self):
         ref_stack = self.big_stack_dict
         #Work with the Osc Dict data
@@ -541,7 +550,7 @@ class proc_dEEG:
             
             
             # VARIANCE HERE
-            X_mad[condit] = np.var(ensemble_med,axis=0)
+            X_mad[condit] = np.std(ensemble_med,axis=0)
             #X_mad[condit] = robust.mad(dsgn_X[condit],axis=0)
             #X_mad[condit] = np.var(dsgn_X[condit],axis=0)
             X_segnum[condit] = dsgn_X[condit].shape[0]
@@ -581,7 +590,7 @@ class proc_dEEG:
         self.ICA_x = ica.fit_transform(ICA_inX)
         
         
-    def DEPRgen_GMM_stack(self,stack_bl=''):
+    def gen_GMM_stack(self,stack_bl=''):
         state_stack = nestdict()
         state_labels = nestdict()
         
@@ -721,10 +730,8 @@ class proc_dEEG:
             print(rsres)
         
         #plt.suptitle(condit)
-            
         
-        
-    def plot_meds(self,band='Alpha',flatten=True):
+    def plot_meds(self,band='Alpha',flatten=True,condits=['OnT','OffT']):
         print('Doing Population Level Medians and MADs')
         
         band_median = {key:0 for key in self.condits}
@@ -838,21 +845,23 @@ class proc_dEEG:
         #allcond_vec = np.array([[self.Seg_Med[0]['OnT'][:,band_idx] + ont_semed,self.Seg_Med[0]['OnT'][:,band_idx] - ont_semed],[self.Seg_Med[0]['OffT'][:,band_idx] + offt_semed,self.Seg_Med[0]['OffT'][:,band_idx] - offt_semed]])
         
         
+        # TODO
+        # THID SHOULD BE MOVED TO A SEPARATE METHOD
         #do a sweep through to find the channels that don't overlap
-        sweep_range = np.linspace(0,0.11,100)
-        
-        ont_over = np.zeros_like(sweep_range)
-        offt_over = np.zeros_like(sweep_range)
-        
-        for ss,sr in enumerate(sweep_range):
-            ont_over[ss] = sum(serr_med['OnT'] > sr)
-            offt_over[ss] = sum(serr_med['OffT'] > sr)
-        plt.suptitle(band)
-        
-        plt.figure()
-        plt.plot(sweep_range,ont_over)
-        plt.plot(sweep_range,offt_over)
-        plt.suptitle(band)
+#        sweep_range = np.linspace(0,0.11,100)
+#        
+#        ont_over = np.zeros_like(sweep_range)
+#        offt_over = np.zeros_like(sweep_range)
+#        
+#        for ss,sr in enumerate(sweep_range):
+#            ont_over[ss] = sum(serr_med['OnT'] > sr)
+#            offt_over[ss] = sum(serr_med['OffT'] > sr)
+#        plt.suptitle(band)
+#        
+#        plt.figure()
+#        plt.plot(sweep_range,ont_over)
+#        plt.plot(sweep_range,offt_over)
+#        plt.suptitle(band)
         
     def train_GMM(self):
         #shape our dsgn matrix properly

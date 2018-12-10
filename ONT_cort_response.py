@@ -8,6 +8,7 @@ Simple script that runs the jackknifing on EEG data
 """
 
 from proc_dEEG import proc_dEEG
+import DBSpace as dbo
 from DBSpace.visualizations import EEG_Viz
 
 import scipy.stats as stats
@@ -22,22 +23,20 @@ import pickle
 import cmocean
 #%%
 pt_list = ['905','906','907','908']
-#pt_list=['908']
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)
 do_coherence = False
 
 ## Basic initialization methods, need to suppress figures from these and clean these up
-eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
+eFrame = proc_dEEG(pts=pt_list,procsteps='liberal',condits=['OnT'])
 eFrame.extract_feats(polyorder=0)
-eFrame.DEPRgen_OSC_stack()
-
-
 #%%
-eFrame.simple_stats()
+eFrame.pool_patients()
+band = 'Alpha'
 
-#%%
-eFrame.band_stats()
-
-#%%
-eFrame.plot_band_stats(do_band='Alpha')
+for pt in ['POOL']:
+    mean_response = eFrame.med_stats(pt=pt)
+    fig = plt.figure()
+  
+    band_i = dbo.feat_order.index(band)
+    EEG_Viz.plot_3d_scalp(mean_response['OnT'][:,band_i],fig,label='OnT Mean Response',unwrap=True)

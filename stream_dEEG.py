@@ -55,11 +55,11 @@ Targeting['All'] = {
                 'Volt':{}}},
         '905':{
                 'OnT':{
-                        'fname':'',
+                        'fname':'/home/extend/MDD_Data/hdEEG/Continuous/ALLMATS/DBS905_TurnOn_Day1_onTARGET_20150928_015403.mat',
                         'lfp':'/home/virati/MDD_Data/BR/905/Session_2015_09_28_Monday/Dbs905_2015_09_28_13_51_42__MR_0.txt',
                         'epochs':{'Bilat':(610,640),'PreBilat':(561,591)}},
                 'OffT':{
-                        'fname':'',
+                        'fname':'/home/extend/MDD_Data/hdEEG/Continuous/ALLMATS/DBS905_TurnOn_OffTargetStims_20150929_123449.mat',
                         'lfp':'/home/virati/MDD_Data/BR/905/Session_2015_09_29_Tuesday/Dbs905_2015_09_29_12_32_47__MR_0.txt' ,
                         'epochs':{'Bilat':(610,640),'PreBilat':(561,591)}},
                 'Volt':{}},
@@ -217,7 +217,7 @@ class streamLFP:
         
         
 class streamEEG:
-    def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False,do_L_reref=True):
+    def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False,reref_class=True):
         #self.data_dict = {ev:{condit:[] for condit in do_condits} for ev in do_pts}
         
         self.donfft = 2**10
@@ -272,9 +272,9 @@ class streamEEG:
         
         
         # Do local re-referencing and set the datamatrix to the re-referenced data
-        if do_L_reref:
+        if reref_class:
             print('Doing Local Re-referencing...')
-            self.data_matr = self.re_ref(scheme='local')
+            self.data_matr = self.re_ref(scheme=reref_class)
         
         #can add LFP and interpolate HERE?!
         
@@ -298,7 +298,9 @@ class streamEEG:
             dist_matr = neigh_mont.return_cap_L(dth=3)
             
             dataref = self.data_matr
-            post_ref = neigh_mont.reref_data(dataref,dist_matr)        
+            post_ref = neigh_mont.reref_data(dataref,dist_matr)     
+        elif scheme == 'avg':
+            post_ref = self.data_matr - np.mean(self.data_matr,axis=0)
             
         
         #self.re_ref_data = post_ref

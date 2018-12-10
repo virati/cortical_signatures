@@ -40,7 +40,7 @@ do_null = False
 
 #LOAD IN THE EEG FILE
 #inFile = pickle.load(open('/home/virati/stream_intvs.pickle','rb'))
-inFile = pickle.load(open('/home/virati/Dropbox/Data/streaming_EEG.pickle','rb'))
+inFile = pickle.load(open('/tmp/big_file.pickle','rb'))
 
 def do_ica():
     state_vec = np.array(inFile['States'][3][0]).reshape(-1,257,5,order='F') #ordering here as F results in curves that make more sense, namely that gamma is ALWAYS low
@@ -52,7 +52,7 @@ def do_ica():
     
     plt.plot(S_)
     
-do_ica()
+#do_ica()
 
 def do_descr():
     #example plot the power across all segments of a single condit
@@ -69,10 +69,11 @@ def do_descr():
         return np.array(med_vec)
     ens_med = jk_median(state_vec)
     
-    #%%
-    plot_med = np.mean(ens_med,axis=0)
+    
+    plot_med = np.median(ens_med,axis=0)
     for bb in range(5):
         mainfig = plt.figure()
         
         EEG_Viz.plot_3d_scalp(plot_med[:,bb],mainfig,clims=(-1,1),animate=False,unwrap=True)
         plt.title(dbo.feat_order[bb])
+do_descr()

@@ -45,8 +45,9 @@ active_chann = [24,35,66,240,212]
 limit_chann = False
 
 #LOAD IN THE EEG FILE
-#inFile = pickle.load(open('/home/virati/stream_intvs.pickle','rb'))
-inFile = pickle.load(open('/home/virati/Dropbox/Data/streaming_EEG.pickle','rb'))
+
+#inFile = pickle.load(open('/home/virati/Dropbox/Data/streaming_EEG.pickle','rb'))
+inFile = pickle.load(open('/tmp/big_file.pickle','rb'))
 
 #IF WE ADD LFP HERE WE'RE AWESOME
 
