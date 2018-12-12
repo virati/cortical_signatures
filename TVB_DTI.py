@@ -85,7 +85,8 @@ for ii in range(coords.shape[0]):
     
     dist_to_closest_tract[ii] = np.min(np.array(tract_dist))
 
-prior_locs = np.array(dist_to_closest_tract) < 30
+dist_to_closest_tract = np.array(dist_to_closest_tract)
+prior_locs = dist_to_closest_tract < 30
 
 #%%
 fig = plt.figure()
@@ -94,15 +95,31 @@ ax._axis3don = False
 ax.scatter(coords[:,0],coords[:,1],coords[:,2],s=200,alpha=0.5)
 plt.title('Coordinates of the brain regions')
 
-ax.scatter(display_vox_loc[:,0],display_vox_loc[:,1],display_vox_loc[:,2],alpha=0.2,s=100)
+ax.scatter(display_vox_loc[:,0],display_vox_loc[:,1],display_vox_loc[:,2],alpha=0.4,s=50)
 ax.scatter(coords[prior_locs,0],coords[prior_locs,1],coords[prior_locs,2],s=500,color='r')
 ax.set_xticks([])
 ax.set_yticks([])
 ax.set_zticks([])
 ax.grid(False)
 
+EEG_coords = EEG_Viz.get_coords()
+
+dist_to_closest_parcel = [None] * EEG_coords.shape[0]
+for cc in range(EEG_coords.shape[0]):
+    parcel_dist = []
+    for jj in coords[prior_locs]:
+        parcel_dist.append(np.linalg.norm(EEG_coords[cc,:] - jj))
+        
+    dist_to_closest_parcel[cc] = np.min(np.array(parcel_dist))
+
+prior_channs = np.array(dist_to_closest_parcel) < 10
 #Now overlay the EEG channels
-EEG_Viz.plot_3d_locs(np.ones((257,)),ax,scale=10)
+EEG_Viz.plot_3d_locs(np.ones((257,)),ax,scale=10,animate=False)
+
+chann_mask = np.zeros((257,))
+chann_mask[prior_channs] = 1
+
+EEG_Viz.plot_3d_scalp(chann_mask,ax,scale=10)
 
 
 
