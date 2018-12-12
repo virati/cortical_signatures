@@ -32,11 +32,16 @@ eFrame = proc_dEEG(pts=pt_list,procsteps='liberal',condits=['OnT'])
 eFrame.extract_feats(polyorder=0)
 #%%
 eFrame.pool_patients()
-band = 'Alpha'
+band = 'Beta*'
 
+for band in ['Theta','Alpha','Beta*']:
+    for pt in ['POOL']:
+        mean_response = eFrame.med_stats(pt=pt)
+        fig = plt.figure()
+      
+        band_i = dbo.feat_order.index(band)
+        EEG_Viz.plot_3d_scalp(mean_response['OnT'][:,band_i],fig,label='OnT Mean Response ' + band,unwrap=True)
+#%%
 for pt in ['POOL']:
-    mean_response = eFrame.med_stats(pt=pt)
-    fig = plt.figure()
-  
-    band_i = dbo.feat_order.index(band)
-    EEG_Viz.plot_3d_scalp(mean_response['OnT'][:,band_i],fig,label='OnT Mean Response',unwrap=True)
+    plt.figure()
+    eFrame.OnT_response()

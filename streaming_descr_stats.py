@@ -67,6 +67,7 @@ def do_descr():
             med_vec.append(np.median(state_vecs[idxs,:,:],axis=0))
     
         return np.array(med_vec)
+    
     ens_med = jk_median(state_vec)
     
     
@@ -76,4 +77,7 @@ def do_descr():
         
         EEG_Viz.plot_3d_scalp(plot_med[:,bb],mainfig,clims=(-1,1),animate=False,unwrap=True)
         plt.title(dbo.feat_order[bb])
-do_descr()
+    
+    return ens_med
+
+ens_med = do_descr()

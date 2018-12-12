@@ -181,9 +181,38 @@ class proc_dEEG:
         self.osc_bl_norm = {pt:{condit:self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for condit in self.condits} for pt in self.pts}
         self.osc_bl_norm['POOL'] = {condit:np.concatenate([self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for pt in self.pts]) for condit in self.condits}
     
-    def med_stats(self,pt='POOL'):
-        middle = {condit:np.median(self.osc_bl_norm[pt][condit],axis=0) for condit in self.condits}
-        return middle
+    def med_stats(self,pt='POOL',stat_ens=False):
+        if not stat_ens:
+            return {condit:np.median(self.osc_bl_norm[pt][condit],axis=0) for condit in self.condits}
+        else:
+            return 0
+    
+    def OnT_response(self,pt='POOL'):
+        med = self.med_stats()['OnT']
+        rpca = r_pca.R_pca(med)
+        L,S = rpca.fit()
+        
+        #L = med
+        svm_pca = PCA()
+        svm_pca.fit(L)
+        SVM_coeff_L = svm_pca.fit_transform(L)
+        
+        fig = plt.figure()
+        EEG_Viz.plot_3d_scalp(L[:,0],fig,label='OnT Mean Response',unwrap=True)
+        
+        plt.figure();
+        plt.subplot(221)
+        plt.plot(svm_pca.explained_variance_ratio_)
+        plt.subplot(222)
+        plt.plot(svm_pca.components_)
+        plt.legend(['PC1','PC2','PC3','PC4'])
+        
+
+        
+    
+    
+    #%%
+    #OLD STUFF
     
     def train_simple(self):
         #Train our simple classifier that just finds the shortest distance
@@ -385,7 +414,7 @@ class proc_dEEG:
 
             
             
-    def pca_decomp(self,direction='channels',band='Alpha',condit='OnT',bl_correct=False,pca_type='pca',plot_distr=False):
+    def DEPRpca_decomp(self,direction='channels',band='Alpha',condit='OnT',bl_correct=False,pca_type='pca',plot_distr=False):
         print('Doing PCA on the SVM Oscillatory Stack')
         #check to see if we have what variables we need
         Xdsgn = self.SVM_stack
