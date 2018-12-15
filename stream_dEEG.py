@@ -217,7 +217,7 @@ class streamLFP:
         
         
 class streamEEG:
-    def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False,reref_class=True):
+    def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False,reref_class=True,full_experiment=True):
         #self.data_dict = {ev:{condit:[] for condit in do_condits} for ev in do_pts}
         
         self.donfft = 2**10
@@ -233,7 +233,10 @@ class streamEEG:
         #THIS IS FINE SINCE it's like a highpass with a DCish cutoff
         #10 * 60 * fs:18*60*fs
         snippet = True
+        
+        #THIS CAPTURES THE ENTIRE EXPERIMENT INCLUDING UNILATERAL STIMULATION
         start_time=0
+        
         if snippet:
             #906
             if pt == '906' and condit == 'OnT':
@@ -252,8 +255,11 @@ class streamEEG:
                 start_time = 0
             elif pt == '910':
                 start_time = 5
-            tlim = np.array((start_time,start_time + 16)) * 60 #in seconds
-                        
+            
+            if full_experiment:
+                tlim = np.array((start_time,start_time + 16)) * 60 #in seconds
+            else:
+                tlim = np.array((start_time+8,start_time + 16)) * 60 #in seconds
                         
         tint = (tlim*fs).astype(np.int)[0]
         

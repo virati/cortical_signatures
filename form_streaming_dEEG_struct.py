@@ -34,7 +34,7 @@ pts = ['905','906','907','908','910']
 condits =  ['OnT','OffT']
 baseline_calibrate = True
 #local_reref = False
-reref_class='avg'
+reref_class='local'
 
 #%%
 
@@ -61,7 +61,7 @@ for pp,pt in enumerate(pts):
     
     for condit in condits:
         print('Doing ' + pt + ' ' + condit)
-        sEEG = streamEEG(ds_fact=2,pt=pt,condit=condit,spotcheck=True,reref_class=reref_class)
+        sEEG = streamEEG(ds_fact=2,pt=pt,condit=condit,spotcheck=True,reref_class=reref_class,full_experiment=False)
         
         sEEG.seg_PSDs()
         
