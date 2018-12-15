@@ -173,8 +173,6 @@ ax.grid(False)
 EEG_Viz.plot_3d_locs(np.ones((257,)),ax,scale=eeg_scale,animate=False)
 EEG_Viz.plot_3d_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
 
-
-
 fig = plt.figure()
 ax = fig.add_subplot(111,projection='3d')
 EEG_Viz.plot_3d_scalp(second_chann_mask,ax,scale=10,alpha=0.2,unwrap=False)
@@ -186,6 +184,10 @@ EEG_Viz.plot_3d_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=True)
 fig = plt.figure()
 ax = fig.add_subplot(111)
 EEG_Viz.plot_3d_scalp(second_chann_mask,ax,scale=10,alpha=0.5,unwrap=True)
+
+
+#%%
+EEG_Viz.plot_maya_scalp(chann_mask,scale=10,alpha=0.5,unwrap=False)
 
 
 #%%
