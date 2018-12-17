@@ -35,13 +35,12 @@ eFrame.pool_patients()
 band = 'Beta*'
 
 for band in ['Theta','Alpha','Beta*']:
-    for pt in ['POOL']:
+    for pt in ['908']:
         mean_response = eFrame.med_stats(pt=pt)
         fig = plt.figure()
       
         band_i = dbo.feat_order.index(band)
         EEG_Viz.plot_3d_scalp(mean_response['OnT'][:,band_i],fig,label='OnT Mean Response ' + band,unwrap=True)
 #%%
-for pt in ['POOL']:
-    plt.figure()
+for pt in ['908']:
     eFrame.OnT_response()

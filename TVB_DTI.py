@@ -34,8 +34,8 @@ Etrode_map = DTI.Etrode_map
 parcel_coords = np.load('/home/virati/Dropbox/TVB_192_coord.npy')
 # Load in a simple DTI image
 condit = 'OnT'
-pt = '905'
-voltage = str(4)
+pt = '908'
+voltage = str(6)
 
 #%% Load in the file
 
@@ -161,6 +161,7 @@ ax._axis3don = False
 ax.scatter(parcel_coords[:,0],parcel_coords[:,1],parcel_coords[:,2],s=200,alpha=0.5)
 plt.title('Coordinates of the brain regions')
 
+
 ax.scatter(display_vox_loc[:,0],display_vox_loc[:,1],display_vox_loc[:,2],alpha=0.7,s=100)
 ax.scatter(parcel_coords[prior_locs,0],parcel_coords[prior_locs,1],parcel_coords[prior_locs,2],s=500,color='r')
 
@@ -176,19 +177,29 @@ EEG_Viz.plot_3d_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
 fig = plt.figure()
 ax = fig.add_subplot(111,projection='3d')
 EEG_Viz.plot_3d_scalp(second_chann_mask,ax,scale=10,alpha=0.2,unwrap=False)
+plt.title('Secondary Channels')
 
+#%%
 fig = plt.figure()
 ax = fig.add_subplot(111)
 EEG_Viz.plot_3d_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=True)
+plt.title('Primary Channels')
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 EEG_Viz.plot_3d_scalp(second_chann_mask,ax,scale=10,alpha=0.5,unwrap=True)
-
+plt.title('Secondary Channels')
 
 #%%
-EEG_Viz.plot_maya_scalp(chann_mask,scale=10,alpha=0.5,unwrap=False)
+#Do Mayavi Plotting
+#EEG_Viz.plot_maya_scalp(chann_mask,scale=10,alpha=0.5,unwrap=False)
+#EEG_Viz.plot_maya_scalp(np.ones((257,)),ax,scale=eeg_scale,animate=False)
+#EEG_Viz.plot_maya_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
 
+
+EEG_Viz.plot_maya(display_vox_loc,color=(1.,0.,0.))
+EEG_Viz.plot_maya(parcel_coords,color=(0.,1.,0.))
+EEG_Viz.plot_maya_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
 
 #%%
 plt.figure()

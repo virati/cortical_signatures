@@ -199,6 +199,7 @@ class proc_dEEG:
         
         fig = plt.figure()
         EEG_Viz.plot_3d_scalp(L[:,0],fig,label='OnT Mean Response',unwrap=True)
+        plt.title('rPCA Component 0')
         
         plt.figure();
         plt.subplot(221)
@@ -206,6 +207,7 @@ class proc_dEEG:
         plt.subplot(222)
         plt.plot(svm_pca.components_)
         plt.legend(['PC1','PC2','PC3','PC4'])
+        plt.title('rPCA Components')
         
 
         
