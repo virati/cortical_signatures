@@ -24,7 +24,7 @@ sns.set_style('white')
 
 import pickle
 import cmocean
-#%%
+
 pt_list = ['906','907','908']
 #pt_list=['908']
 #The feature vector, in this case the frequencies
@@ -34,21 +34,65 @@ do_coherence = False
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
 eFrame.extract_feats(polyorder=0)
-eFrame.DEPRgen_OSC_stack()
 
+#%%
+eFrame.compute_response()
+eFrame.response_stats(plot=True,band='Alpha')
+
+
+
+
+#%%
+
+'''
+EVERYTHING BELOW IS KIND OF A MESS
+
+
+'''
+
+#%%
+
+
+
+
+
+eFrame.DEPRgen_OSC_stack()
+#%%
+do_band = 'Alpha'
 
 #%%
 eFrame.simple_stats()
 eFrame.band_stats()
-
 #%%
 eFrame.band_distr()
-
+eFrame.plot_band_stats(do_band=do_band)
 
 #%%
 if 0:
+    
+    
+    
+    
+    #%%
+    # Secondary analyses - Started Jan 2019
+    # Find the combined baseline distribution
+    eFrame.combined_bl()
+    eFrame.compute_response()
+    #If we want to plot all the violinplots for all channels; we rarely do
+    #eFrame.combined_bl_distr(ch=10)
+    
+    #%%
+    eFrame.per_chann_stats(condit='OnT',band=do_band)
+    
+    #%%
+    eFrame.ONTvsOFFT(band=do_band,stim=0)
+    
+    
+    
+    #%%
     #
     eFrame.simple_stats()
+    
 
     #
     eFrame.band_stats()

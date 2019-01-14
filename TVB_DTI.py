@@ -35,7 +35,7 @@ parcel_coords = np.load('/home/virati/Dropbox/TVB_192_coord.npy')
 # Load in a simple DTI image
 condit = 'OnT'
 pt = '908'
-voltage = str(6)
+voltage = str(3)
 
 #%% Load in the file
 
@@ -169,7 +169,7 @@ ax.set_xticks([])
 ax.set_yticks([])
 ax.set_zticks([])
 ax.grid(False)
-
+#%%
 #Now overlay the EEG channels
 EEG_Viz.plot_3d_locs(np.ones((257,)),ax,scale=eeg_scale,animate=False)
 EEG_Viz.plot_3d_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
@@ -187,8 +187,15 @@ plt.title('Primary Channels')
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
-EEG_Viz.plot_3d_scalp(second_chann_mask,ax,scale=10,alpha=0.5,unwrap=True)
+EEG_Viz.plot_3d_scalp(second_chann_mask,ax,scale=12,alpha=0.5,unwrap=True)
 plt.title('Secondary Channels')
+
+
+#%%
+#Channel mask writing
+EEG_support = {'primary':chann_mask,'secondary':second_chann_mask}
+pickle.dump(EEG_support,open('/tmp/' + pt + '_' + condit + '_' + voltage,'wb'))
+
 
 #%%
 #Do Mayavi Plotting
@@ -197,9 +204,12 @@ plt.title('Secondary Channels')
 #EEG_Viz.plot_maya_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
 
 
-EEG_Viz.plot_maya(display_vox_loc,color=(1.,0.,0.))
-EEG_Viz.plot_maya(parcel_coords,color=(0.,1.,0.))
+EEG_Viz.plot_tracts(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
+EEG_Viz.plot_maya(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
+EEG_Viz.plot_maya(parcel_coords,active_mask=prior_locs,color=(0.,1.,0.))
+EEG_Viz.plot_maya(parcel_coords,active_mask=second_locs,color=(0.,1.,1.))
 EEG_Viz.plot_maya_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
+EEG_Viz.plot_maya_scalp(second_chann_mask,ax,color=(0.,0.,1.),scale=10,alpha=0.3,unwrap=False)
 
 #%%
 plt.figure()

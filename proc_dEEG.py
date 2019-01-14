@@ -23,6 +23,7 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 plt.close('all')
 
+import random
 from DBSpace.visualizations import EEG_Viz
 #import DBSpace.visualizations.EEG_Viz.EEG_Viz.plot_3d_scalp as EEG_Viz.plot_3d_scalp
 
@@ -93,33 +94,26 @@ keys_oi = {'OnT':["Off_3","BONT"],'OffT':["Off_3","BOFT"]}
 
 class proc_dEEG:
     def __init__(self,pts,procsteps='liberal',condits=['OnT','OffT'],pretty_mode=False,polyfix=0):
-        #load in the procsteps files
-        ts_data = defaultdict(dict)
-        
+
         self.chann_dim = 257
+        self.ch_order_list = range(self.chann_dim)
+        self.procsteps = procsteps
+        
+        self.pts = pts
+        self.condits = condits
+        
         self.polyorder = polyfix
         self.pretty = pretty_mode
         
-        for pt in pts:
-            ts_data[pt] = defaultdict(dict)
-            for condit in condits:
-                ts_data[pt][condit] = defaultdict(dict)
-                
-                temp_data = loadmat(TargetingEXP[procsteps][pt][condit])
-                
-                for epoch in keys_oi[condit]:
-                    ts_data[pt][condit][epoch] = temp_data[epoch]
+        
+        #%% Load in the data
+        self.ts_data = self.load_data(pts)
+        
 
-        self.fs = temp_data['EEGSamplingRate'][0][0]
-        self.donfft = 2**11
-        self.fvect = np.linspace(0,self.fs/2,self.donfft/2+1)
-        
-        self.ts_data = ts_data
-        self.pts = pts
-        self.condits = condits
        
-        self.ch_order_list = range(257)
+        self.eeg_locs = mne.channels.read_montage('/home/virati/Dropbox/GSN-HydroCel-257.sfp')
         
+        # CHECK IF we're still using ANY of these
         
         #sloppy containers for the outputs of our analyses        
         self.psd_trans = {pt:{condit:{epoch:[] for epoch in keys_oi} for condit in self.condits} for pt in self.pts}
@@ -130,8 +124,25 @@ class proc_dEEG:
         self.Feat_diff = {pt:{condit:[] for condit in self.condits} for pt in self.pts}
         self.Feat_var = {pt:{condit:[] for condit in self.condits} for pt in self.pts}
         
-        self.eeg_locs = mne.channels.read_montage('/home/virati/Dropbox/GSN-HydroCel-257.sfp')
-    
+        
+    def load_data(self,pts):
+        ts_data = defaultdict(dict)
+        for pt in pts:
+            ts_data[pt] = defaultdict(dict)
+            for condit in self.condits:
+                ts_data[pt][condit] = defaultdict(dict)
+                
+                temp_data = loadmat(TargetingEXP[self.procsteps][pt][condit])
+                
+                for epoch in keys_oi[condit]:
+                    ts_data[pt][condit][epoch] = temp_data[epoch]
+
+        self.fs = temp_data['EEGSamplingRate'][0][0]
+        self.donfft = 2**11
+        self.fvect = np.linspace(0,self.fs/2,self.donfft/2+1)
+        
+        return ts_data
+        
     def extract_feats(self,polyorder=4):
         pts = self.pts
         feat_dict = defaultdict(dict)
@@ -147,10 +158,10 @@ class proc_dEEG:
                     data_matr = self.ts_data[pt][condit][epoch] #should give us a big matrix with all the crap we care about
                     data_dict = {ch:data_matr[ch,:,:].squeeze() for ch in range(data_matr.shape[0])} #transpose is done to make it segxtime
                     
+                    #TODO check if this is in the right units
                     seg_psds = dbo.gen_psd(data_dict,Fs=self.fs,nfft=self.donfft,polyord=polyorder)
                     
                     #gotta flatten the DICTIONARY, so have to do it carefully
-                    
                     PSD_matr = np.array([seg_psds[ch] for ch in self.ch_order_list])
                     
                     OSC_matr = np.zeros((seg_psds[0].shape[0],257,len(dbo.feat_order)))
@@ -176,36 +187,278 @@ class proc_dEEG:
         #THIS IS THE PSDs RAW, not log transformed
         self.feat_dict = feat_dict
         self.osc_dict = osc_dict
+    
+    def compute_response(self,condits=['OnT','OffT']):
+        BL = {pt:{condit:[] for condit in condits} for pt in self.pts}
+        response = {pt:{condit:[] for condit in condits} for pt in self.pts}
         
-    def pool_patients(self):
-        self.osc_bl_norm = {pt:{condit:self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for condit in self.condits} for pt in self.pts}
-        self.osc_bl_norm['POOL'] = {condit:np.concatenate([self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for pt in self.pts]) for condit in self.condits}
+        for pt in self.pts:
+            for condit in condits:
+                #first, compute the median state during baseline
+                BL[pt][condit] = np.median(self.osc_dict[pt][condit]['Off_3'],axis=0)
+                
+                #Now, go to each segment during stim and subtract the BL for that
+                response[pt][condit] = self.osc_dict[pt][condit][keys_oi[condit][1]] - BL[pt][condit]
+                
+        self.targ_response = response
+        
+    def train_SVM(self,mask=False):
+        #Bring in and flatten our stack
+        SVM_stack = 1
+                
+    def response_stats(self,band='Alpha',plot=False):
+        band_idx = dbo.feat_order.index(band)
+        response_diff_stats = {pt:[] for pt in self.pts}
+        
+        ## First, check to see if per-channel h-testing rejects the null
+        for pt in self.pts:
+            for cc in range(256):
+                response_diff_stats[pt].append(stats.mannwhitneyu(self.targ_response[pt]['OnT'][:,cc,band_idx],self.targ_response[pt]['OffT'][:,cc,band_idx])[1])
     
-    def med_stats(self,pt='POOL',stat_ens=False):
-        if not stat_ens:
-            return {condit:np.median(self.osc_bl_norm[pt][condit],axis=0) for condit in self.condits}
+        self.response_diff_stats = response_diff_stats
+        
+        ## Now check variances\
+        ONT_var = {pt:[] for pt in self.pts}
+        OFFT_var = {pt:[] for pt in self.pts}
+        pool_ONT = []
+        pool_OFFT = []
+        for pt in self.pts:
+            for cc in range(256):
+                ONT_var[pt].append(np.var(self.targ_response[pt]['OnT'][:,cc,band_idx]))
+                OFFT_var[pt].append(np.var(self.targ_response[pt]['OffT'][:,cc,band_idx]))
+                
+            pool_ONT.append(self.targ_response[pt]['OnT'][:,:,band_idx])
+            pool_OFFT.append(self.targ_response[pt]['OffT'][:,:,band_idx])
+                
+        # Now stack across all patients
+        pool_ONT_var = np.var(np.concatenate(pool_ONT,axis=0),axis=0)
+        pool_OFFT_var = np.var(np.concatenate(pool_OFFT,axis=0),axis=0)
+        
+        ch_response_sig = {pt:np.array(response_diff_stats[pt]) for pt in self.pts}
+        aggr_resp_sig = np.array([(resp < 0.05/256).astype(np.int) for pt,resp in ch_response_sig.items()])
+        union_sig = np.sum(aggr_resp_sig,axis=0) >= 2
+        
+        if plot:
+            for pt in self.pts:
+                if 0:
+                    plt.figure()
+                    plt.plot(response_diff_stats[pt])
+                    plt.hlines(0.05/256,0,256)
+                    n_sig = np.sum((ch_response_sig[pt] < 0.05/256).astype(np.int))
+                    plt.suptitle(pt + ' ' + str(n_sig))
+                    
+                    bins = np.linspace(0,40,100)
+                    plt.figure()
+                    plt.violinplot(ONT_var[pt])#,bins=bins)
+                    print(np.median(ONT_var[pt]))
+                    plt.violinplot(OFFT_var[pt])#,bins=bins)
+                    print(np.median(OFFT_var[pt]))
+                    
+                plt.figure()
+                plt.plot(pool_ONT_var)
+                plt.plot(pool_OFFT_var)
+                print(np.median(pool_ONT_var))
+                print(np.median(pool_OFFT_var))
+    
+    
+    def BLWEIRDcompute_response(self,combine_baselines=True,plot=False):
+        if combine_baselines:
+            baseline = {pt:np.median(self.combined_BL[pt],axis=0) for pt in self.pts}
         else:
-            return 0
+            baseline = {pt:np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for pt in self.pts}
+            
+        self.osc_bl_norm = {pt:{condit:(self.osc_dict[pt][condit][keys_oi[condit][1]] - baseline[pt]) for condit in self.condits} for pt in self.pts}
+        
+        if plot:
+            plt.figure()
+            
+               
+    def pool_patients_ONT(self,bl='OnT'):
+        if bl=='OnT':
+            self.osc_bl_norm = {pt:{condit:self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for condit in self.condits} for pt in self.pts}
+            self.osc_bl_norm['POOL'] = {condit:np.concatenate([self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for pt in self.pts]) for condit in self.condits}
+        elif bl == 'both':
+            raise ValueError
+            self.osc_bl_norm = {pt:{condit:self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(np.concatenate(self.osc_dict[pt]['OnT'][keys_oi['OnT'][0]],self.osc_dict[pt]['OffT'][keys_oi['OffT'][0]],axis=-1),axis=0) for condit in self.condits} for pt in self.pts}
+            self.osc_bl_norm['POOL'] = {condit:np.concatenate([self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(np.concatenate(self.osc_dict[pt]['OnT'][keys_oi['OnT'][0]],self.osc_dict[pt]['OffT'][keys_oi['OffT'][0]],axis=-1),axis=0) for pt in self.pts]) for condit in self.condits}
+
+    #Median dimensionality reduction here; for now rPCA
+    def median_response(self,pt='POOL',mfunc = np.median, bootstrap=0):
+        if bootstrap == 0:
+            print('Doing ' + str(mfunc))
+            return {condit:mfunc(self.osc_bl_norm[pt][condit],axis=0) for condit in self.condits}
+        
+        # if we're doing the stat on the ensemble, we're doing it on a subset.
+        else:
+            bs_mean = []
+            for ii in range(bootstrap):
+                rnd_idxs = {condit:random.sample(range(self.osc_bl_norm[pt][condit].shape[0]),100) for condit in self.condits}
+                bs_mean.append({condit:mfunc(self.osc_bl_norm[pt][condit][rnd_idxs[condit],:,:],axis=0) for condit in self.condits})
+            
+            mean_of_means = {condit:np.mean([iteration[condit] for iteration in bs_mean],axis=0) for condit in self.condits}
+            return mean_of_means
+        
+    #In this function, we stack ONT_Off3 and OFFT_Off3 together to DEFINE the null distribution
+    def combined_bl(self):
+        self.combined_BL = nestdict()
+        for pt in self.pts:
+            ONT_BL = self.osc_dict[pt]['OnT'][keys_oi['OnT'][0]]
+            OFFT_BL = self.osc_dict[pt]['OffT'][keys_oi['OffT'][0]]
+            
+            self.combined_BL[pt] = np.concatenate((ONT_BL,OFFT_BL),axis=0)
+            
+    def combined_bl_distr(self,band='Alpha'):
+        band_idx = dbo.feat_order.index(band)
+        
+        for pt in self.pts:
+            plt.figure()
+            for ch in range(256):
+                plt.violinplot(self.combined_BL[pt][:,ch,band_idx])
+        
+    def ONTvsOFFT(self,band='Alpha',stim=0):
+        band_idx = dbo.feat_order.index(band)
+        
+        for pt in self.pts:
+            ch_stat = np.zeros((257,))
+            ch_ont = []
+            ch_offt = []
+            for ch in range(256):
+                #distribution for pre-stimulation period
+                #pdb.set_trace()
+                ONT_distr = []
+                OFFT_distr = []
+                for ii in range(10):
+                    ont_rand_idx = random.sample(range(0,self.osc_dict[pt]['OnT'][keys_oi['OnT'][stim]].shape[0]),10)
+                    offt_rand_idx = random.sample(range(0,self.osc_dict[pt]['OffT'][keys_oi['OffT'][stim]].shape[0]),10)
+
+                    ONT_distr.append(np.mean(self.osc_dict[pt]['OnT'][keys_oi['OnT'][stim]][ont_rand_idx,ch,band_idx]))
+                    OFFT_distr.append(np.mean(self.osc_dict[pt]['OffT'][keys_oi['OffT'][stim]][offt_rand_idx,ch,band_idx]))
+                    
+                #baseline_distr = self.osc_dict[pt][condit][keys_oi[condit][0]][0:20,ch,band_idx]#should be segments x bands
+                #stim_distr = self.osc_dict[pt][condit][keys_oi[condit][1]][0:20,ch,band_idx]
+                diff_stat = stats.ranksums(ONT_distr,OFFT_distr)
+                #diff_stat = stats.f_oneway(baseline_distr,stim_distr)
+                print(str(ch) + ':' + str(diff_stat))
+                ch_stat[ch] = diff_stat[1]
+                
+                ch_ont.append(np.mean(ONT_distr))
+                ch_offt.append(np.mean(OFFT_distr))
+                
+            
+            plt.figure()
+            plt.violinplot(ch_ont)
+            plt.violinplot(ch_offt)
+            plt.ylim((-10,10))
+            plt.suptitle(pt + ' stim: ' + str(stim))
+            
+            plt.figure()
+            plt.plot(ch_stat)
+            plt.axhline(0.05/256,0,256)
+            
+            plt.suptitle(pt + ' stim: '+ str(stim))
+    #Do per-channel, standard stats. Compare pre-stim to stim condition
+    def per_chann_stats(self,condit='OnT',band='Alpha'):
+        band_idx = dbo.feat_order.index(band)
+        
+        for pt in self.pts:
+            ch_stat = np.zeros((257,))
+            ch_bl_mean = []
+            ch_stim_mean = []
+            for ch in range(256):
+                #distribution for pre-stimulation period
+                #pdb.set_trace()
+                baseline_distr = []
+                stim_distr = []
+                for ii in range(100):
+                    bl_rand_idx = random.sample(range(0,self.osc_dict[pt][condit][keys_oi[condit][0]].shape[0]),10)
+                    stim_rand_idx = random.sample(range(0,self.osc_dict[pt][condit][keys_oi[condit][1]].shape[0]),10)
+
+                    baseline_distr.append(np.mean(self.osc_dict[pt][condit][keys_oi[condit][0]][bl_rand_idx,ch,band_idx]))
+                    stim_distr.append(np.mean(self.osc_dict[pt][condit][keys_oi[condit][1]][stim_rand_idx,ch,band_idx]))
+                    
+                #baseline_distr = self.osc_dict[pt][condit][keys_oi[condit][0]][0:20,ch,band_idx]#should be segments x bands
+                #stim_distr = self.osc_dict[pt][condit][keys_oi[condit][1]][0:20,ch,band_idx]
+                diff_stat = stats.mannwhitneyu(baseline_distr,stim_distr)
+                #diff_stat = stats.f_oneway(baseline_distr,stim_distr)
+                print(str(ch) + ':' + str(diff_stat))
+                ch_stat[ch] = diff_stat[1]
+                
+            
+            
+                #plt.violinplot(baseline_distr)
+                #plt.violinplot(stim_distr)
+                ch_bl_mean.append(np.mean(baseline_distr))
+                ch_stim_mean.append(np.mean(stim_distr))
+            
+            plt.figure()
+            plt.plot(ch_stat)
+            plt.axhline(0.05/256,0,256)
+            
+            plt.figure()
+            plt.violinplot(ch_bl_mean)
+            plt.violinplot(ch_stim_mean)
+        
     
-    def OnT_response(self,pt='POOL'):
-        med = self.med_stats()['OnT']
-        rpca = r_pca.R_pca(med)
+    '''
+    Support analysis involves looking at forward-modeled EEG changes for Primary and Secondary nodes built from tractography
+    
+    '''
+    def support_analysis(self,pt='POOL',condit='OnT',voltage='3',band='Alpha'):
+        support_struct = pickle.load(open('/tmp/'+ pt + '_' + condit + '_' + voltage,'rb'))
+        medians = self.med_stats(pt=pt)
+        
+        band_i = dbo.feat_order.index(band)
+        
+        full_distr = medians[condit][:,band_i] - np.mean(medians[condit][:,band_i]) #this zeros the means of the distribution
+        primary_distr = full_distr[support_struct['primary'] == 1]
+        print(np.sum((support_struct['primary'] == 1).astype(np.int)))
+        secondary_distr = full_distr[support_struct['secondary'] == 1]
+        print(np.sum((support_struct['secondary'] == 1).astype(np.int)))
+        
+        plt.figure()
+        bins = np.linspace(-2,2,20)
+        #plt.hist(primary_distr,bins=bins,alpha=0.5,label='Primary')
+        print('Primary mean: ' + str(np.median(primary_distr)))
+        plt.violinplot(primary_distr)
+        
+        #plt.hist(secondary_distr,bins=bins,alpha=0.5,label='Secondary')
+        print('Secondary mean: ' + str(np.median(secondary_distr)))
+        plt.violinplot(secondary_distr)
+        
+        print(stats.mannwhitneyu(primary_distr,secondary_distr))
+        
+        #plt.hist(full_distr,bins=bins,alpha=0.5,label='FULL')
+        plt.legend()
+        plt.title(pt + ' ' + condit + ' ' + band)
+        #pdb.set_trace()
+    
+    #Dimensionality reduction of ONTarget response; for now rPCA
+    def OnT_dr(self,pt='POOL'):
+        #First, get a bootstrapped estimate of the median
+        med_response = self.median_response(bootstrap=0)['OnT']
+        
+        svm_pca_coeffs = []
+        rpca = r_pca.R_pca(med_response)
         L,S = rpca.fit()
         
         #L = med
         svm_pca = PCA()
         svm_pca.fit(L)
-        SVM_coeff_L = svm_pca.fit_transform(L)
+        #SVM_coeff_L = svm_pca.fit_transform(L)
         
-        fig = plt.figure()
-        EEG_Viz.plot_3d_scalp(L[:,0],fig,label='OnT Mean Response',unwrap=True)
-        plt.title('rPCA Component 0')
+        svm_pca_coeffs.append(svm_pca.components_)
+        
+        for comp in range(2):
+            fig = plt.figure()
+            EEG_Viz.plot_3d_scalp(L[:,comp],fig,label='OnT Mean Response',unwrap=True)
+            plt.title('rPCA Component ' + str(comp))
+            
         
         plt.figure();
         plt.subplot(221)
         plt.plot(svm_pca.explained_variance_ratio_)
         plt.subplot(222)
-        plt.plot(svm_pca.components_)
+        plt.plot(np.mean(np.array(svm_pca_coeffs),axis=0))
         plt.legend(['PC1','PC2','PC3','PC4'])
         plt.title('rPCA Components')
         
@@ -285,15 +538,20 @@ class proc_dEEG:
             
             fig = plt.figure()
             EEG_Viz.plot_3d_scalp(sig_stat_mask,fig,animate=False,unwrap=True)
-        
+    
+    #in this method, we're going to do per-channel statistics for each patient, channel, band
+
     def band_stats(self,do_band='Alpha'):
         self.pop_meds()
         
     def plot_band_stats(self,do_band='Alpha'):
         self.plot_meds(band=do_band,flatten=not self.pretty)
-        
+          
+    
 
-    def simple_stats(self):
+    def OBSsimple_stats(self):
+        # We have a bit stack of the segments oscillatory powers
+        
         ref_stack = self.big_stack_dict
         #Work with the Osc Dict data
         for condit in self.condits:
@@ -971,7 +1229,7 @@ class proc_dEEG:
         
         print(np.sum(np.array(Yte) == np.array(predlabels))/len(Yte))
         
-    def train_SVM(self,mask=False):
+    def OBStrain_SVM(self,mask=False):
         num_segs = self.SVM_stack.shape[0]
         
         #generate a mask
@@ -1029,7 +1287,7 @@ class proc_dEEG:
         
         self.SVM = clf
         self.SVM_dsgn_X = dsgn_X
-        self.SVM_test_labels = predlabels\
+        self.SVM_test_labels = predlabels
     
     def assess_dynamics(self,band='Alpha'):
         band_idx = dbo.feat_order.index(band)

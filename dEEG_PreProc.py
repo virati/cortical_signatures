@@ -30,7 +30,7 @@ import DBSpace as dbo
 
 
 
-from EEG_Viz import plot_3d_scalp
+from DBSpace.visualizations import plot_3d_scalp
 import numpy as np
 
 
