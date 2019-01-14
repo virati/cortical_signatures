@@ -241,12 +241,9 @@ class proc_dEEG:
         if plot:
             for pt in self.pts:
                 if 0:
-                    plt.figure()
-                    plt.plot(response_diff_stats[pt])
-                    plt.hlines(0.05/256,0,256)
-                    n_sig = np.sum((ch_response_sig[pt] < 0.05/256).astype(np.int))
-                    plt.suptitle(pt + ' ' + str(n_sig))
-                    
+                    pass
+                
+                    # Look at each patient's ONT and OFFT VARIANCE
                     bins = np.linspace(0,40,100)
                     plt.figure()
                     plt.violinplot(ONT_var[pt])#,bins=bins)
@@ -254,11 +251,21 @@ class proc_dEEG:
                     plt.violinplot(OFFT_var[pt])#,bins=bins)
                     print(np.median(OFFT_var[pt]))
                     
+                #Stats for ONT vs OFFT within each patient
                 plt.figure()
-                plt.plot(pool_ONT_var)
-                plt.plot(pool_OFFT_var)
-                print(np.median(pool_ONT_var))
-                print(np.median(pool_OFFT_var))
+                plt.plot(response_diff_stats[pt])
+                plt.hlines(0.05/256,0,256)
+                n_sig = np.sum((ch_response_sig[pt] < 0.05/256).astype(np.int))
+                plt.suptitle(pt + ' ' + str(n_sig))
+                    
+                
+                    
+            plt.figure()
+            plt.plot(pool_ONT_var)
+            plt.plot(pool_OFFT_var)
+            print(np.median(pool_ONT_var))
+            print(np.median(pool_OFFT_var))
+            plt.suptitle('Pooled stats for ONT/OFFT consistency check')
     
     
     def BLWEIRDcompute_response(self,combine_baselines=True,plot=False):
@@ -273,15 +280,10 @@ class proc_dEEG:
             plt.figure()
             
                
-    def pool_patients_ONT(self,bl='OnT'):
-        if bl=='OnT':
-            self.osc_bl_norm = {pt:{condit:self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for condit in self.condits} for pt in self.pts}
-            self.osc_bl_norm['POOL'] = {condit:np.concatenate([self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for pt in self.pts]) for condit in self.condits}
-        elif bl == 'both':
-            raise ValueError
-            self.osc_bl_norm = {pt:{condit:self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(np.concatenate(self.osc_dict[pt]['OnT'][keys_oi['OnT'][0]],self.osc_dict[pt]['OffT'][keys_oi['OffT'][0]],axis=-1),axis=0) for condit in self.condits} for pt in self.pts}
-            self.osc_bl_norm['POOL'] = {condit:np.concatenate([self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(np.concatenate(self.osc_dict[pt]['OnT'][keys_oi['OnT'][0]],self.osc_dict[pt]['OffT'][keys_oi['OffT'][0]],axis=-1),axis=0) for pt in self.pts]) for condit in self.condits}
-
+    def pool_patients_ONT(self):
+        self.osc_bl_norm = {pt:{condit:self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for condit in self.condits} for pt in self.pts}
+        self.osc_bl_norm['POOL'] = {condit:np.concatenate([self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for pt in self.pts]) for condit in self.condits}
+   
     #Median dimensionality reduction here; for now rPCA
     def median_response(self,pt='POOL',mfunc = np.median, bootstrap=0):
         if bootstrap == 0:
@@ -306,7 +308,7 @@ class proc_dEEG:
             OFFT_BL = self.osc_dict[pt]['OffT'][keys_oi['OffT'][0]]
             
             self.combined_BL[pt] = np.concatenate((ONT_BL,OFFT_BL),axis=0)
-            
+    
     def combined_bl_distr(self,band='Alpha'):
         band_idx = dbo.feat_order.index(band)
         
@@ -314,7 +316,8 @@ class proc_dEEG:
             plt.figure()
             for ch in range(256):
                 plt.violinplot(self.combined_BL[pt][:,ch,band_idx])
-        
+    
+    # Compare ONTarget and OFFTarget distributions
     def ONTvsOFFT(self,band='Alpha',stim=0):
         band_idx = dbo.feat_order.index(band)
         
@@ -356,6 +359,8 @@ class proc_dEEG:
             plt.axhline(0.05/256,0,256)
             
             plt.suptitle(pt + ' stim: '+ str(stim))
+            
+            
     #Do per-channel, standard stats. Compare pre-stim to stim condition
     def per_chann_stats(self,condit='OnT',band='Alpha'):
         band_idx = dbo.feat_order.index(band)
@@ -1360,9 +1365,9 @@ class proc_dEEG:
             EEG_Viz.plot_3d_scalp(bin_coeff[:,bb],fig,label=band + ' SVM Coefficients',unwrap=True,animate=False)
             
         # next, we plot the l2 energy of each channel's coefficient, to see which one is "largest"
-        fig = plt.figure()
-        EEG_Viz.plot_3d_scalp(np.linalg.norm(bin_coeff[:,:],axis=1,ord=2),fig,label=band + ' SVM Coefficients',unwrap=False,animate=False)
-        plt.suptitle('L2 of all bands')
+        #fig = plt.figure()
+        #EEG_Viz.plot_3d_scalp(np.linalg.norm(bin_coeff[:,:],axis=1,ord=2),fig,label=band + ' SVM Coefficients',unwrap=False,animate=False)
+        #plt.suptitle('L2 of all bands')
         
         # next, we'll do a pca rotation
         if approach == 'rpca':
@@ -1412,7 +1417,13 @@ class proc_dEEG:
             
         
     def train_binSVM(self,mask=False):
-        num_segs = self.SVM_stack.shape[0]
+        label_map = {'OnT':1,'OffT':0}
+        
+        #num_segs = self.SVM_stack.shape[0]
+        SVM_stack = np.concatenate([self.osc_bl_norm['POOL'][condit] for condit in self.condits],axis=0)
+        SVM_labels = np.concatenate([[label_map[condit] for seg in self.osc_bl_norm['POOL'][condit]] for condit in self.condits],axis=0)
+        num_segs = SVM_stack.shape[0]
+        
         print('DOING BINARY')
         #generate a mask
         if mask:
@@ -1424,17 +1435,57 @@ class proc_dEEG:
             sub_X = self.SVM_stack[:,self.SVM_Mask,:]
             dsgn_X = sub_X.reshape(num_segs,-1,order='C')
         else:
-            dsgn_X = self.SVM_stack.reshape(num_segs,-1,order='C')
+            # RESHAPE FLAG
+            dsgn_X = SVM_stack.reshape(num_segs,-1,order='C')
         
-        #doing a one class SVM
-        #clf = svm.OneClassSVM(nu=0.1,kernel="rbf", gamma=0.1)
-    
-        #get rid of ALL OFF, and only do two labels
-        OFFs = np.where(self.SVM_labels == 'OFF')
-        dsgn_X = np.delete(dsgn_X,OFFs,0)
-        SVM_labels = np.delete(self.SVM_labels,OFFs,0)
         
-              
+        ## OK, we're good right now
+        #We have labels and we have the stack itself, properly reshaped
+        
+        #Next, we want to split out a validation set
+        Xtr,Xva,Ytr,Yva = sklearn.model_selection.train_test_split(dsgn_X,SVM_labels,test_size=0.5,shuffle=True,random_state=None)
+        
+        #Next, we want to do CV learning on just the training set
+        #Ensemble variables
+        big_score = []
+        coeffs = []
+        models = []
+                #Parameters for CV
+        nfold = 50
+        cv = StratifiedKFold(n_splits=nfold)
+        for train,test in cv.split(Xtr,Ytr):
+            clf = svm.LinearSVC(penalty='l2',dual=False,C=1)
+            mod_score = clf.fit(Xtr[train],Ytr[train]).score(Xtr[test],Ytr[test])
+            outpred = clf.predict(Xtr[test])
+            coeffs.append(clf.coef_)
+            big_score.append(mod_score)
+            models.append(clf)
+            #Maybe do ROC stuff HERE? TODO
+        #Plot the big score for the CVs
+        plt.figure()
+        plt.plot(big_score)
+        
+        # Find the best model
+        best_model_idx = np.argmax(big_score)
+        best_model = models[best_model_idx]
+        
+        
+        #Plotting of confusion matrix and coefficients
+        # Validation set assessment now
+        validation_accuracy = best_model.score(Xva,Yva)
+        print(validation_accuracy)
+        plt.figure()
+        plt.subplot(1,2,1)
+        #confusion matrix here
+        plt.subplot(1,2,2)
+        coeffs = np.array(coeffs).squeeze().reshape(50,257,5,order='C')
+        #pdb.set_trace()
+        #plt.plot(coeffs,alpha=0.2)
+        plt.plot(np.median(coeffs,axis=0))
+        
+        
+    # THE BELOW FUNCTION DOES NOT RUN, JUST HERE FOR REFERENCE AS THE SVM IS BEING RECODED ABOVE
+    def OLDtrain_binSVM(self):
         #%% PLOT THE WHOLE DATA
         plt.figure()
         Yall = np.zeros(SVM_labels.shape[0]).astype(np.float)

@@ -29,15 +29,18 @@ all_pts = ['906','907','908']
 #UNIT TEST
 EEG_analysis = proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
 EEG_analysis.extract_feats(polyorder=0)
-EEG_analysis.DEPRgen_OSC_stack()
+EEG_analysis.pool_patients_ONT()
 
-
+#EEG_analysis.assess_binSVM()
 #%%
-# Binary Classification
-EEG_analysis.assess_binSVM()
-
 EEG_analysis.train_binSVM(mask=False)
 EEG_analysis.analyse_binSVM(approach='rpca')
+
+#EEG_analysis.DEPRgen_OSC_stack()
+
+#EEG_analysis.OBSsimple_stats()
+# Binary Classification
+
 
 #%%
 EEG_analysis.OBSsimple_stats()

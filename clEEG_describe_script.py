@@ -37,6 +37,7 @@ eFrame.extract_feats(polyorder=0)
 
 #%%
 eFrame.compute_response()
+## This looks at the stats of the response
 eFrame.response_stats(plot=True,band='Alpha')
 
 
@@ -45,33 +46,29 @@ eFrame.response_stats(plot=True,band='Alpha')
 #%%
 
 '''
-EVERYTHING BELOW IS KIND OF A MESS
+EVERYTHING BELOW needs to be cleaned up
 
 
 '''
-
-#%%
-
-
-
-
-
-eFrame.DEPRgen_OSC_stack()
-#%%
-do_band = 'Alpha'
-
-#%%
-eFrame.simple_stats()
-eFrame.band_stats()
-#%%
-eFrame.band_distr()
-eFrame.plot_band_stats(do_band=do_band)
 
 #%%
 if 0:
     
     
     
+
+
+    eFrame.DEPRgen_OSC_stack()
+    #%%
+    do_band = 'Alpha'
+    
+    #%%
+    eFrame.simple_stats()
+    eFrame.band_stats()
+    #%%
+    eFrame.band_distr()
+    eFrame.plot_band_stats(do_band=do_band)
+
     
     #%%
     # Secondary analyses - Started Jan 2019
