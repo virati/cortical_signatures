@@ -93,7 +93,7 @@ TargetingEXP['liberal'] = {
 keys_oi = {'OnT':["Off_3","BONT"],'OffT':["Off_3","BOFT"]}
 
 class proc_dEEG:
-    def __init__(self,pts,procsteps='liberal',condits=['OnT','OffT'],pretty_mode=False,polyfix=0):
+    def __init__(self,pts,procsteps='liberal',condits=['OnT','OffT'],pretty_mode=False,polyfix=0,do_pipeline=True):
 
         self.chann_dim = 257
         self.ch_order_list = range(self.chann_dim)
@@ -124,6 +124,13 @@ class proc_dEEG:
         self.Feat_diff = {pt:{condit:[] for condit in self.condits} for pt in self.pts}
         self.Feat_var = {pt:{condit:[] for condit in self.condits} for pt in self.pts}
         
+        
+        if do_pipeline:
+            self.standard_pipeline()
+    
+    def standard_pipeline(self):
+        self.extract_feats(polyorder=0)
+        self.pool_patients()
         
     def load_data(self,pts):
         ts_data = defaultdict(dict)
@@ -188,15 +195,18 @@ class proc_dEEG:
         self.feat_dict = feat_dict
         self.osc_dict = osc_dict
     
-    def compute_response(self,condits=['OnT','OffT']):
-        BL = {pt:{condit:[] for condit in condits} for pt in self.pts}
-        response = {pt:{condit:[] for condit in condits} for pt in self.pts}
+    def compute_response(self,do_pts=[],condits=['OnT','OffT']):
+        if do_pts == []:
+            do_pts = self.pts
+            
+        BL = {pt:{condit:[] for condit in condits} for pt in do_pts}
+        response = {pt:{condit:[] for condit in condits} for pt in do_pts}
         
-        for pt in self.pts:
+        for pt in do_pts:
             for condit in condits:
                 #first, compute the median state during baseline
-                BL[pt][condit] = np.median(self.osc_dict[pt][condit]['Off_3'],axis=0)
-                
+                try: BL[pt][condit] = np.median(self.osc_dict[pt][condit]['Off_3'],axis=0)
+                except: pdb.set_trace()               
                 #Now, go to each segment during stim and subtract the BL for that
                 response[pt][condit] = self.osc_dict[pt][condit][keys_oi[condit][1]] - BL[pt][condit]
                 
@@ -280,12 +290,13 @@ class proc_dEEG:
             plt.figure()
             
                
-    def pool_patients_ONT(self):
+    def pool_patients(self):
         self.osc_bl_norm = {pt:{condit:self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for condit in self.condits} for pt in self.pts}
         self.osc_bl_norm['POOL'] = {condit:np.concatenate([self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for pt in self.pts]) for condit in self.condits}
    
     #Median dimensionality reduction here; for now rPCA
     def median_response(self,pt='POOL',mfunc = np.median, bootstrap=0):
+        print('Computing Median Response for ' + pt)
         if bootstrap == 0:
             print('Doing ' + str(mfunc))
             return {condit:mfunc(self.osc_bl_norm[pt][condit],axis=0) for condit in self.condits}
@@ -410,15 +421,32 @@ class proc_dEEG:
     '''
     def support_analysis(self,pt='POOL',condit='OnT',voltage='3',band='Alpha'):
         support_struct = pickle.load(open('/tmp/'+ pt + '_' + condit + '_' + voltage,'rb'))
-        medians = self.med_stats(pt=pt)
+        medians = self.median_response(pt=pt)
+        #medians = np.median(self.targ_response[pt][condit],axis=0)
+        fig = plt.figure()
+        #First, we'll plot what the medians actually are
+        band_i = dbo.feat_order.index(band)
+        EEG_Viz.plot_3d_scalp(medians['OnT'][:,band_i],fig,label='OnT Mean Response ' + band,unwrap=True,scale=10)
+        plt.suptitle(pt)
         
         band_i = dbo.feat_order.index(band)
         
-        full_distr = medians[condit][:,band_i] - np.mean(medians[condit][:,band_i]) #this zeros the means of the distribution
+        full_distr = medians['OnT'][:,band_i]# - np.mean(medians['OnT'][:,band_i]) #this zeros the means of the distribution
+        
         primary_distr = full_distr[support_struct['primary'] == 1]
+        #now we'll circle where the primary nodes are
+        
         print(np.sum((support_struct['primary'] == 1).astype(np.int)))
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        EEG_Viz.plot_3d_scalp(support_struct['primary'],ax,scale=10,alpha=0.5,unwrap=True)
+        plt.title('Primary Channels')
+        
         secondary_distr = full_distr[support_struct['secondary'] == 1]
         print(np.sum((support_struct['secondary'] == 1).astype(np.int)))
+        fig = plt.figure()
+        EEG_Viz.plot_3d_scalp(support_struct['secondary'],fig,scale=10,alpha=0.5,unwrap=True)
+        plt.title('Secondary Channels')
         
         plt.figure()
         bins = np.linspace(-2,2,20)
@@ -429,6 +457,7 @@ class proc_dEEG:
         #plt.hist(secondary_distr,bins=bins,alpha=0.5,label='Secondary')
         print('Secondary mean: ' + str(np.median(secondary_distr)))
         plt.violinplot(secondary_distr)
+        plt.legend(['Primary','Secondary'])
         
         print(stats.mannwhitneyu(primary_distr,secondary_distr))
         
@@ -438,9 +467,15 @@ class proc_dEEG:
         #pdb.set_trace()
     
     #Dimensionality reduction of ONTarget response; for now rPCA
-    def OnT_dr(self,pt='POOL'):
-        #First, get a bootstrapped estimate of the median
-        med_response = self.median_response(bootstrap=0)['OnT']
+    def OnT_dr(self,pt='POOL',data_source=[]):
+        
+        if data_source == []:
+            #First, get a bootstrapped estimate of the median
+            med_response = self.median_response(pt=pt,bootstrap=0)['OnT']
+            source_label = 'Median Response'
+        else:
+            med_response = np.median(data_source,axis=0)
+            source_label = 'SVM Coefficients'
         
         svm_pca_coeffs = []
         rpca = r_pca.R_pca(med_response)
@@ -465,7 +500,7 @@ class proc_dEEG:
         plt.subplot(222)
         plt.plot(np.mean(np.array(svm_pca_coeffs),axis=0))
         plt.legend(['PC1','PC2','PC3','PC4'])
-        plt.title('rPCA Components')
+        plt.title('rPCA Components ' + source_label)
         
 
         
@@ -1357,7 +1392,7 @@ class proc_dEEG:
         plt.plot(tsize,np.mean(vscore,axis=1))
         plt.legend(['Training Score','Cross-validation Score'])
         
-    def analyse_binSVM(self,approach='rpca'):
+    def OBSanalyse_binSVM(self,approach='rpca'):
         bin_coeff = self.binSVM.coef_.reshape(-1,5)
         # First, we'll plot the coefficients for each band
         for bb,band in enumerate(dbo.feat_order):
@@ -1423,6 +1458,7 @@ class proc_dEEG:
         SVM_stack = np.concatenate([self.osc_bl_norm['POOL'][condit] for condit in self.condits],axis=0)
         SVM_labels = np.concatenate([[label_map[condit] for seg in self.osc_bl_norm['POOL'][condit]] for condit in self.condits],axis=0)
         num_segs = SVM_stack.shape[0]
+        print(num_segs)
         
         print('DOING BINARY')
         #generate a mask
@@ -1450,7 +1486,8 @@ class proc_dEEG:
         big_score = []
         coeffs = []
         models = []
-                #Parameters for CV
+        
+        #Parameters for CV
         nfold = 50
         cv = StratifiedKFold(n_splits=nfold)
         for train,test in cv.split(Xtr,Ytr):
@@ -1473,16 +1510,27 @@ class proc_dEEG:
         #Plotting of confusion matrix and coefficients
         # Validation set assessment now
         validation_accuracy = best_model.score(Xva,Yva)
+        Ypred = best_model.predict(Xva)
         print(validation_accuracy)
         plt.figure()
         plt.subplot(1,2,1)
         #confusion matrix here
+        conf_matrix = confusion_matrix(Ypred,Yva)
+        plt.imshow(conf_matrix)
+        plt.yticks(np.arange(0,2),['OffT','OnT'])
+        plt.xticks(np.arange(0,2),['OffT','OnT'])
+        plt.colorbar()
+        
         plt.subplot(1,2,2)
         coeffs = np.array(coeffs).squeeze().reshape(50,257,5,order='C')
         #pdb.set_trace()
         #plt.plot(coeffs,alpha=0.2)
         plt.plot(np.median(coeffs,axis=0))
         
+        
+        self.SVM_coeffs = coeffs
+    def analyse_binSVM(self):
+        pass
         
     # THE BELOW FUNCTION DOES NOT RUN, JUST HERE FOR REFERENCE AS THE SVM IS BEING RECODED ABOVE
     def OLDtrain_binSVM(self):

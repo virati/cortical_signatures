@@ -217,7 +217,7 @@ class streamLFP:
         
         
 class streamEEG:
-    def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False,reref_class=True,full_experiment=True):
+    def __init__(self,pt='908',condit='OnT',ds_fact=1,spotcheck=False,reref_class='local',full_experiment=True):
         #self.data_dict = {ev:{condit:[] for condit in do_condits} for ev in do_pts}
         
         self.donfft = 2**10

@@ -34,8 +34,8 @@ Etrode_map = DTI.Etrode_map
 parcel_coords = np.load('/home/virati/Dropbox/TVB_192_coord.npy')
 # Load in a simple DTI image
 condit = 'OnT'
-pt = '908'
-voltage = str(3)
+pt = '906'
+voltage = str(4)
 
 #%% Load in the file
 
@@ -151,7 +151,7 @@ chann_mask[prior_channs] = 1
 second_chann_mask = np.zeros((257,))
 second_chann_mask[second_channs] = 1
 
-second_chann_mask = np.logical_and(second_chann_mask == 1, ~(chann_mask == 1))
+second_chann_mask = np.logical_and(second_chann_mask == 1, ~(chann_mask == 1)).astype(np.int)
 
 #%%
 #Plotting stuff now

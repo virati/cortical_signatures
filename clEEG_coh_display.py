@@ -35,9 +35,6 @@ def umap_display():
         
         csd_dict = import_dict['CSD']
         plv_dict = import_dict['PLV']
-    
-
-
 
 #%%
 # Here, we're going to focus on Alpha only
@@ -49,6 +46,7 @@ with open('/home/virati/big_coher_matrix.pickle','rb') as handle:
     import_dict = pickle.load(handle)
 csd_dict = import_dict['CSD']
 plv_dict = import_dict['PLV']
+
 #%% Reshape the inputs into matrices for each patient x condition
 band_idx = 2
 msCoh = nestdict()

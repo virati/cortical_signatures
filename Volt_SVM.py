@@ -11,10 +11,10 @@ Load in continuous, raw dEEG from the mat converted files
 from stream_dEEG import streamEEG
 
 
-import sys
-sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
-import DBS_Osc as dbo
-from DBS_Osc import nestdict
+#import sys
+#sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
+import DBSpace as dbo
+from DBSpace import nestdict
 
 import itertools
 from sklearn.metrics import confusion_matrix
@@ -26,7 +26,7 @@ import pickle
 
 perf_dict = nestdict()
 
-pts = ['906','907']
+pts = ['906']
 condits =  ['Volt']
 class_type = 'l2'
 #%%

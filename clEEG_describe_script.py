@@ -4,7 +4,8 @@
 Created on Fri Sep 14 16:32:20 2018
 
 @author: virati
-A REWRITE of the Cleaned EEG-Descriptive Pipeline (SCRIPT)
+This script is focused on capturing the difference between ONTarget and OFFTarget
+
 """
 
 #import sys
@@ -33,9 +34,7 @@ do_coherence = False
 
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
-eFrame.extract_feats(polyorder=0)
 
-#%%
 eFrame.compute_response()
 ## This looks at the stats of the response
 eFrame.response_stats(plot=True,band='Alpha')
