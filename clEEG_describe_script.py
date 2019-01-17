@@ -34,7 +34,11 @@ do_coherence = False
 
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
+#%%
 
+eFrame.plot_median_response(condit='OnT',use_maya=False)
+eFrame.plot_median_response(condit='OffT',use_maya=False)
+#%%
 eFrame.compute_response()
 ## This looks at the stats of the response
 eFrame.response_stats(plot=True,band='Alpha')

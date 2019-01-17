@@ -21,6 +21,7 @@ import sys
 sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
 import DBSpace as dbo
 from DBSpace import nestdict
+from DBSpace.visualizations import EEG_Viz
 
 import pdb
 
@@ -29,6 +30,7 @@ import pickle
 from sklearn import mixture
 from sklearn.decomposition import PCA
 from sklearn import svm
+
 
 
 Targeting = defaultdict(dict)
@@ -295,6 +297,8 @@ class streamEEG:
         self.pt = pt
         self.condit = condit
         
+    
+        
     def re_ref(self,scheme='local'):
         #do a very simple lowpass filter at 1Hz
         hpf_cutoff=1/(self.fs/2)
@@ -307,6 +311,8 @@ class streamEEG:
             post_ref = neigh_mont.reref_data(dataref,dist_matr)     
         elif scheme == 'avg':
             post_ref = self.data_matr - np.mean(self.data_matr,axis=0)
+        elif scheme == 'none':
+            post_ref = self.data_matr
             
         
         #self.re_ref_data = post_ref
@@ -317,6 +323,44 @@ class streamEEG:
     
     def make_epochs(self):
         pass
+    
+    def median_state(self,intv=(0,1),do_plot=False,use_maya=False,band='Alpha'):
+        #Intervals NEED TO BE IN THE SEGMENT NUMBER
+        
+        band_i = dbo.feat_order.index(band)
+        
+        medians = np.median(self.osc_matr[:,intv[0]:intv[1],:],axis=1)
+        
+        #pdb.set_trace()
+        if do_plot:
+            if use_maya:
+                EEG_Viz.maya_band_display(medians[:,band_i])
+            else:
+                EEG_Viz.plot_3d_scalp(medians[:,band_i],plt.figure(),label='Volt Mean Response ' + band + ' | ',unwrap=True,scale=100,clims=(-1,1),alpha=0.3,marker_scale=5)
+    
+                plt.suptitle(self.pt)
+                
+        
+        return medians
+    
+    def median_response(self,intv=(0,1),do_plot=False,use_maya=False,band='Alpha'):
+        #Intervals NEED TO BE IN THE SEGMENT NUMBER
+        
+        band_i = dbo.feat_order.index(band)
+        
+        medians = np.median(self.osc_matr[:,intv[0]:intv[1],:],axis=1) - self.baseline_state
+        
+        #pdb.set_trace()
+        if do_plot:
+            if use_maya:
+                EEG_Viz.maya_band_display(medians[:,band_i])
+            else:
+                EEG_Viz.plot_3d_scalp(medians[:,band_i],plt.figure(),label='Volt Mean Response ' + band + ' | ',unwrap=True,scale=100,clims=(-5,5),alpha=0.5,marker_scale=5)
+    
+                plt.suptitle(self.pt)
+                
+        
+        return medians
         
     def seg_PSDs(self):
         tvect = self.tvect
@@ -357,8 +401,22 @@ class streamEEG:
             self.clf = pickle.load(open('/home/virati/SVMModel_' + ctype,'rb'))
         elif train_type == 'stream':
             self.clf = pickle.load(open('/home/virati/Stream_SVMModel_' + ctype,'rb'))
+   
+    def calc_baseline(self,intv=(20,40)):
+        #Which segments are with stim off?
+        baseline_state = self.median_state(intv=intv) #large amount of time for us to average.
+        
+        self.baseline_state = baseline_state
+        return 1
+
+    def plot_segment_labels(self):
+        plt.figure()
+        elements = len(self.true_labels)
+        
+        plt.stem(self.true_labels)
+        plt.xlabel('Segment number')
     
-    def calc_baseline(self,baseline_calibration = True):
+    def label_segments(self,baseline_calibration = True):
         #go to every stim_feat segment WITHOUT stimulation and average them together. This is like a calibration
         
         no_stim_segs = self.stim_feat < 10
@@ -372,16 +430,9 @@ class streamEEG:
         self.no_stim_median = np.median(self.osc_matr[:,no_stim_segs,:],axis=1)
         
         #Go through each segment and subtract out the median of the stim
-        if baseline_calibration:
-            for ss in range(self.osc_matr.shape[1]):
-                self.stim_matr[:,ss,:] = self.osc_matr[:,ss,:] - self.no_stim_median
-                self.label_time[ss] = ss
-                self.stim_matr_calibrated = True
-        else:
-            self.stim_matr = self.osc_matr
-            for ss in range(self.osc_matr.shape[1]): self.label_time[ss] = ss
-            
-            self.stim_matr_calibrated = False
+        for ss in range(self.osc_matr.shape[1]):
+            self.label_time[ss] = ss
+
         
         if self.condit == 'OnT':
             label_val = 2

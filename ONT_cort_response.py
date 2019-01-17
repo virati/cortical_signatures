@@ -27,7 +27,9 @@ pt_list = ['905','906','907','908']
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
 #%%
-eFrame.OnT_dr(pt='906')
+eFrame.OnT_dr(pt='POOL')
+#%%
+eFrame.plot_median_response(pt='POOL',use_maya=False)
 
 '''
 

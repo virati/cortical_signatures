@@ -414,7 +414,21 @@ class proc_dEEG:
             plt.violinplot(ch_bl_mean)
             plt.violinplot(ch_stim_mean)
         
-    
+    def plot_median_response(self,pt='POOL',band='Alpha',condit='OnT',use_maya=False):
+        band_i = dbo.feat_order.index(band)
+       
+        medians = self.median_response(pt=pt)
+        #medians = np.median(self.targ_response[pt][condit],axis=0)
+        #First, we'll plot what the medians actually are
+        
+        #The old scatterplot approach
+        if use_maya:
+            EEG_Viz.maya_band_display(medians[condit][:,band_i])
+        else:
+            EEG_Viz.plot_3d_scalp(medians[condit][:,band_i],plt.figure(),label=condit + ' Mean Response ' + band + ' | ' + pt,unwrap=True,scale=100,clims=(-1,1),alpha=0.3,marker_scale=5)
+
+            plt.suptitle(pt)
+        
     '''
     Support analysis involves looking at forward-modeled EEG changes for Primary and Secondary nodes built from tractography
     
@@ -490,16 +504,17 @@ class proc_dEEG:
         
         for comp in range(2):
             fig = plt.figure()
-            EEG_Viz.plot_3d_scalp(L[:,comp],fig,label='OnT Mean Response',unwrap=True)
+            EEG_Viz.plot_3d_scalp(L[:,comp],fig,label='OnT Mean Response',unwrap=True,scale=100,alpha=0.3,marker_scale=5)
             plt.title('rPCA Component ' + str(comp))
             
         
         plt.figure();
         plt.subplot(221)
         plt.plot(svm_pca.explained_variance_ratio_)
+        plt.ylim((0,1))
         plt.subplot(222)
         plt.plot(np.mean(np.array(svm_pca_coeffs),axis=0))
-        plt.legend(['PC1','PC2','PC3','PC4'])
+        plt.legend(['PC1','PC2','PC3','PC4','PC5'])
         plt.title('rPCA Components ' + source_label)
         
 
@@ -1449,7 +1464,22 @@ class proc_dEEG:
             EEG_Viz.plot_3d_scalp(SVM_coeff_L[:,cc],fig,animate=False,unwrap=True,highlight=big_coeffs)
             plt.title('Plotting component ' + str(cc))
             plt.suptitle(approach + ' rotated results')
-            
+    
+    def learning_binSVM(self,mask=False):
+        label_map = {'OnT':1,'OffT':0}
+    
+        SVM_stack = np.concatenate([self.osc_bl_norm['POOL'][condit] for condit in self.condits],axis=0)
+        SVM_labels = np.concatenate([[label_map[condit] for seg in self.osc_bl_norm['POOL'][condit]] for condit in self.condits],axis=0)
+        num_segs = SVM_stack.shape[0]
+        
+        dsgn_X = SVM_stack.reshape(num_segs,-1,order='C')
+        
+        print('DOING BINARY - Learning Curve')
+        tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty='l2',dual=False,C=1),dsgn_X,SVM_labels,train_sizes=np.linspace(0.1,1,20),shuffle=True,cv=10,random_state=12342)
+        plt.figure()
+        plt.plot(tsize,np.mean(tscore,axis=1))
+        plt.plot(tsize,np.mean(vscore,axis=1))
+        plt.legend(['Training Score','Cross-validation Score'])
         
     def train_binSVM(self,mask=False):
         label_map = {'OnT':1,'OffT':0}
