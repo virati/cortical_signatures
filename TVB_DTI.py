@@ -35,7 +35,7 @@ parcel_coords = np.load('/home/virati/Dropbox/TVB_192_coord.npy')
 # Load in a simple DTI image
 condit = 'OnT'
 pt = '906'
-voltage = str(4)
+voltage = str(3)
 
 #%% Load in the file
 
@@ -172,6 +172,7 @@ ax.grid(False)
 #%%
 #Now overlay the EEG channels
 EEG_Viz.plot_3d_locs(np.ones((257,)),ax,scale=eeg_scale,animate=False)
+
 EEG_Viz.plot_3d_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
 
 fig = plt.figure()

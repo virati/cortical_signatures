@@ -66,7 +66,7 @@ for pp,pt in enumerate(pts):
         sEEG.seg_PSDs()
         
         #%%
-        sEEG.calc_baseline(baseline_calibration = baseline_calibrate)
+        sEEG.calc_baseline(intv=(0,20))
         
         #This will display our experimental conditions, but from the presence of stimulation artifact
         #plt.figure()

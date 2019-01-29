@@ -476,9 +476,8 @@ class proc_dEEG:
         print(stats.mannwhitneyu(primary_distr,secondary_distr))
         
         #plt.hist(full_distr,bins=bins,alpha=0.5,label='FULL')
-        plt.legend()
+        plt.legend(['Primary','Secondary'])
         plt.title(pt + ' ' + condit + ' ' + band)
-        #pdb.set_trace()
     
     #Dimensionality reduction of ONTarget response; for now rPCA
     def OnT_dr(self,pt='POOL',data_source=[]):
