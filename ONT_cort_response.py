@@ -29,7 +29,7 @@ eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
 #%%
 eFrame.OnT_dr(pt='POOL')
 #%%
-eFrame.plot_median_response(pt='POOL',use_maya=False)
+eFrame.plot_median_response(pt='POOL',use_maya=True)
 
 '''
 
@@ -44,10 +44,8 @@ do_coherence = False
 
 
 #eFrame.pool_patients()
-band = 'Beta*'
-
 for band in ['Alpha']:
-    for pt in ['906']:
+    for pt in ['906','907','908']:
 
-        eFrame.support_analysis(pt=pt,band=band)
+        eFrame.support_analysis(pt=pt,band=band,voltage=str(3))
         

@@ -295,6 +295,9 @@ class proc_dEEG:
         self.osc_bl_norm['POOL'] = {condit:np.concatenate([self.osc_dict[pt][condit][keys_oi[condit][1]] - np.median(self.osc_dict[pt][condit][keys_oi[condit][0]],axis=0) for pt in self.pts]) for condit in self.condits}
    
     #Median dimensionality reduction here; for now rPCA
+    def distr_response(self,pt='POOL'):
+        return {condit:self.osc_bl_norm[pt][condit] for condit in self.condits}
+    
     def median_response(self,pt='POOL',mfunc = np.median, bootstrap=0):
         print('Computing Median Response for ' + pt)
         if bootstrap == 0:
@@ -428,6 +431,27 @@ class proc_dEEG:
             EEG_Viz.plot_3d_scalp(medians[condit][:,band_i],plt.figure(),label=condit + ' Mean Response ' + band + ' | ' + pt,unwrap=True,scale=100,clims=(-1,1),alpha=0.3,marker_scale=5)
 
             plt.suptitle(pt)
+    
+    
+    def support_analysis(self,pt='POOL',condit='OnT',voltage='3',band='Alpha'):
+        support_struct = pickle.load(open('/tmp/'+ pt + '_' + condit + '_' + voltage,'rb'))
+        distr = self.distr_response(pt=pt)
+        #medians = np.median(self.targ_response[pt][condit],axis=0)
+        fig = plt.figure()
+        #First, we'll plot what the medians actually are
+        band_i = dbo.feat_order.index(band)
+        EEG_Viz.plot_3d_scalp(np.median(distr['OnT'][:,:,band_i],axis=0),fig,label='OnT Mean Response ' + band,unwrap=True,scale=10)
+        plt.suptitle(pt)
+        
+        band_i = dbo.feat_order.index(band)
+        
+        full_distr = distr['OnT'][:,:,band_i]# - np.mean(medians['OnT'][:,band_i]) #this zeros the means of the distribution
+        
+        primary_distr = full_distr[:,support_struct['primary'] == 1]
+        secondary_distr = full_distr[:,support_struct['secondary'] == 1]
+        
+        for cc in range(257):
+            p_val[cc] = stats.ks_2samp(primary_distr[:,cc],secondary_distr[:,cc])
         
     '''
     Support analysis involves looking at forward-modeled EEG changes for Primary and Secondary nodes built from tractography
@@ -467,16 +491,17 @@ class proc_dEEG:
         #plt.hist(primary_distr,bins=bins,alpha=0.5,label='Primary')
         print('Primary mean: ' + str(np.median(primary_distr)))
         plt.violinplot(primary_distr)
+        #pdb.set_trace()
         
         #plt.hist(secondary_distr,bins=bins,alpha=0.5,label='Secondary')
         print('Secondary mean: ' + str(np.median(secondary_distr)))
         plt.violinplot(secondary_distr)
         plt.legend(['Primary','Secondary'])
         
-        print(stats.mannwhitneyu(primary_distr,secondary_distr))
+        print(stats.ks_2samp(primary_distr,secondary_distr))
         
         #plt.hist(full_distr,bins=bins,alpha=0.5,label='FULL')
-        plt.legend(['Primary','Secondary'])
+        plt.legend(['Primary','','','Secondary'])
         plt.title(pt + ' ' + condit + ' ' + band)
     
     #Dimensionality reduction of ONTarget response; for now rPCA
