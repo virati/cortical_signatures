@@ -28,30 +28,9 @@ import matplotlib.pyplot as plt
 import pdb
 
 #%%
-# Define our classes here
 
-class support_model:
-    def __init__(self):
-        pass
-    
-    
-    def load_parcels(self):
-        
-
-
-#%%
-
-Etrode_map = DTI.Etrode_map
-
-
-# Load in a simple DTI image
-condit = 'OnT'
-pt = '908'
-voltage = str(5)
-        
-def DTI_support_model(pt,voltage,condit='OnT'):
-    
-    #%% Load in the file
+def DTI_support_model(pt,voltage,dti_parcel_thresh=30,eeg_thresh=30,condit='OnT'):
+    Etrode_map = DTI.Etrode_map
     # Load in the coordinates for the parcellation
     parcel_coords = np.load('/home/virati/Dropbox/TVB_192_coord.npy')
 
@@ -59,7 +38,7 @@ def DTI_support_model(pt,voltage,condit='OnT'):
     dti_file = nestdict()
     for ss,side in enumerate(['L','R']):
         cntct = Etrode_map[condit][pt][ss]+1
-        dti_file[side] = '/home/virati/Dropbox/projects/Research/MDD-DBS/Data/Anatomy/DTI/MDT_DBS_2_7V_Tractography/DBS'+str(pt) + '.'+side+str(cntct)+'.'+voltage+'V.bin.nii.gz'
+        dti_file[side] = '/home/virati/Dropbox/projects/Research/MDD-DBS/Data/Anatomy/DTI/MDT_DBS_2_7V_Tractography/DBS'+str(pt) + '.'+side+str(cntct)+'.'+str(voltage)+'V.bin.nii.gz'
     
         data[side] = image.smooth_img(dti_file[side],fwhm=1)
     
@@ -103,9 +82,9 @@ def DTI_support_model(pt,voltage,condit='OnT'):
     #%% Threshold tract -> parcellations
     #This is our FIRST threshold
     
-    dti_parcel_thresh = 30
+
     
-    plt.hist(dist_to_closest_tract)
+    #plt.hist(dist_to_closest_tract)
     prior_locs = dist_to_closest_tract < dti_parcel_thresh
     
     #%%
@@ -126,14 +105,15 @@ def DTI_support_model(pt,voltage,condit='OnT'):
         plt.subplot(2,1,2)
         plt.imshow(fl)
     
-    plot_first_scnd(first_order,second_order,f_laplacian)
+    #plot_first_scnd(first_order,second_order,f_laplacian)
     
     second_locs = second_order > 20
     
     #%%
     #
-    eeg_scale = 10
+    eeg_scale = 8
     EEG_coords = EEG_Viz.get_coords(scale=eeg_scale)
+    # maybe scale things here..
     
     # Find First order EEG channels
     dist_to_closest_parcel = [None] * EEG_coords.shape[0]
@@ -156,11 +136,12 @@ def DTI_support_model(pt,voltage,condit='OnT'):
         
     #%%
     
-    eeg_thresh = 35
+    
     # This is our SECOND threshold
     prior_channs = np.array(dist_to_closest_parcel) < eeg_thresh
-    plt.figure()
-    plt.hist(dist_to_closest_parcel)
+    
+    #plt.figure()
+    #plt.hist(dist_to_closest_parcel)
     
     second_channs = np.array(dist_to_closest_second) < eeg_thresh
     
@@ -173,7 +154,23 @@ def DTI_support_model(pt,voltage,condit='OnT'):
     second_chann_mask = np.logical_and(second_chann_mask == 1, ~(chann_mask == 1)).astype(np.int)
     
     #%%
-    #Plotting stuff now
+    #Channel mask writing
+    EEG_support = {'primary':chann_mask,'secondary':second_chann_mask,'parcel_coords':parcel_coords,'prior_locs':prior_locs,'eeg_scale':eeg_scale}
+    #pickle.dump(EEG_support,open('/tmp/' + pt + '_' + condit + '_' + voltage,'wb'))
+    return EEG_support
+    
+    
+    #%%
+    #Do Mayavi Plotting
+    #EEG_Viz.plot_maya_scalp(chann_mask,scale=10,alpha=0.5,unwrap=False)
+    #EEG_Viz.plot_maya_scalp(np.ones((257,)),ax,scale=eeg_scale,animate=False)
+    #EEG_Viz.plot_maya_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
+def plot_support_model(EEG_support):
+
+    parcel_coords = EEG_support['parcel_coords']
+    prior_locs= EEG_support['prior_locs']
+    eeg_scale = EEG_support['eeg_scale']
+    
     fig = plt.figure()
     ax = fig.add_subplot(111,projection='3d')
     ax._axis3don = False
@@ -188,18 +185,19 @@ def DTI_support_model(pt,voltage,condit='OnT'):
     ax.set_yticks([])
     ax.set_zticks([])
     ax.grid(False)
-    #%%
+    
     #Now overlay the EEG channels
     EEG_Viz.plot_3d_locs(np.ones((257,)),ax,scale=eeg_scale,animate=False)
     
     EEG_Viz.plot_3d_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
     
+    
+    #%%
     fig = plt.figure()
     ax = fig.add_subplot(111,projection='3d')
     EEG_Viz.plot_3d_scalp(second_chann_mask,ax,scale=10,alpha=0.2,unwrap=False)
     plt.title('Secondary Channels')
-    
-    #%%
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
     EEG_Viz.plot_3d_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=True)
@@ -209,22 +207,6 @@ def DTI_support_model(pt,voltage,condit='OnT'):
     ax = fig.add_subplot(111)
     EEG_Viz.plot_3d_scalp(second_chann_mask,ax,scale=12,alpha=0.5,unwrap=True)
     plt.title('Secondary Channels')
-    
-    #pdb.set_trace()
-    
-    
-    #%%
-    #Channel mask writing
-    EEG_support = {'primary':chann_mask,'secondary':second_chann_mask}
-    pickle.dump(EEG_support,open('/tmp/' + pt + '_' + condit + '_' + voltage,'wb'))
-    
-    
-    #%%
-    #Do Mayavi Plotting
-    #EEG_Viz.plot_maya_scalp(chann_mask,scale=10,alpha=0.5,unwrap=False)
-    #EEG_Viz.plot_maya_scalp(np.ones((257,)),ax,scale=eeg_scale,animate=False)
-    #EEG_Viz.plot_maya_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
-    
     
     #%%
     EEG_Viz.maya_band_display(1*chann_mask - second_chann_mask)
@@ -247,5 +229,5 @@ def DTI_support_model(pt,voltage,condit='OnT'):
 
 if __name__=='__main__':
     for pt in ['906']:
-        for voltage in [3,7]:
+        for voltage in range(3,4):
             DTI_support_model(pt,str(voltage))

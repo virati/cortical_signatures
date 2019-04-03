@@ -11,6 +11,8 @@ This scipt is focused on characterizing the ONTarget response
 from proc_dEEG import proc_dEEG
 import DBSpace as dbo
 from DBSpace.visualizations import EEG_Viz
+from TVB_DTI import DTI_support_model
+
 
 import scipy.stats as stats
 import numpy as np
@@ -45,7 +47,7 @@ do_coherence = False
 
 #eFrame.pool_patients()
 for band in ['Alpha']:
-    for pt in ['906','907','908']:
-
-        eFrame.support_analysis(pt=pt,band=band,voltage=str(3))
+    for pt in ['906']:
+        EEG_support = DTI_support_model(pt,3,eeg_thresh=30,dti_parcel_thresh=25)
+        eFrame.support_analysis(support_struct=EEG_support,pt=pt,band=band,voltage=str(3))
         

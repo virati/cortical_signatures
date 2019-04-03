@@ -60,7 +60,7 @@ import r_pca
 TargetingEXP = defaultdict(dict)
 #TargetingEXP['conservative'] = {'905':0,'906':0,'907':0,'908':0}
 TargetingEXP['conservative'] = {
-        '905':{'OnT':'/home/extend/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS905_B4_OnTarget_HP_LP_seg_mff_cln_ref_con.mat','OffT':'/home/extend/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS905_B4_OffTar_HP_LP_seg_mff_cln_ref_con.mat'},
+        '905':{'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS905_B4_OnTarget_HP_LP_seg_mff_cln_ref_con.mat','OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS905_B4_OffTar_HP_LP_seg_mff_cln_ref_con.mat'},
         '906':{
                 'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS906_TO_onTAR_MU_HP_LP_seg_mff_cln_ref_1.mat',
                 'OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/conservative/DBS906_TO_offTAR_bcr_LP_HP_seg_bcr_ref.mat'
@@ -75,7 +75,7 @@ TargetingEXP['conservative'] = {
                 }
         }
 TargetingEXP['liberal'] = {
-        '905':{'OnT':'/home/extend/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS905_B4_OnTarget_HP_LP_seg_mff_cln_ref_lib.mat','OffT':'/home/extend/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS905_B4_OffTar_HP_LP_seg_mff_cln_ref_lib.mat'},
+        '905':{'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS905_B4_OnTarget_HP_LP_seg_mff_cln_ref_lib.mat','OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS905_B4_OffTar_HP_LP_seg_mff_cln_ref_lib.mat'},
         '906':{
                 'OnT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS906_TO_onTAR_MU_HP_LP_seg_mff_cln_ref.mat',
                 'OffT':'/home/virati/MDD_Data/hdEEG/Segmented/Targeting_B4/liberal/DBS906_TO_offTAR_LP_seg_mff_cln_ref_1.mat'
@@ -457,8 +457,8 @@ class proc_dEEG:
     Support analysis involves looking at forward-modeled EEG changes for Primary and Secondary nodes built from tractography
     
     '''
-    def support_analysis(self,pt='POOL',condit='OnT',voltage='3',band='Alpha'):
-        support_struct = pickle.load(open('/tmp/'+ pt + '_' + condit + '_' + voltage,'rb'))
+    def support_analysis(self,support_struct,pt='POOL',condit='OnT',voltage='3',band='Alpha'):
+        #support_struct = pickle.load(open('/tmp/'+ pt + '_' + condit + '_' + voltage,'rb'))
         medians = self.median_response(pt=pt)
         #medians = np.median(self.targ_response[pt][condit],axis=0)
         fig = plt.figure()
