@@ -11,7 +11,7 @@ This scipt is focused on characterizing the ONTarget response
 from proc_dEEG import proc_dEEG
 import DBSpace as dbo
 from DBSpace.visualizations import EEG_Viz
-from TVB_DTI import DTI_support_model
+from TVB_DTI import DTI_support_model, plot_support_model
 
 
 import scipy.stats as stats
@@ -33,13 +33,6 @@ eFrame.OnT_dr(pt='POOL')
 #%%
 eFrame.plot_median_response(pt='POOL',use_maya=True)
 
-'''
-
-OLD STUFF
-
-'''
-#%%
-    
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)
 do_coherence = False
@@ -48,6 +41,8 @@ do_coherence = False
 #eFrame.pool_patients()
 for band in ['Alpha']:
     for pt in ['906']:
-        EEG_support = DTI_support_model(pt,3,eeg_thresh=30,dti_parcel_thresh=25)
+        #30, 25 is good
+        EEG_support = DTI_support_model(pt,3,eeg_thresh=35,dti_parcel_thresh=27)
+        plot_support_model(EEG_support,pt)
         eFrame.support_analysis(support_struct=EEG_support,pt=pt,band=band,voltage=str(3))
         

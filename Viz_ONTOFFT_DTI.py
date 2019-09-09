@@ -67,7 +67,8 @@ for pp,pt in enumerate(all_pts):
         #plotting.plot_glass_brain(data[pp]['L'],black_bg=True)
         
         #plotting.plot_glass_brain(nibabel.Nifti1Image(data_arr[pp][condit]['L'],affine=-1*np.eye(4)),black_bg=True)
-        plotting.plot_glass_brain(combined[pt][condit],black_bg=True,title=pt + ' ' + condit)
+        
+        #plotting.plot_glass_brain(combined[pt][condit],black_bg=True,title=pt + ' ' + condit)
 
 #%%
 #Find the mean for a condit
@@ -80,7 +81,7 @@ for cc, condit in enumerate(['OnT','OffT']):
     #plotting.plot_glass_brain(nibabel.Nifti1Image(np.median(np.sum(data_arr[:,0,:,:,:,:],axis=2),axis=0),affine=np.eye(4)))
 #%%
 diff_map = image.math_img("np.abs(img1-img2)",img1=condit_avg['OnT'],img2=condit_avg['OffT'])
-plotting.plot_glass_brain(diff_map,black_bg=True,title='Diff Tractography',vmin=0,vmax=1,threshold=0.5)
+plotting.plot_glass_brain(diff_map,black_bg=True,title='Diff Tractography',vmin=0,vmax=1,threshold=0.3)
 #test = np.mean(np.array(dti_file),axis=0)
 #plotting.plot_img(test)
 plt.show()
