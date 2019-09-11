@@ -152,7 +152,7 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
         mni_vox.append(np.array(image.coord_transform(vv[0],vv[1],vv[2],niimg.affine)))
     
     mni_vox = sig.detrend(np.array(mni_vox),axis=0,type='constant')
-    vox_loc = mni_vox/10
+    vox_loc = mni_vox/0.1
     
     #%%
     # now that we're coregistered, we go to each parcellation and find the minimum distance from it to the tractography
@@ -201,12 +201,12 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
         plt.imshow(fl)
     
     #plot_first_scnd(first_order,second_order,f_laplacian)
-    
-    second_locs = second_order > 20
-    
+    #This value is chosen semi-randomly to achieve a reasonable secondary-EEG density
+    second_locs = second_order > 9
+    plt.figure();plt.hist(second_order)
     #%%
     #
-    eeg_scale = 1
+    eeg_scale = 10
     EEG_coords = EEG_Viz.get_coords(scale=eeg_scale)
     # maybe scale things here..
     
@@ -219,7 +219,7 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
             
         dist_to_closest_parcel[cc] = np.min(np.array(parcel_dist))
     
-    
+    #pdb.set_trace()
     # Find second order EEG channels
     dist_to_closest_second = [None] * EEG_coords.shape[0]
     for cc in range(EEG_coords.shape[0]):
@@ -247,6 +247,7 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
     
     second_chann_mask = np.logical_and(second_chann_mask == 1, ~(chann_mask == 1)).astype(np.int)
     
+    #pdb.set_trace()
     #%%
     #Channel mask writing
     EEG_support = {'primary':chann_mask,'secondary':second_chann_mask,'parcel_coords':parcel_coords,'prior_locs':prior_locs,'eeg_scale':eeg_scale,'second_locs':second_locs}
@@ -263,7 +264,7 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
 
 #%%
     # The main support model code
-def plot_support_model(EEG_support,pt,voltage=3,dti_parcel_thresh=30,eeg_thresh=30,condit='OnT'):
+def plot_support_model(EEG_support,pt,voltage=3,condit='OnT'):
     Etrode_map = DTI.Etrode_map
     #%%
     # Load in the coordinates for the parcellation
@@ -369,11 +370,11 @@ def plot_support_model(EEG_support,pt,voltage=3,dti_parcel_thresh=30,eeg_thresh=
     ## NEED TO PRETTY THIS UP with plot_3d_scalp updates that give much prettier OnT/OffT pictures
     # First, we plot the tracts from the DTI
     EEG_Viz.plot_tracts(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
-    #EEG_Viz.plot_coords(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
+    EEG_Viz.plot_coords(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
     
     # Next, we plot the parcellation nodes from TVB
     EEG_Viz.plot_coords(parcel_coords,active_mask=prior_locs,color=(0.,1.,0.))
-    EEG_Viz.plot_coords(parcel_coords,active_mask=second_locs,color=(0.,1.,1.))
+    EEG_Viz.plot_coords(parcel_coords,active_mask=second_locs,color=(0.,0.,1.))
     
     # Finally, we plot the EEG channels with their primary and secondary masks
     EEG_Viz.plot_maya_scalp(chann_mask,color=(0.,1.,0.),scale=10,alpha=0.5,unwrap=False)
@@ -388,5 +389,5 @@ def plot_support_model(EEG_support,pt,voltage=3,dti_parcel_thresh=30,eeg_thresh=
 if __name__=='__main__':
     for pt in ['906']:
         for voltage in range(3,4):
-            supp_model = DTI_support_model(pt,str(voltage),dti_parcel_thresh=50,eeg_thresh=20)
+            supp_model = DTI_support_model(pt,str(voltage),dti_parcel_thresh=15,eeg_thresh=45)
             plot_support_model(supp_model,pt=pt)
