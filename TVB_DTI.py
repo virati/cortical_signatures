@@ -126,8 +126,12 @@ class head_model:
 def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'):
     Etrode_map = DTI.Etrode_map
     # Load in the coordinates for the parcellation
-    parcel_coords = 0.8 * np.load('/home/virati/Dropbox/TVB_192_coord.npy')
+    parcel_coords = 0.84 * np.load('/home/virati/Dropbox/TVB_192_coord.npy')
     # Load in the DTI coordinates
+    brain_offset = 25
+    tract_offset = 50 #this gives us forward/backward offset?
+    dti_scale_factor = 0.8
+    
     
     data = nestdict()
     dti_file = nestdict()
@@ -152,15 +156,18 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
         mni_vox.append(np.array(image.coord_transform(vv[0],vv[1],vv[2],niimg.affine)))
     
     mni_vox = sig.detrend(np.array(mni_vox),axis=0,type='constant')
-    vox_loc = mni_vox/0.1
-    
+    vox_loc = mni_vox/dti_scale_factor #This scale factor is for the tractography. We want to make sure the tracts, especially the dorsal aspect of the cingulum, makes sense wrt the location of the rest of it
+
     #%%
     # now that we're coregistered, we go to each parcellation and find the minimum distance from it to the tractography
-
-    #randomly subsample just for shits and gigs and to actually run properly on display
     display_vox_loc = vox_loc[np.random.randint(vox_loc.shape[0],size=(1000,)),:] / 3
     display_vox_loc += np.random.normal(0,1,size=display_vox_loc.shape)
-    #ax = fig.add_subplot(111,projection='3d')
+    z_translate = np.zeros_like(display_vox_loc)
+    z_translate[:,2] = 1
+    y_translate = np.zeros_like(display_vox_loc)
+    y_translate[:,1] = 1
+    display_vox_loc += brain_offset * z_translate + tract_offset * y_translate
+    
     
     dist_to_closest_tract = [None] * parcel_coords.shape[0]
     for ii in range(parcel_coords.shape[0]):
@@ -181,7 +188,8 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
     
     #plt.hist(dist_to_closest_tract)
     prior_locs = dist_to_closest_tract < dti_parcel_thresh
-    
+    plt.figure();plt.hist(dist_to_closest_tract)
+    plt.title('Tract->Parcel histogram')
     #%%
     #So, above, we've just found the prior parcellations that we expect changes in
     #No we're going to find the 2nd order nodes
@@ -202,8 +210,10 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
     
     #plot_first_scnd(first_order,second_order,f_laplacian)
     #This value is chosen semi-randomly to achieve a reasonable secondary-EEG density
-    second_locs = second_order > 9
+    
     plt.figure();plt.hist(second_order)
+    plt.title('Histogram of Second Order Laplacian Magnitudes')
+    second_locs = second_order > 1
     #%%
     #
     eeg_scale = 10
@@ -250,7 +260,10 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
     #pdb.set_trace()
     #%%
     #Channel mask writing
-    EEG_support = {'primary':chann_mask,'secondary':second_chann_mask,'parcel_coords':parcel_coords,'prior_locs':prior_locs,'eeg_scale':eeg_scale,'second_locs':second_locs}
+    EEG_support = {'primary':chann_mask,'secondary':second_chann_mask,
+                   'parcel_coords':parcel_coords,'prior_locs':prior_locs,'eeg_scale':eeg_scale,
+                   'second_locs':second_locs,'dti_scale_factor':dti_scale_factor,
+                   'brain_offset':brain_offset,'tract_offset':tract_offset}
     #pickle.dump(EEG_support,open('/tmp/' + pt + '_' + condit + '_' + voltage,'wb'))
     return EEG_support
     
@@ -266,6 +279,9 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
     # The main support model code
 def plot_support_model(EEG_support,pt,voltage=3,condit='OnT'):
     Etrode_map = DTI.Etrode_map
+    brain_offset = EEG_support['brain_offset']
+    dti_scale_factor = EEG_support['dti_scale_factor']
+    tract_offset = EEG_support['tract_offset']
     #%%
     # Load in the coordinates for the parcellation
     second_locs = EEG_support['second_locs']
@@ -293,7 +309,7 @@ def plot_support_model(EEG_support,pt,voltage=3,condit='OnT'):
     prior_locs= EEG_support['prior_locs']
     eeg_scale = EEG_support['eeg_scale']
     
-    brain_offset = 20
+    
     
     #pdb.set_trace()
     z_translate = np.zeros_like(parcel_coords);
@@ -311,7 +327,7 @@ def plot_support_model(EEG_support,pt,voltage=3,condit='OnT'):
     #%% CALCULATE TRACT->PARCEL
     # now that we're coregistered, we go to each parcellation and find the minimum distance from it to the tractography
     
-    vox_loc = mni_vox / 3
+    vox_loc = mni_vox / dti_scale_factor
     
     display_vox_loc = vox_loc[np.random.randint(vox_loc.shape[0],size=(1000,)),:] / 3
     display_vox_loc += np.random.normal(0,1,size=display_vox_loc.shape)
@@ -319,7 +335,6 @@ def plot_support_model(EEG_support,pt,voltage=3,condit='OnT'):
     z_translate[:,2] = 1
     y_translate = np.zeros_like(display_vox_loc)
     y_translate[:,1] = 1
-    tract_offset = 15
     display_vox_loc += brain_offset * z_translate + tract_offset * y_translate
     
     
@@ -370,7 +385,7 @@ def plot_support_model(EEG_support,pt,voltage=3,condit='OnT'):
     ## NEED TO PRETTY THIS UP with plot_3d_scalp updates that give much prettier OnT/OffT pictures
     # First, we plot the tracts from the DTI
     EEG_Viz.plot_tracts(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
-    EEG_Viz.plot_coords(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
+    #EEG_Viz.plot_coords(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
     
     # Next, we plot the parcellation nodes from TVB
     EEG_Viz.plot_coords(parcel_coords,active_mask=prior_locs,color=(0.,1.,0.))
@@ -387,7 +402,7 @@ def plot_support_model(EEG_support,pt,voltage=3,condit='OnT'):
     
 
 if __name__=='__main__':
-    for pt in ['906']:
-        for voltage in range(3,4):
-            supp_model = DTI_support_model(pt,str(voltage),dti_parcel_thresh=15,eeg_thresh=45)
+    for pt in ['908']:
+        for voltage in [4]:
+            supp_model = DTI_support_model(pt,str(voltage),dti_parcel_thresh=20,eeg_thresh=50)
             plot_support_model(supp_model,pt=pt)

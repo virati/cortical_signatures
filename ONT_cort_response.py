@@ -42,7 +42,7 @@ do_coherence = False
 for band in ['Alpha']:
     for pt in ['906']:
         #30, 25 is good
-        EEG_support = DTI_support_model(pt,6,dti_parcel_thresh=15,eeg_thresh=45)
+        EEG_support = DTI_support_model(pt,7,dti_parcel_thresh=20,eeg_thresh=40)
         plot_support_model(EEG_support,pt)
         eFrame.support_analysis(support_struct=EEG_support,pt=pt,band=band,voltage=str(3))
         
