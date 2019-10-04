@@ -37,12 +37,12 @@ eFrame.plot_median_response(pt='POOL',use_maya=True)
 fvect = np.linspace(0,500,513)
 do_coherence = False
 
-
+#%%
 #eFrame.pool_patients()
 for band in ['Alpha']:
     for pt in ['906']:
         #30, 25 is good
-        EEG_support = DTI_support_model(pt,7,dti_parcel_thresh=20,eeg_thresh=40)
+        EEG_support = DTI_support_model(pt,4,dti_parcel_thresh=25,eeg_thresh=40)
         plot_support_model(EEG_support,pt)
         eFrame.support_analysis(support_struct=EEG_support,pt=pt,band=band,voltage=str(3))
         

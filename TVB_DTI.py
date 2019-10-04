@@ -99,10 +99,10 @@ class head_model:
         
         # Next, we plot the parcellation nodes from TVB
         EEG_Viz.plot_coords(self.parcel_coords,active_mask=prior_locs,color=(0.,1.,0.))
-        EEG_Viz.plot_coords(self.parcel_coords,active_mask=second_locs,color=(0.,1.,1.))
+        EEG_Viz.plot_coords(self.parcel_coords,active_mask=second_locs,color=(0.,0.,1.))
         
         # Finally, we plot the EEG channels with their primary and secondary masks
-        EEG_Viz.plot_maya_scalp(chann_mask,ax,scale=10,alpha=0.5,unwrap=False)
+        EEG_Viz.plot_maya_scalp(chann_mask,ax,color=(1.,0.,0.),scale=10,alpha=0.5,unwrap=False)
         EEG_Viz.plot_maya_scalp(second_chann_mask,ax,color=(0.,0.,1.),scale=10,alpha=0.3,unwrap=False)
         
     
@@ -130,7 +130,7 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
     # Load in the DTI coordinates
     brain_offset = 25
     tract_offset = 50 #this gives us forward/backward offset?
-    dti_scale_factor = 0.8
+    dti_scale_factor = 0.75
     
     
     data = nestdict()
@@ -211,9 +211,9 @@ def DTI_support_model(pt,voltage,dti_parcel_thresh=70,eeg_thresh=70,condit='OnT'
     #plot_first_scnd(first_order,second_order,f_laplacian)
     #This value is chosen semi-randomly to achieve a reasonable secondary-EEG density
     
-    plt.figure();plt.hist(second_order)
-    plt.title('Histogram of Second Order Laplacian Magnitudes')
-    second_locs = second_order > 1
+    #plt.figure();plt.hist(second_order)https://schmidtsciencefellows.org/
+    #plt.title('Histogram of Second Order Laplacian Magnitudes')
+    second_locs = second_order > 10
     #%%
     #
     eeg_scale = 10
@@ -337,6 +337,8 @@ def plot_support_model(EEG_support,pt,voltage=3,condit='OnT'):
     y_translate[:,1] = 1
     display_vox_loc += brain_offset * z_translate + tract_offset * y_translate
     
+    #%%
+    # Here we'll plot...
     
     fig = plt.figure()
     ax = fig.add_subplot(111,projection='3d')
@@ -350,6 +352,9 @@ def plot_support_model(EEG_support,pt,voltage=3,condit='OnT'):
     ax.set_yticks([])
     ax.set_zticks([])
     ax.grid(False)
+    plt.title('matplotlib Head Model')
+    
+    #%%
 #    
 #    
 #    #%% Now we move to the EEG scaling
@@ -377,22 +382,24 @@ def plot_support_model(EEG_support,pt,voltage=3,condit='OnT'):
 #    plt.title('Secondary Channels')
     
     #%%
+    # We clugy ourselves an EEG display for the primary and secondary channels
     EEG_Viz.maya_band_display(1*chann_mask - second_chann_mask)
     #%EEG_Viz.maya_band_display(-1*second_chann_mask)
     
     #%% FINAL PLOTTING
+    # This figure is for the 
     mlab.figure(bgcolor=(1.0,1.0,1.0))
     ## NEED TO PRETTY THIS UP with plot_3d_scalp updates that give much prettier OnT/OffT pictures
     # First, we plot the tracts from the DTI
-    EEG_Viz.plot_tracts(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
-    #EEG_Viz.plot_coords(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
+    #EEG_Viz.plot_tracts(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
+    EEG_Viz.plot_coords(display_vox_loc,active_mask=[True]*display_vox_loc.shape[0],color=(1.,0.,0.))
     
     # Next, we plot the parcellation nodes from TVB
     EEG_Viz.plot_coords(parcel_coords,active_mask=prior_locs,color=(0.,1.,0.))
     EEG_Viz.plot_coords(parcel_coords,active_mask=second_locs,color=(0.,0.,1.))
     
     # Finally, we plot the EEG channels with their primary and secondary masks
-    EEG_Viz.plot_maya_scalp(chann_mask,color=(0.,1.,0.),scale=10,alpha=0.5,unwrap=False)
+    EEG_Viz.plot_maya_scalp(chann_mask,color=(1.,0.,0.),scale=10,alpha=0.5,unwrap=False)
     EEG_Viz.plot_maya_scalp(second_chann_mask,color=(0.,0.,1.),scale=10,alpha=0.3,unwrap=False)
     
     #%%
@@ -402,7 +409,7 @@ def plot_support_model(EEG_support,pt,voltage=3,condit='OnT'):
     
 
 if __name__=='__main__':
-    for pt in ['908']:
+    for pt in ['906']:
         for voltage in [4]:
-            supp_model = DTI_support_model(pt,str(voltage),dti_parcel_thresh=20,eeg_thresh=50)
+            supp_model = DTI_support_model(pt,str(voltage),dti_parcel_thresh=25,eeg_thresh=50)
             plot_support_model(supp_model,pt=pt)
