@@ -126,6 +126,7 @@ for cc,chann in enumerate(['Left','Right']):
     
     for co,condit in enumerate(['OnT','OffT']):
         #how many segments?
+        #Here, we're going to plot ALL segments, marginalized across patients
         segNum = Osc_pt_marg[condit].shape[2]
         distr_to_plot = Osc_pt_marg[condit].swapaxes(1,2).reshape(len(do_pts)*segNum,2,5)[:,cc,:]
         parts = ax2.violinplot(distr_to_plot,positions=np.array([1,2,3,4,5]) + 0.2*co,showmedians=True)

@@ -5,6 +5,7 @@ Created on Sun Jan 13 20:25:09 2019
 
 @author: virati
 clClassif Script
+Binary Classification for Cleaned EEG Data
 """
 
 import DBSpace as dbo
@@ -29,8 +30,10 @@ all_pts = ['906','907','908']
 #UNIT TEST
 EEG_analysis = proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
 
-#%%
 EEG_analysis.train_binSVM(mask=False)
+EEG_analysis.oneshot_binSVM()
+#%%
+
 EEG_analysis.OnT_dr(data_source=EEG_analysis.SVM_coeffs)
 #%%
 EEG_analysis.learning_binSVM()

@@ -298,21 +298,26 @@ class proc_dEEG:
     def distr_response(self,pt='POOL'):
         return {condit:self.osc_bl_norm[pt][condit] for condit in self.condits}
     
-    def median_response(self,pt='POOL',mfunc = np.median, bootstrap=0):
-        print('Computing Median Response for ' + pt)
-        if bootstrap == 0:
-            print('Doing ' + str(mfunc))
-            return {condit:mfunc(self.osc_bl_norm[pt][condit],axis=0) for condit in self.condits}
+    def median_bootstrap_response(self,pt='POOL',mfunc=np.mean,bootstrap=100):
+        print('Computing Bootstrap Median Response for ' + pt)
+
+        bs_mean = []
+        bs_var = []
+        for ii in range(bootstrap):
+            rnd_idxs = {condit:random.sample(range(self.osc_bl_norm[pt][condit].shape[0]),100) for condit in self.condits}
+            bs_mean.append({condit:mfunc(self.osc_bl_norm[pt][condit][rnd_idxs[condit],:,:],axis=0) for condit in self.condits})
+            #bs_var.append({condit:np.var(self.osc_bl_norm[pt][condit][rnd_idxs[condit],:,:],axis=0) for condit in self.condits})
         
-        # if we're doing the stat on the ensemble, we're doing it on a subset.
-        else:
-            bs_mean = []
-            for ii in range(bootstrap):
-                rnd_idxs = {condit:random.sample(range(self.osc_bl_norm[pt][condit].shape[0]),100) for condit in self.condits}
-                bs_mean.append({condit:mfunc(self.osc_bl_norm[pt][condit][rnd_idxs[condit],:,:],axis=0) for condit in self.condits})
-            
-            mean_of_means = {condit:np.mean([iteration[condit] for iteration in bs_mean],axis=0) for condit in self.condits}
-            return mean_of_means
+        mean_of_means = {condit:np.mean([iteration[condit] for iteration in bs_mean],axis=0) for condit in self.condits}
+        var_of_means = {condit:np.var([iteration[condit] for iteration in bs_mean],axis=0) for condit in self.condits}
+
+        return {mean:mean_of_means, var:var_of_means}
+    
+    def median_response(self,pt='POOL',mfunc = np.median):
+        print('Computing Median Response for ' + pt)
+        print('Doing ' + str(mfunc))
+        return {condit:mfunc(self.osc_bl_norm[pt][condit],axis=0) for condit in self.condits}
+
         
     #In this function, we stack ONT_Off3 and OFFT_Off3 together to DEFINE the null distribution
     def combined_bl(self):
@@ -420,9 +425,8 @@ class proc_dEEG:
     def plot_median_response(self,pt='POOL',band='Alpha',condit='OnT',use_maya=False):
         band_i = dbo.feat_order.index(band)
        
-        medians = self.median_response(pt=pt)
-        #medians = np.median(self.targ_response[pt][condit],axis=0)
-        #First, we'll plot what the medians actually are
+        #medians = self.median_response(pt=pt)
+        medians = self.median_bootstrap_response(pt=pt,bootstrap=100)
         
         #The old scatterplot approach
         if use_maya:
@@ -1506,6 +1510,7 @@ class proc_dEEG:
         plt.legend(['Training Score','Cross-validation Score'])
         
     def train_binSVM(self,mask=False):
+        self.bin_classif = nestdict()
         label_map = {'OnT':1,'OffT':0}
         
         #num_segs = self.SVM_stack.shape[0]
@@ -1533,7 +1538,7 @@ class proc_dEEG:
         #We have labels and we have the stack itself, properly reshaped
         
         #Next, we want to split out a validation set
-        Xtr,Xva,Ytr,Yva = sklearn.model_selection.train_test_split(dsgn_X,SVM_labels,test_size=0.5,shuffle=True,random_state=None)
+        Xtr,self.Xva,Ytr,self.Yva = sklearn.model_selection.train_test_split(dsgn_X,SVM_labels,test_size=0.7,shuffle=True,random_state=None)
         
         #Next, we want to do CV learning on just the training set
         #Ensemble variables
@@ -1552,24 +1557,29 @@ class proc_dEEG:
             big_score.append(mod_score)
             models.append(clf)
             #Maybe do ROC stuff HERE? TODO
+            
         #Plot the big score for the CVs
         plt.figure()
         plt.plot(big_score)
+        plt.title('Plotting the fit scores for the CV training procedure')
         
         # Find the best model
         best_model_idx = np.argmax(big_score)
         best_model = models[best_model_idx]
+        self.bin_classif['Model'] = best_model
+        self.bin_classif['Coeffs'] = coeffs
         
-        
+    def oneshot_binSVM(self):
+        best_model = self.bin_classif
         #Plotting of confusion matrix and coefficients
         # Validation set assessment now
-        validation_accuracy = best_model.score(Xva,Yva)
-        Ypred = best_model.predict(Xva)
+        validation_accuracy = best_model.score(self.Xva,self.Yva)
+        Ypred = best_model.predict(self.Xva)
         print(validation_accuracy)
         plt.figure()
         plt.subplot(1,2,1)
         #confusion matrix here
-        conf_matrix = confusion_matrix(Ypred,Yva)
+        conf_matrix = confusion_matrix(Ypred,self.Yva)
         plt.imshow(conf_matrix)
         plt.yticks(np.arange(0,2),['OffT','OnT'])
         plt.xticks(np.arange(0,2),['OffT','OnT'])
@@ -1580,9 +1590,17 @@ class proc_dEEG:
         #pdb.set_trace()
         #plt.plot(coeffs,alpha=0.2)
         plt.plot(np.median(coeffs,axis=0))
-        
+        plt.title('Plotting Median Coefficients for CV-best Model performance')
         
         self.SVM_coeffs = coeffs
+    
+    def assess_binSVM(self):
+        best_model = self.bin_classif
+        
+        for ii in range(100):
+            Xrs,Yrs = resample(self.Xva, self.Yva,100)
+            valid_accuracy = best_model.score(Xva,Yva)
+        
     def analyse_binSVM(self):
         pass
         

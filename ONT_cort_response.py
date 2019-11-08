@@ -5,6 +5,7 @@ Created on Fri Nov 23 16:13:54 2018
 
 @author: virati
 This scipt is focused on characterizing the ONTarget response
+Includes some DTI support modeling which should be split out
 
 """
 
@@ -31,7 +32,8 @@ eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
 #%%
 eFrame.OnT_dr(pt='POOL')
 #%%
-eFrame.plot_median_response(pt='POOL',use_maya=True)
+eFrame.plot_median_response(pt='POOL',use_maya=False)
+#%%
 
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)
@@ -42,7 +44,7 @@ do_coherence = False
 for band in ['Alpha']:
     for pt in ['906']:
         #30, 25 is good
-        EEG_support = DTI_support_model(pt,4,dti_parcel_thresh=25,eeg_thresh=40)
+        EEG_support = DTI_support_model(pt,4,dti_parcel_thresh=15,eeg_thresh=55)
         plot_support_model(EEG_support,pt)
         eFrame.support_analysis(support_struct=EEG_support,pt=pt,band=band,voltage=str(3))
         
