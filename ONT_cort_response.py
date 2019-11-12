@@ -40,6 +40,7 @@ fvect = np.linspace(0,500,513)
 do_coherence = False
 
 #%%
+# Here we do the forward modeling to do network dissection
 #eFrame.pool_patients()
 for band in ['Alpha']:
     for pt in ['906']:

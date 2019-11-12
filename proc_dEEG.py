@@ -21,6 +21,8 @@ import scipy.signal as sig
 
 import scipy.stats as stats
 import matplotlib.pyplot as plt
+
+from sklearn.utils import resample
 plt.close('all')
 
 import random
@@ -1547,7 +1549,7 @@ class proc_dEEG:
         models = []
         
         #Parameters for CV
-        nfold = 50
+        nfold = 10
         cv = StratifiedKFold(n_splits=nfold)
         for train,test in cv.split(Xtr,Ytr):
             clf = svm.LinearSVC(penalty='l2',dual=False,C=1)
@@ -1568,13 +1570,27 @@ class proc_dEEG:
         best_model = models[best_model_idx]
         self.bin_classif['Model'] = best_model
         self.bin_classif['Coeffs'] = coeffs
+        self.cv_folding = nfold
+    
+    def bootstrap_binSVM(self):
+        best_model = self.bin_classif
+        
+        #randomlt sample the validation set
+        validation_accuracy = []
+        for ii in range(100):
+            Xva_ss,Yva_ss = resample(self.Xva,self.Yva,replace=True)
+            validation_accuracy.append(best_model['Model'].score(Xva_ss,Yva_ss))
+            
+        plt.figure()
+        plt.hist(validation_accuracy)
         
     def oneshot_binSVM(self):
         best_model = self.bin_classif
         #Plotting of confusion matrix and coefficients
         # Validation set assessment now
-        validation_accuracy = best_model.score(self.Xva,self.Yva)
-        Ypred = best_model.predict(self.Xva)
+        
+        validation_accuracy = best_model['Model'].score(self.Xva,self.Yva)
+        Ypred = best_model['Model'].predict(self.Xva)
         print(validation_accuracy)
         plt.figure()
         plt.subplot(1,2,1)
@@ -1586,7 +1602,7 @@ class proc_dEEG:
         plt.colorbar()
         
         plt.subplot(1,2,2)
-        coeffs = np.array(coeffs).squeeze().reshape(50,257,5,order='C')
+        coeffs = np.array(best_model['Coeffs']).squeeze().reshape(self.cv_folding,257,5,order='C')
         #pdb.set_trace()
         #plt.plot(coeffs,alpha=0.2)
         plt.plot(np.median(coeffs,axis=0))
