@@ -24,33 +24,51 @@ import numpy as np
 import copy
 from copy import deepcopy
 
-# Which two epochs are we analysing?
-win_list = ['Bilat','PreBilat']
+class local_response:
+    #Setup our main variables for the analysis
+    TF_response = nestdict()
+    Osc_response = nestdict()
+    Osc_prebilat = nestdict()
+    Osc_baseline = nestdict()
+    
+    #Ancillary analysis variables
+    Osc_response_uncorr = nestdict()
+    
+    def __init__(self,analysis_windows=['Bilat','PreBilat'],do_pts = dbo.all_pts):
+        # Which two epochs are we analysing?
 
-do_pts = dbo.all_pts
+        self.win_list = analysis_windows
+
+        self.do_pts = do_pts
+        
+    def extract_baselines(self):
+        TF_response = self.TF_response
+        Osc_response_uncorr = self.Osc_response_uncorr
+        Osc_prebilat = self.Osc_prebilat
+        Osc_baseline = self.Osc_baseline
+        
+        for pt,condit in cart_prod(self.do_pts,['OnT','OffT']):
+            eg_rec = streamLFP(pt=pt,condit=condit)
+            rec = eg_rec.time_series(epoch_name='PreBilat')
+            TF_response[pt][condit] = eg_rec.tf_transform(epoch_name='Bilat')
+            Osc_response_uncorr[pt][condit] = eg_rec.osc_transform(epoch_name='Bilat')
+            
+            Osc_prebilat[pt][condit] = eg_rec.osc_transform(epoch_name='PreBilat')
+            #Find the mean within the prebilat for both left and right
+            Osc_baseline[pt][condit] = [np.mean(Osc_prebilat[pt][condit][chann],axis=0) for chann in ['Left','Right']]
+    
+    def extract_response(self):
+        Osc_response = deepcopy(self.Osc_response_uncorr)
+        for pt,condit in cart_prod(self.do_pts,['OnT','OffT']):
+            for seg in range(self.Osc_response_uncorr[pt][condit]['Left'].shape[0]):
+                for cc,chann in enumerate(['Left','Right']):
+                    Osc_response[pt][condit][chann][seg,:] -= Osc_baseline[pt][condit][cc]
+                    
+        self.Osc_response = Osc_response
 
 
 #%%
-TF_response = nestdict()
-Osc_response = nestdict()
-Osc_prebilat = nestdict()
-Osc_baseline = nestdict()
-Osc_response_uncorr = nestdict()
-for pt,condit in cart_prod(do_pts,['OnT','OffT']):
-    eg_rec = streamLFP(pt=pt,condit=condit)
-    rec = eg_rec.time_series(epoch_name='PreBilat')
-    TF_response[pt][condit] = eg_rec.tf_transform(epoch_name='Bilat')
-    Osc_response_uncorr[pt][condit] = eg_rec.osc_transform(epoch_name='Bilat')
-    
-    Osc_prebilat[pt][condit] = eg_rec.osc_transform(epoch_name='PreBilat')
-    #Find the mean within the prebilat for both left and right
-    Osc_baseline[pt][condit] = [np.mean(Osc_prebilat[pt][condit][chann],axis=0) for chann in ['Left','Right']]
-    
-Osc_response = deepcopy(Osc_response_uncorr)
-for pt,condit in cart_prod(do_pts,['OnT','OffT']):
-    for seg in range(Osc_response_uncorr[pt][condit]['Left'].shape[0]):
-        for cc,chann in enumerate(['Left','Right']):
-            Osc_response[pt][condit][chann][seg,:] -= Osc_baseline[pt][condit][cc]
+
 
 #%%
 # THIS IS WHAT GIVES US THE POP LEVEL STUFF
