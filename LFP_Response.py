@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 """
 Created on Fri Sep 21 22:05:44 2018
@@ -39,7 +39,7 @@ Osc_response_uncorr = nestdict()
 for pt,condit in cart_prod(do_pts,['OnT','OffT']):
     eg_rec = streamLFP(pt=pt,condit=condit)
     rec = eg_rec.time_series(epoch_name='PreBilat')
-    #TF_response[pt][condit] = eg_rec.tf_transform(epoch_name='Bilat')
+    TF_response[pt][condit] = eg_rec.tf_transform(epoch_name='Bilat')
     Osc_response_uncorr[pt][condit] = eg_rec.osc_transform(epoch_name='Bilat')
     
     Osc_prebilat[pt][condit] = eg_rec.osc_transform(epoch_name='PreBilat')
@@ -180,6 +180,9 @@ for cc in range(2):
 TF_pt_marg = {condit:np.array([(TF_response[pt][condit]['Left']['SG'],TF_response[pt][condit]['Right']['SG']) for pt in do_pts])for condit in ['OnT','OffT']}
 
 fvect = TF_response[pt][condit]['Left']['F']
-TF_pt_median = {condit:np.mean(TF_pt_marg[condit].swapaxes(1,3).reshape(6*88,423,2),axis=0) for condit in ['OnT','OffT']}
+#how many segments we got?
+seg_num = TF_pt_marg['OnT'].shape[3]
+plt.figure()
+TF_pt_median = {condit:np.mean(TF_pt_marg[condit].swapaxes(1,3).reshape(6*seg_num,423,2),axis=0) for condit in ['OnT','OffT']}
 plt.plot(fvect,10*np.log10(TF_pt_median['OnT'][:,0]))
 plt.plot(fvect,10*np.log10(TF_pt_median['OffT'][:,0]))
