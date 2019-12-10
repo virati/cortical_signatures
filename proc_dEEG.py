@@ -515,8 +515,8 @@ class proc_dEEG:
         
         if data_source == []:
             #First, get a bootstrapped estimate of the median
-            #med_response = self.median_response(pt=pt)['OnT'] #if you want the one-shot response
-            med_response = self.median_bootstrap_response(pt=pt)['mean']['OnT'] #If you want the bootstrap response
+            med_response = self.median_response(pt=pt)['OnT'] #if you want the one-shot response
+            #med_response = self.median_bootstrap_response(pt=pt)['mean']['OnT'] #If you want the bootstrap response
             
             source_label = 'Median Response'
         else:
