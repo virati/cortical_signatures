@@ -313,7 +313,7 @@ class proc_dEEG:
         mean_of_means = {condit:np.mean([iteration[condit] for iteration in bs_mean],axis=0) for condit in self.condits}
         var_of_means = {condit:np.var([iteration[condit] for iteration in bs_mean],axis=0) for condit in self.condits}
 
-        return {mean:mean_of_means, var:var_of_means}
+        return {'mean':mean_of_means, 'var':var_of_means}
     
     def median_response(self,pt='POOL',mfunc = np.median):
         print('Computing Median Response for ' + pt)
@@ -428,7 +428,7 @@ class proc_dEEG:
         band_i = dbo.feat_order.index(band)
        
         #medians = self.median_response(pt=pt)
-        medians = self.median_bootstrap_response(pt=pt,bootstrap=100)
+        medians = self.median_bootstrap_response(pt=pt,bootstrap=100)['mean']
         
         #The old scatterplot approach
         if use_maya:
@@ -515,7 +515,7 @@ class proc_dEEG:
         
         if data_source == []:
             #First, get a bootstrapped estimate of the median
-            med_response = self.median_response(pt=pt,bootstrap=0)['OnT']
+            med_response = self.median_response(pt=pt)['OnT']
             source_label = 'Median Response'
         else:
             med_response = np.median(data_source,axis=0)
