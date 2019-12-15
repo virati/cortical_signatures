@@ -10,10 +10,11 @@ Binary Classification for Cleaned EEG Data
 
 import DBSpace as dbo
 from DBSpace.visualizations import EEG_Viz
+from DBSpace.control import proc_dEEG
 import numpy as np
 
 
-from proc_dEEG import proc_dEEG
+#from proc_dEEG import proc_dEEG
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -28,7 +29,7 @@ all_pts = ['906','907','908']
 
         #%%
 #UNIT TEST
-EEG_analysis = proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
+EEG_analysis = proc_dEEG.proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
 #%%
 EEG_analysis.train_binSVM(mask=False)
 

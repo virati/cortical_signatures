@@ -9,10 +9,10 @@ Includes some DTI support modeling which should be split out
 
 """
 
-from proc_dEEG import proc_dEEG
+from DBSpace.control import proc_dEEG
 import DBSpace as dbo
 from DBSpace.visualizations import EEG_Viz
-from TVB_DTI import DTI_support_model, plot_support_model
+from DBSpace.control.TVB_DTI import DTI_support_model, plot_support_model
 
 
 import scipy.stats as stats
@@ -28,7 +28,7 @@ import cmocean
 
 pt_list = ['905','906','907','908']
 ## Basic initialization methods, need to suppress figures from these and clean these up
-eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
+eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
 #%%
 eFrame.OnT_dr(pt='POOL')
 #%%

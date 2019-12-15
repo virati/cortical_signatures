@@ -16,8 +16,6 @@ from DBSpace.control import network_action
 import itertools
 from itertools import product as cart_prod
 
-from stream_dEEG import streamLFP
-
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 import numpy as np
