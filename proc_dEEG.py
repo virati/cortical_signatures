@@ -787,8 +787,6 @@ class proc_dEEG:
         PCAdsgn = sig.detrend(Xdo,axis=0,type='constant')
         PCAdsgn = sig.detrend(PCAdsgn,axis=1,type='constant')
         
-        
-        #%%
         bins = np.linspace(-3,3,50)
         
         # If we want to do PCA here
@@ -1512,13 +1510,18 @@ class proc_dEEG:
         plt.plot(tsize,np.mean(tscore,axis=1))
         plt.plot(tsize,np.mean(vscore,axis=1))
         plt.legend(['Training Score','Cross-validation Score'])
-        
+    
+    def analyse_binSVM(self):
+        #we'll analyse the coefficients of the binSVM here to get an idea of which channels are most informative
+        pass
+    
     def train_binSVM(self,mask=False):
         self.bin_classif = nestdict()
         label_map = {'OnT':1,'OffT':0}
         
         #num_segs = self.SVM_stack.shape[0]
         SVM_stack = np.concatenate([self.osc_bl_norm['POOL'][condit] for condit in self.condits],axis=0)
+        self.SVM_raw_stack = SVM_stack # for analysis/debug purposes
         SVM_labels = np.concatenate([[label_map[condit] for seg in self.osc_bl_norm['POOL'][condit]] for condit in self.condits],axis=0)
         num_segs = SVM_stack.shape[0]
         print(num_segs)
@@ -1620,7 +1623,24 @@ class proc_dEEG:
             valid_accuracy = best_model.score(Xva,Yva)
         
     def analyse_binSVM(self):
-        pass
+        coeffs = self.SVM_coeffs
+        
+        #get the median power in each of the bands so we can get a weighed idea of which channels are most important
+        var_pow = np.var(self.SVM_raw_stack,axis=0).reshape(-1,order='C')
+        
+        tot_var = np.sum(np.multiply(np.median(coeffs,axis=0).reshape(-1,order='C'),var_pow).reshape(257,5,order='C'),axis=1)
+        
+        plt.figure()
+        plt.subplot(2,1,1)
+        plt.plot(np.abs(tot_var))
+        plt.subplot(2,1,2)
+        #EEG_Viz.plot_3d_scalp(np.abs(tot_var))      
+        plt.hist(np.abs(tot_var))
+        
+        self.tot_var = np.abs(tot_var)
+        plt.figure()
+        self.import_mask = np.abs(tot_var) > 0.10
+        EEG_Viz.plot_3d_scalp(self.import_mask.astype(np.int))  
         
     # THE BELOW FUNCTION DOES NOT RUN, JUST HERE FOR REFERENCE AS THE SVM IS BEING RECODED ABOVE
     def OLDtrain_binSVM(self):

@@ -34,11 +34,10 @@ EEG_analysis.train_binSVM(mask=False)
 
 EEG_analysis.oneshot_binSVM()
 EEG_analysis.bootstrap_binSVM()
+EEG_analysis.analyse_binSVM()
 #%%
 
 EEG_analysis.OnT_dr(data_source=EEG_analysis.SVM_coeffs)
 #%%
 EEG_analysis.learning_binSVM()
-#%%
-#EEG_analysis.analyse_binSVM(approach='rpca')
 
