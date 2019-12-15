@@ -26,7 +26,7 @@ sns.set_style('white')
 import pickle
 import cmocean
 
-pt_list = ['906','907','908']
+pt_list = ['905','906','907','908']
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
 #%%

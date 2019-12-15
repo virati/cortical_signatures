@@ -41,6 +41,9 @@ class local_response:
 
         self.do_pts = do_pts
         
+        self.colors = ['b','g']
+
+        
     def extract_baselines(self):
         TF_response = self.TF_response
         Osc_response_uncorr = self.Osc_response_uncorr
@@ -59,68 +62,74 @@ class local_response:
     
     def extract_response(self):
         Osc_response = deepcopy(self.Osc_response_uncorr)
+        Osc_baseline = self.Osc_baseline
+        
         for pt,condit in cart_prod(self.do_pts,['OnT','OffT']):
             for seg in range(self.Osc_response_uncorr[pt][condit]['Left'].shape[0]):
                 for cc,chann in enumerate(['Left','Right']):
                     Osc_response[pt][condit][chann][seg,:] -= Osc_baseline[pt][condit][cc]
                     
         self.Osc_response = Osc_response
+        
+    def gen_osc_distr(self):
+        Osc_response = self.Osc_response
+        do_pts = self.do_pts
+        
+        
+        self.Osc_indiv_marg = {pt:{condit:np.array((Osc_response[pt][condit]['Left'],Osc_response[pt][condit]['Right']))for condit in ['OnT','OffT']} for pt in do_pts}
+        self.Osc_indiv_med = {pt:{condit:np.median(self.Osc_indiv_marg[pt][condit],axis=1) for condit in ['OnT','OffT']} for pt in do_pts}
+        self.Osc_indiv_pop = {side:{condit:np.array([self.Osc_indiv_med[pt][condit][ss,:] for pt in do_pts]) for condit in ['OnT','OffT']} for ss,side in enumerate(['Left','Right'])}
 
+    def plot_response(self):
+        Osc_indiv_pop = self.Osc_indiv_pop
+        color = self.colors
+        
+        for cc,chann in enumerate(['Left','Right']):
+            plt.figure()
+            ax2 = plt.subplot(111)
+            distr = nestdict()
+            for co,condit in enumerate(['OnT','OffT']):
+                distr_to_plot = Osc_indiv_pop[chann][condit]
+                
+                parts = ax2.violinplot(distr_to_plot,positions=np.array([1,2,3,4,5]) + 0.2*co,showmedians=True)
+                for partname in ('cbars','cmins','cmaxes','cmedians'):
+                    vp = parts[partname]
+                    vp.set_edgecolor(color[co])
+                    if partname == 'cmedians':
+                        vp.set_linewidth(5)
+                    else:
+                        vp.set_linewidth(2)
+            
+                for pc in parts['bodies']:
+                    pc.set_facecolor(color[co])
+                    pc.set_edgecolor(color[co])
+                    #pc.set_linecolor(color[co])
+                
+                plt.ylim((-6,30))
+                distr[condit] = distr_to_plot
+                    
+            for bb in range(5):
+                #rsres = stats.ks_2samp(distr['OnT'][:,bb],distr['OffT'][:,bb])
+                rsres = stats.ranksums(distr['OnT'][:,bb],distr['OffT'][:,bb])
+                #rsres = stats.ks_2samp(distr['OnT'][:,bb],distr['OffT'][:,bb])
+                #rsres = stats.wilcoxon(distr['OnT'][:,bb],distr['OffT'][:,bb])
+                #rsres = stats.ttest_ind(distr['OnT'][:,bb],distr['OffT'][:,bb])
+                
+                
+                #ontres = stats.ranksums(distr['OnT'][:,bb])
+                #ontres = stats.kstest(distr['OnT'][:,bb],cdf='norm')
+                #ontres = stats.mannwhitneyu(distr['OnT'][:,bb])
+                ontres = stats.ttest_1samp(distr['OnT'][:,bb],0)
+                print(dbo.feat_order[bb])
+                print(rsres)
+                print(ontres)
 
 #%%
-
-
-#%%
-# THIS IS WHAT GIVES US THE POP LEVEL STUFF
-            
-# Let's do the patient=specific median changes and do ensemble there
-
-            
-Osc_indiv_marg = {pt:{condit:np.array((Osc_response[pt][condit]['Left'],Osc_response[pt][condit]['Right']))for condit in ['OnT','OffT']} for pt in do_pts}
-Osc_indiv_med = {pt:{condit:np.median(Osc_indiv_marg[pt][condit],axis=1) for condit in ['OnT','OffT']} for pt in do_pts}
-Osc_indiv_pop = {side:{condit:np.array([Osc_indiv_med[pt][condit][ss,:] for pt in do_pts]) for condit in ['OnT','OffT']} for ss,side in enumerate(['Left','Right'])}
-
-color = ['b','g']
-
-for cc,chann in enumerate(['Left','Right']):
-    plt.figure()
-    ax2 = plt.subplot(111)
-    distr = nestdict()
-    for co,condit in enumerate(['OnT','OffT']):
-        distr_to_plot = Osc_indiv_pop[chann][condit]
-        
-        parts = ax2.violinplot(distr_to_plot,positions=np.array([1,2,3,4,5]) + 0.2*co,showmedians=True)
-        for partname in ('cbars','cmins','cmaxes','cmedians'):
-            vp = parts[partname]
-            vp.set_edgecolor(color[co])
-            if partname == 'cmedians':
-                vp.set_linewidth(5)
-            else:
-                vp.set_linewidth(2)
-    
-        for pc in parts['bodies']:
-            pc.set_facecolor(color[co])
-            pc.set_edgecolor(color[co])
-            #pc.set_linecolor(color[co])
-        
-        plt.ylim((-6,30))
-        distr[condit] = distr_to_plot
-            
-    for bb in range(5):
-        #rsres = stats.ks_2samp(distr['OnT'][:,bb],distr['OffT'][:,bb])
-        rsres = stats.ranksums(distr['OnT'][:,bb],distr['OffT'][:,bb])
-        #rsres = stats.ks_2samp(distr['OnT'][:,bb],distr['OffT'][:,bb])
-        #rsres = stats.wilcoxon(distr['OnT'][:,bb],distr['OffT'][:,bb])
-        #rsres = stats.ttest_ind(distr['OnT'][:,bb],distr['OffT'][:,bb])
-        
-        
-        #ontres = stats.ranksums(distr['OnT'][:,bb])
-        #ontres = stats.kstest(distr['OnT'][:,bb],cdf='norm')
-        #ontres = stats.mannwhitneyu(distr['OnT'][:,bb])
-        ontres = stats.ttest_1samp(distr['OnT'][:,bb],0)
-        print(dbo.feat_order[bb])
-        print(rsres)
-        print(ontres)
+analysis = local_response(do_pts = ['905','906','907','908'])
+analysis.extract_baselines()
+analysis.extract_response()
+analysis.gen_osc_distr()
+analysis.plot_response()
 
 
 #%%
