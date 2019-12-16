@@ -56,6 +56,6 @@ for pt in pts:
 data = np.array([[[plv_dict[pt][condit][epoch] for epoch in ['Off_3',on_label[condit]]] for condit in ['OnT','OffT']] for pt in pts]).reshape(-1,257,257)
 
 #%%
-udim = umap.UMAP().fit_transform(data)
+udim = umap.UMAP().fit_transform(data[0,:,:])
 plt.figure()
 plt.scatter(udim[:,0],udim[:,1])

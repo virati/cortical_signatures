@@ -35,6 +35,7 @@ EEG_analysis.train_binSVM(mask=False)
 
 EEG_analysis.oneshot_binSVM()
 EEG_analysis.bootstrap_binSVM()
+#%%
 EEG_analysis.analyse_binSVM()
 #%%
 
