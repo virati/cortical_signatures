@@ -33,7 +33,8 @@ eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'
 #eFrame.combined_bl()
 #eFrame.combined_bl_distr(band='Alpha')
 #%%
-eFrame.OnT_dr(pt='POOL')
+eFrame.OnT_ctrl_modes(pt='POOL')
+
 #%%
 eFrame.plot_median_response(pt='POOL',use_maya=False)
 #%%
