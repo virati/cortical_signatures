@@ -22,6 +22,9 @@ sns.set_style('white')
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=['906','907','908'],procsteps='conservative',condits=['OnT','OffT'])
 
-eFrame.OnT_ctrl_modes(pt='POOL')
 #%%
+eFrame.OnT_ctrl_dyn(do_plot=True)
+#%%
+eFrame.OnT_ctrl_modes(pt='POOL')
+
 eFrame.control_rotate()
