@@ -23,8 +23,6 @@ sns.set_style('white')
 eFrame = proc_dEEG.proc_dEEG(pts=['906','907','908'],procsteps='conservative',condits=['OnT','OffT'])
 
 #%%
-eFrame.OnT_ctrl_dyn(do_plot=True)
-#%%
 eFrame.OnT_ctrl_modes(pt='POOL')
 
 eFrame.control_rotate()
