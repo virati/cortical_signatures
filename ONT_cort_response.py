@@ -29,15 +29,14 @@ import cmocean
 pt_list = ['906','907','908']
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
-#%%
-#eFrame.combined_bl()
-#eFrame.combined_bl_distr(band='Alpha')
-#%%
-eFrame.OnT_ctrl_modes(pt='POOL')
 
 #%%
-eFrame.plot_median_response(pt='POOL',use_maya=False)
+eFrame.OnT_ctrl_modes(pt='POOL') #THIS HAS BEEN MOVED TO control_modes.py
+
 #%%
+eFrame.plot_median_response(pt='POOL',use_maya=False) #This can be moved to ONTOFFT_cort_response.py TODO
+
+#%% ALL BELOW IS FORWARD MODELING moved to forward_modeling.py
 
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)

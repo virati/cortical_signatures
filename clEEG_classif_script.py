@@ -27,10 +27,12 @@ sns.set_style('white')
 all_pts = ['906','907','908']
 #all_pts = ['906']
 
-        #%%
-#UNIT TEST
 EEG_analysis = proc_dEEG.proc_dEEG(pts=all_pts,procsteps='conservative',condits=['OnT','OffT'])
 #%%
+#x,y,z,xx = EEG_analysis.get_SVM_dsgn(do_plot=True)
+
+#%%
+
 EEG_analysis.train_binSVM(mask=False)
 
 EEG_analysis.oneshot_binSVM()
