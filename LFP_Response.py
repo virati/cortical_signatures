@@ -4,7 +4,7 @@
 Created on Fri Sep 21 22:05:44 2018
 
 @author: virati
-LFP Response Script
+Network Action - Compare ONT vs OFFT for SCC-LFP
 """
 
 import sys
