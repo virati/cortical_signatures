@@ -23,7 +23,7 @@ pt_list = ['906','907','908']
 
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
-#%%
+
 # Channel-marginalized Responses
-eFrame.pop_meds()
+eFrame.pop_meds(response=False)
 eFrame.band_distr()

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Dec 20 19:55:19 2019
+Created on Fri Dec 27 13:32:10 2019
 
 @author: virati
-Main script for forward modeling
+Script for analysis of *dynamics* during stimulation instead of response vector
 """
 
 
@@ -26,22 +26,9 @@ import mayavi.mlab as mlab
 import pickle
 import cmocean
 
+
 pt_list = ['906','907','908']
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
 #%%
-eFrame.OnT_ctrl_dyn()
-#%%
-#The feature vector, in this case the frequencies
-fvect = np.linspace(0,500,513)
-do_coherence = False
-
-#%%
-# Here we do the forward modeling to do network dissection
-#eFrame.pool_patients()
-for band in ['rP0']:
-    for pt in ['908']:
-        #30, 25 is good
-        EEG_support = DTI_support_model(pt,4,dti_parcel_thresh=15,eeg_thresh=55)
-        plot_support_model(EEG_support,pt) 
-        eFrame.support_analysis(support_struct=EEG_support,pt=pt,band=band,voltage=str(3))
+eFrame.OnT_ctrl_dyn(do_plot=True)
