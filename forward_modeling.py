@@ -21,6 +21,7 @@ import seaborn as sns
 sns.set_context('paper')
 sns.set(font_scale=3)
 sns.set_style('white')
+import mayavi.mlab as mlab
 
 import pickle
 import cmocean
@@ -28,9 +29,9 @@ import cmocean
 pt_list = ['906','907','908']
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
-
-eFrame.OnT_ctrl_dyn(do_plot=False)
-
+#%%
+eFrame.OnT_ctrl_dyn(do_plot=True)
+#%%
 #The feature vector, in this case the frequencies
 fvect = np.linspace(0,500,513)
 do_coherence = False

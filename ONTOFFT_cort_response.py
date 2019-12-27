@@ -10,7 +10,7 @@ Network Action - Compare ONT vs OFFT for EEG
 from DBSpace.control import proc_dEEG
 import DBSpace as dbo
 from DBSpace.visualizations import EEG_Viz
-from DBSpace.control.TVB_DTI import DTI_support_model, plot_support_model
+from DBSpace.control.TVB_DsTI import DTI_support_model, plot_support_model
 
 import cmocean
 import matplotlib.pyplot as plt
