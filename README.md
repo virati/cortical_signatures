@@ -19,3 +19,7 @@ Focusing specifically on $\alpha$ oscillations, we see that SCCwm DBS evokes a s
 
 ![](imgs/EEG_support_setup.png)
 I then used the per-patient tractography to dissect out the immediate and secondary effects of SCCwm DBS.
+
+
+## Methods
+![](imgs/A3_SysDiag.png)
