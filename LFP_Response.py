@@ -23,7 +23,8 @@ import numpy as np
 import copy
 from copy import deepcopy
 
-analysis = network_action.local_response(do_pts = ['905','906','907','908'])
+do_pts = ['905','906','907','908']
+analysis = network_action.local_response(do_pts = do_pts)
 analysis.extract_baselines()
 analysis.extract_response()
 analysis.gen_osc_distr()
@@ -33,11 +34,7 @@ analysis.plot_response()
 # BELOW NEEDS TO BE FOLDED INTO THE local_response CLASS
 
 
-#%%
-# here we'll work with the oscillatory state variables
-Osc_pt_marg = {condit:np.array([(Osc_response[pt][condit]['Left'],Osc_response[pt][condit]['Right']) for pt in do_pts])for condit in ['OnT','OffT']}
-Osc_pt_marg_bl = {condit:np.array([(Osc_prebilat[pt][condit]['Left'],Osc_prebilat[pt][condit]['Right']) for pt in do_pts])for condit in ['OnT','OffT']}
-Osc_pt_marg_uncorr = {condit:np.array([(Osc_response_uncorr[pt][condit]['Left'],Osc_response_uncorr[pt][condit]['Right']) for pt in do_pts])for condit in ['OnT','OffT']}
+
 
 #%%
 # Do stats to see if the response is distributed the same as the no stim
