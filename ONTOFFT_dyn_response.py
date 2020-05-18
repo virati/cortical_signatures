@@ -31,4 +31,5 @@ pt_list = ['906','907','908']
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='liberal',condits=['OnT'])
 #%%
+
 eFrame.OnT_ctrl_dyn(do_plot=True)

@@ -28,7 +28,8 @@ analysis = network_action.local_response(do_pts = do_pts)
 analysis.extract_baselines()
 analysis.extract_response()
 analysis.gen_osc_distr()
-analysis.plot_response()
+#%%
+analysis.plot_patient_responses()
 
 #%%
 # BELOW NEEDS TO BE FOLDED INTO THE local_response CLASS
@@ -40,53 +41,7 @@ analysis.plot_response()
 # Do stats to see if the response is distributed the same as the no stim
 
 
-
-#%%
-for cc,chann in enumerate(['Left','Right']):
-    #do violin plots
-    fig = plt.figure()
-    ax2 = plt.subplot(111)
-    color = ['b','g']
-    distr = nestdict()
-    
-    for co,condit in enumerate(['OnT','OffT']):
-        #how many segments?
-        #Here, we're going to plot ALL segments, marginalized across patients
-        segNum = Osc_pt_marg[condit].shape[2]
-        distr_to_plot = Osc_pt_marg[condit].swapaxes(1,2).reshape(len(do_pts)*segNum,2,5)[:,cc,:]
-        parts = ax2.violinplot(distr_to_plot,positions=np.array([1,2,3,4,5]) + 0.2*co,showmedians=True)
-        
-        for partname in ('cbars','cmins','cmaxes','cmedians'):
-            vp = parts[partname]
-            vp.set_edgecolor(color[co])
-            if partname == 'cmedians':
-                vp.set_linewidth(5)
-            else:
-                vp.set_linewidth(2)
-    
-        for pc in parts['bodies']:
-            pc.set_facecolor(color[co])
-            pc.set_edgecolor(color[co])
-            #pc.set_linecolor(color[co])
-        
-        distr[condit] = distr_to_plot
-        #plt.plot([1,2,3,4,5],np.mean(distr_to_plot,axis=0),color=color[co])
-    for bb in range(5):
-        print(bb)
-        #rsres = stats.ranksums(distr['OnT'][:,bb],distr['OffT'][:,bb])
-        rsres = stats.ks_2samp(distr['OnT'][:,bb],distr['OffT'][:,bb])
-        #rsres = stats.wilcoxon(distr['OnT'][:,bb],distr['OffT'][:,bb])
-        #rsres = stats.ttest_ind(distr['OnT'][:,bb],distr['OffT'][:,bb])
-        print(rsres)
-        
-        #ontres = stats.ranksums(distr['OnT'][:,bb])
-        #ontres = stats.kstest(distr['OnT'][:,bb],cdf='norm')
-        #ontres = stats.mannwhitneyu(distr['OnT'][:,bb])
-        ontres = stats.ttest_1samp(distr['OnT'][:,bb],np.zeros((5,1)))
-        print(ontres)
-    
-    plt.ylim((-30,50))
-    plt.legend()
+analysis.plot_segment_responses(do_pts = do_pts)
     
     #%%
 
