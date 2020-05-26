@@ -20,9 +20,12 @@ sns.set(font_scale=3)
 sns.set_style('white')
 
 pt_list = ['906','907','908']
+do_condits = ['OnT','OffT']
 
 ## Basic initialization methods, need to suppress figures from these and clean these up
-eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
+eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=do_condits)
+
+#%%
 eFrame.standard_pipeline()
 #%%
 # Channel-marginalized Responses
@@ -31,7 +34,6 @@ eFrame.pop_meds(response=True)
 #%%
 eFrame.band_distr()
 
-
 #%%
 # Here we'll plot the spatial distributions of \alpha
-eFrame.topo_median_response()
+eFrame.topo_median_response(do_condits=do_condits,pt='POOL')

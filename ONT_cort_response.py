@@ -29,11 +29,11 @@ import cmocean
 pt_list = ['906','907','908']
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
+eFrame.standard_pipeline()
+#%% Generate the control modes
+#eFrame.OnT_ctrl_modes(pt='POOL') #THIS HAS BEEN MOVED TO control_modes.py
 
-#%%
-eFrame.OnT_ctrl_modes(pt='POOL') #THIS HAS BEEN MOVED TO control_modes.py
-
-#%%
+#%% Plot the median response
 eFrame.plot_median_response(pt='POOL',use_maya=False) #This can be moved to ONTOFFT_cort_response.py TODO
 
 #%% ALL BELOW IS FORWARD MODELING moved to forward_modeling.py

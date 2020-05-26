@@ -18,11 +18,16 @@ import cmocean
 sns.set_context('paper')
 sns.set(font_scale=3)
 sns.set_style('white')
-
+#%%
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=['906','907','908'],procsteps='conservative',condits=['OnT','OffT'])
+eFrame.standard_pipeline()
+#%%
+## Let's plot all the bands first
+for band in ['Delta','Theta','Alpha','Beta*','Gamma1']:
+    eFrame.topo_median_response(do_condits=['OnT'],band=band)
 
 #%%
-eFrame.OnT_ctrl_modes(pt='POOL')
-
+eFrame.topo_OnT_ctrl(pt='POOL',do_plot=True)
+#%%
 eFrame.control_rotate()

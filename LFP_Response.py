@@ -28,8 +28,15 @@ analysis = network_action.local_response(do_pts = do_pts)
 analysis.extract_baselines()
 analysis.extract_response()
 analysis.gen_osc_distr()
+
+analysis.plot_responses(do_pts=do_pts)
+
+
 #%%
-analysis.plot_patient_responses()
+#analysis.plot_patient_responses()
+#%%
+
+#analysis.plot_segment_responses(do_pts = do_pts)
 
 #%%
 # BELOW NEEDS TO BE FOLDED INTO THE local_response CLASS
@@ -41,10 +48,9 @@ analysis.plot_patient_responses()
 # Do stats to see if the response is distributed the same as the no stim
 
 
-analysis.plot_segment_responses(do_pts = do_pts)
     
     #%%
-
+'''What am I doing here??'''
 for cc in range(2):
     plt.figure()
     Osc_pt_median = {condit:np.mean(Osc_pt_marg[condit].swapaxes(1,2).reshape(len(do_pts)*segNum,2,5),axis=0) for condit in ['OnT','OffT']}
