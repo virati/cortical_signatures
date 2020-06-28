@@ -18,17 +18,19 @@ import seaborn as sns
 sns.set_context('paper')
 sns.set(font_scale=3)
 sns.set_style('white')
-
+#%%
 pt_list = ['906','907','908']
 do_condits = ['OnT','OffT']
 
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=do_condits)
+eFrame.standard_pipeline()
+
+#%% PSD plotting
+eFrame.plot_psd(pt='907',condit='OffT',epoch='BOFT')
 
 #%%
-eFrame.standard_pipeline()
-#%%
-# Channel-marginalized Responses
+# Channel-marginalized Response Histogram
 eFrame.pop_meds(response=True)
 
 #%%
@@ -36,4 +38,9 @@ eFrame.band_distr()
 
 #%%
 # Here we'll plot the spatial distributions of \alpha
-eFrame.topo_median_response(do_condits=do_condits,pt='POOL')
+#for pt in pt_list:
+   
+#    eFrame.topo_median_response(do_condits=do_condits,pt=pt,band='Beta*')
+    
+#%%
+eFrame.topo_median_response(do_condits=do_condits,pt='908',band='Alpha',use_maya=True)

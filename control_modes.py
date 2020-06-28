@@ -18,7 +18,7 @@ import cmocean
 sns.set_context('paper')
 sns.set(font_scale=3)
 sns.set_style('white')
-#%%
+
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=['906','907','908'],procsteps='conservative',condits=['OnT','OffT'])
 eFrame.standard_pipeline()
@@ -28,6 +28,18 @@ for band in ['Delta','Theta','Alpha','Beta*','Gamma1']:
     eFrame.topo_median_response(do_condits=['OnT'],band=band)
 
 #%%
-eFrame.topo_OnT_ctrl(pt='POOL',do_plot=True)
+eFrame.topo_OnT_ctrl(pt='POOL',do_plot=True,plot_maya=True)
+
 #%%
-eFrame.control_rotate()
+
+eFrame.topo_OnT_ctrl_tensor(pt='POOL')
+
+
+#%%
+# This one focuses on a single oscillatory band and tracks channels that 'change together'
+eFrame.topo_OnT_alpha_ctrl(pt='POOL',do_plot=True,band='Alpha')
+#Plot the \alpha specific control across time
+eFrame.plot_alpha_ctrl_L(top_comp=5)
+eFrame.plot_alpha_ctrl_S(top_comp=1)
+#%%
+#eFrame.control_rotate()
