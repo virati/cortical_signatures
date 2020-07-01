@@ -12,11 +12,12 @@ This file is essentially the file that loads in the raw EEG data, re-references,
 
 """
 
-from stream_dEEG import streamEEG
-
-
 import sys
 sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
+from DBSpace.control.stream_dEEG import streamEEG
+
+
+
 import DBSpace as dbo
 from DBSpace import nestdict
 
