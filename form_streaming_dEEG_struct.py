@@ -66,16 +66,16 @@ for pp,pt in enumerate(pts):
         
         sEEG.seg_PSDs()
         
-        #%%
+        
         sEEG.calc_baseline(intv=(0,9))
         
         #This will display our experimental conditions, but from the presence of stimulation artifact
         #plt.figure()
         #plt.plot(sEEG.true_labels,label=pt + condit)
         
-        #%%
+        
         # We write the data to a dictionary with patient keys
-
+        sEEG.label_segments()
         pt_test[pp].append(sEEG.gen_test_matrix())
         pt_test_labels[pp].append(sEEG.true_labels)
         pt_test_times[pp].append(sEEG.label_time)
