@@ -12,14 +12,16 @@ import scipy.signal as sig
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import scipy.stats as stats
 
+plt.rcParams['image.cmap'] = 'viridis'
 import mne
 
 import h5py
 
 from collections import defaultdict
 
-from EEG_Viz import *
+from DBSpace.visualizations import EEG_Viz as EEG_Viz
 
 plt.close('all')
 
@@ -46,9 +48,9 @@ plt.close('all')
 #    plt.title(pt + ' ' + condit)
 #    plt.show()
     
+data_dir = '/run/media/virati/Stokes/MDD_Data/hdEEG/Continuous/CHIRPS/'
 
 def extract_raw_mat():
-    data_dir = '/home/virati/MDD_Data/proc_hdEEG/Continuous/'
     pt_dir = 'DBS906/'
     file = 'DBS906_TurnOn_Day1_Sess1_20150827_024013.mat'
     
@@ -88,7 +90,7 @@ for condit in ['OnTarget']:
     pt = 'DBS906'
     #condit = 'OffTarget'
     
-    file = '/home/virati/MDD_Data/proc_hdEEG/' + pt + '/' + pt + '_Sample_Chirp_template/' + pt + '_' + condit + '_all.mat'
+    file = data_dir + pt + '_Sample_Chirp_template/' + pt + '_' + condit + '_all.mat'
     signal = load_raw_mat(fname=file)
     
     def EEG_to_Matr(signal):
@@ -172,7 +174,7 @@ for condit in ['OnTarget']:
     
     #%%
     #Do a spectrogram of one of the channels
-    ch = [(32,37)]
+    ch = [(225,225)]
     for ch1,ch2 in ch:
         if ch1 == ch2:
             sel_sig = sig.decimate(data[ch1][:],ds_fact,zero_phase=True)
@@ -181,16 +183,39 @@ for condit in ['OnTarget']:
             #sel_sig = sig.decimate(data[19][:] - np.mean(data[[25,18,11,12,20,26]][:],0),ds_fact,zero_phase=True)
     
     plt.figure()
-    F,T,SG = sig.spectrogram(sel_sig,nperseg=512,noverlap=256,window=sig.get_window('blackmanharris',512),fs=fs/ds_fact)
-    plt.pcolormesh(T,F,10*np.log10(SG))
+    F,T,SG = sig.spectrogram(sel_sig,nperseg=512,noverlap=500,window=sig.get_window('blackmanharris',512),fs=fs/ds_fact)
+    plt.pcolormesh(T,F,10*np.log10(SG),rasterized=True)
     plt.title('TimeFrequency Signal of Channel ' + str(ch))
     
     #take out sel_sig and sweep the chirp through it
     
     
     #%%
-    #take out the alpha band in each channel
+    # focus solely on the ~5Hz power and plot the peak between 50-80 seconds
+    t_idxs = np.where(np.logical_and(T > 60,T < 75))
+    F_idxs = np.where(np.logical_and(F > 2, F < 10))
+    ch_blip = []
     
+    for ch in range(257):
+        #find the power in 2-6 hertz at 60-65 seconds in
+        sel_sig = sig.decimate(data[ch][t_idxs[0]],ds_fact,zero_phase=True)
+        _,_,SG = sig.spectrogram(sel_sig,nperseg=512,noverlap=500,window=sig.get_window('blackmanharris',512),fs=fs/ds_fact)
+        ch_blip.append(np.max(SG[F_idxs[0],:]) - np.min(SG[F_idxs[0],:]))
+    ch_blip = np.array(ch_blip)
+    
+
+
+    #%%
+    thresh = 0
+    ch_blip_z = stats.zscore(ch_blip)
+    plt.hist(ch_blip_z,bins=50,range=(-1,1))
+    
+    #%%
+    EEG_Viz.maya_band_display(ch_blip_z > thresh)
+    print(np.where(ch_blip_z > thresh))
+    
+    #%%
+    #take out the alpha band in each channel
     alpha = np.zeros((257))
     theta = np.zeros((257))
     for ch in range(257):
@@ -211,11 +236,12 @@ for condit in ['OnTarget']:
     
     #Just do a scatter plot
         
-    plot_3d_scalp(alpha)
+    #EEG_Viz.plot_3d_scalp(alpha,unwrap=False,scale=100,alpha=0.3,marker_scale=5)
+    EEG_Viz.maya_band_display(alpha)
     plt.title(pt + ' ' + condit + ' alpha change')
     plt.show()
     
-    plot_3d_scalp(theta)
+    EEG_Viz.maya_band_display(theta)
     plt.title(pt + ' ' + condit + ' theta change')
     plt.show()
     

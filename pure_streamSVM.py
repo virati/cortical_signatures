@@ -30,6 +30,8 @@ import seaborn as sns
 
 from sklearn.decomposition import PCA
 
+import scipy.stats as stats
+
 sns.set_context('paper')
 sns.set(font_scale=4)
 sns.set_style('white')
@@ -90,7 +92,7 @@ Xtr,Xte,Ytr,Yte,unshuff_ord_tr,unshuff_ord_te = sklearn.model_selection.train_te
 #NOW we do cross validation WITHIN the training set here
 
 #%%
-#Learning curve
+#Learning curverot_coeff[:,1]
 tsize,tscore,vscore = learning_curve(svm.LinearSVC(penalty=regularization,dual=False,max_iter=10000),Xtr,Ytr,train_sizes=np.linspace(0.1,1,10),shuffle=True)
 #%%
 plt.figure()
@@ -228,12 +230,17 @@ plt.colorbar()
 #DOUBLE CHECK THIS!!
 coeffs = clf.coef_.reshape(3,257,-1,order='F')
 
+from sklearn.neighbors import KernelDensity
+import numpy as np
+
+
+
 coeff_mag = [None] * 3
 choose_band = 4
 for stimclass in range(3):
-    plt.figure()
+    #plt.figure()
     #plt.subplot(1,2,stimcla)
-    plt.imshow(coeffs[stimclass,:,:])
+    #plt.imshow(coeffs[stimclass,:,:])
     
     #coeff_mag[stimclass] = np.linalg.norm(coeffs[stimclass,:,:],axis=1)
     #Here, we'll CHOOSE a coefficient
@@ -244,8 +251,20 @@ for stimclass in range(3):
     pca.fit(coeffs[stimclass,:,:])
     rot_coeff = pca.fit_transform(coeffs[stimclass,:,:])
     
+    # plt.figure()
+    # for bb in range(5):
+    #     kde = KernelDensity(kernel='gaussian', bandwidth=0.2).fit(rot_coeff[:,bb].reshape(-1,1))
+    #     plt.plot(kde.score_samples(rot_coeff[:,bb].reshape(-1,1)))
+    #     #plt.hist(rot_coeff[:,:])
+    
+    #THIS ASSUMES COEFFICIENTS ARE ALL SIMILARLY DISTRIBUTED for each band
+    coeff_max = np.linalg.norm(np.abs(rot_coeff),axis=1)
+    coeff_max = stats.zscore(coeff_max)
+    
+    alpha_coeffs = stats.zscore(np.abs(rot_coeff[:,2]))
+    
     mainfig = plt.figure()
-    EEG_Viz.plot_3d_scalp(rot_coeff[:,1],mainfig,clims=(0,0.06),animate=False,label=label_map[stimclass],unwrap=True)
+    EEG_Viz.plot_3d_scalp(alpha_coeffs>2,mainfig,clims=(0,3),animate=False,label=label_map[stimclass],unwrap=True)
     plt.title(label_map[stimclass])
     
     

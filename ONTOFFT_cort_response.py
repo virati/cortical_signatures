@@ -27,14 +27,14 @@ eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=do_con
 eFrame.standard_pipeline()
 
 #%% PSD plotting
-eFrame.plot_psd(pt='907',condit='OffT',epoch='BOFT')
+eFrame.plot_psd(pt='907',condit='OnT',epoch='BONT')#'Off_3')
 
 #%%
 # Channel-marginalized Response Histogram
-eFrame.pop_meds(response=True)
-
-#%%
-eFrame.band_distr()
+for pt in pt_list:
+    eFrame.pop_meds(response=True,pt=pt)
+    eFrame.band_distr()
+    plt.suptitle(pt)
 
 #%%
 # Here we'll plot the spatial distributions of \alpha

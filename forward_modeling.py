@@ -29,6 +29,7 @@ import cmocean
 pt_list = ['906','907','908']
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
+eFrame.standard_pipeline()
 #%%
 eFrame.OnT_ctrl_dyn()
 #%%
@@ -39,9 +40,9 @@ do_coherence = False
 #%%
 # Here we do the forward modeling to do network dissection
 #eFrame.pool_patients()
-for band in ['rP0']:
-    for pt in ['908']:
+for band in ['Alpha']:
+    for pt in ['906']:
         #30, 25 is good
-        EEG_support = DTI_support_model(pt,4,dti_parcel_thresh=15,eeg_thresh=55)
+        EEG_support = DTI_support_model(pt,4,dti_parcel_thresh=15,eeg_thresh=60) #15,55 work
         plot_support_model(EEG_support,pt) 
         eFrame.support_analysis(support_struct=EEG_support,pt=pt,band=band,voltage=str(3))
