@@ -24,8 +24,8 @@ eFrame = proc_dEEG.proc_dEEG(pts=['906','907','908'],procsteps='conservative',co
 eFrame.standard_pipeline()
 #%%
 ## Let's plot all the bands first
-for band in ['Delta','Theta','Alpha','Beta*','Gamma1']:
-    eFrame.topo_median_response(do_condits=['OnT'],band=band)
+for band in ['Alpha','Beta*']:
+    eFrame.topo_median_response(do_condits=['OnT'],band=band,use_maya=True)
 
 #%%
 eFrame.topo_OnT_ctrl(pt='POOL',do_plot=True,plot_maya=True)
