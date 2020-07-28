@@ -8,7 +8,8 @@ PURE streaming classifier SVM
 Trained and tested on the streamed, locally reference EEG data
 This is the SECOND step in the streaming/online EEG pipeline
 
-YOU HAVE TO FIRST RUN dEEG_streaming
+NOTE:
+YOU HAVE TO FIRST RUN 'form_streaming_dEEG_struct.py' first to generate the intermediate pickle file
 
 """
 

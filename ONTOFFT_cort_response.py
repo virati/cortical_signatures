@@ -33,7 +33,7 @@ eFrame.plot_psd(pt='907',condit='OnT',epoch='BONT')#'Off_3')
 # Channel-marginalized Response Histogram
 for pt in pt_list:
     eFrame.pop_meds(response=True,pt=pt)
-    eFrame.band_distr()
+    eFrame.band_distr(do_moment='mads')
     plt.suptitle(pt)
 
 #%%
@@ -43,4 +43,4 @@ for pt in pt_list:
 #    eFrame.topo_median_response(do_condits=do_condits,pt=pt,band='Beta*')
     
 #%%
-eFrame.topo_median_response(do_condits=do_condits,pt='908',band='Alpha',use_maya=True)
+eFrame.topo_median_response(do_condits=do_condits,pt='POOL',band='Beta*',use_maya=False)

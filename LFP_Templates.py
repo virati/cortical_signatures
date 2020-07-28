@@ -52,7 +52,7 @@ sns.set_style('ticks')
 sns.set(font_scale=3)
 
 plt.rcParams['image.cmap'] = 'jet'
-#%%
+
 #Data.view_raw_ts(channs=range(2))
 #Data.view_raw_hist(chann=[0,1])
 def plot_SG(mI,pI,conditI,chann,SGs,tpts=0):
@@ -320,19 +320,20 @@ for mm, modal in enumerate(['LFP']):
             #Data = dbo.load_BR_dict(Ephys[modal][pt][condit]['Filename'],sec_end=0)
             #Compute the TF representation of the above imported data
             F,T,SG,BANDS = Data.compute_tf()
-            SG_Dict = dbo.gen_SG(Data.extract_dict())
+            SG_Dict = dbo.gen_SG(Data.extract_dict(),overlap=False)
             #Fvect = dbo.calc_feats()
             #for iv, interval in enumerate():
           
-            #[datatv,dataraw] = Data.raw_ts()
+            [datatv,dataraw] = Data.raw_ts()
             
-            SGs[modal][pt][condit]['SG'] = SG_Dict['SG']
-            #SGs[modal][pt][condit]['Raw'] = dataraw
-            #SGs[modal][pt][condit]['TRaw'] = datatv
-            SGs[modal][pt][condit]['T'] = SG_Dict['T']
+            SGs[modal][pt][condit]['SG'] = {chann:SG_Dict[chann]['SG'] for chann in ['Left','Right']}
+            SGs[modal][pt][condit]['Raw'] = dataraw
+            SGs[modal][pt][condit]['TRaw'] = datatv
+            SGs[modal][pt][condit]['T'] = SG_Dict['Left']['T']
+            #pdb.set_trace()
             SGs[modal][pt][condit]['Bands'] = BANDS
             SGs[modal][pt][condit]['BandMatrix'] = np.zeros((BANDS[0]['Alpha'].shape[0],2,5))
-            #SGs[modal][pt][condit]['BandSegments'] = []
+            SGs[modal][pt][condit]['BandSegments'] = nestdict()
             SGs[modal][pt][condit]['DSV'] = np.zeros((BANDS[0]['Alpha'].shape[0],2,1))
             
             
@@ -360,6 +361,7 @@ for mm, modal in enumerate(['LFP']):
                 tbounds = [Ephys[modal][pt][condit]['segments'][seg][0],Ephys[modal][pt][condit]['segments'][seg][1]]
                 #extract from time vector the actual indices
                 t_idxs = np.ceil(np.where(np.logical_and(SGs[modal][pt][condit]['T'] >= tbounds[0],SGs[modal][pt][condit]['T'] <= tbounds[1]))).astype(int)
+                #pdb.set_trace()
                 SGs[modal][pt][condit]['BandSegments'][seg]=SGs[modal][pt][condit]['BandMatrix'][t_idxs,:,:]
                 SGs[modal][pt][condit][seg] = defaultdict(dict)
                 SGs[modal][pt][condit][seg]['PCA'] = defaultdict(dict)
@@ -483,7 +485,7 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 ax.spines['bottom'].set_visible(False)
 
-plt.suptitle(band + ' Power Response to Stim')
+#plt.suptitle(band + ' Power Response to Stim')
 
 plt.show()
 
@@ -640,7 +642,7 @@ disp_pt = ['905']
 disp_condit = ['OnTarget']
 #for 906 bilat: timeseg = [611,690]
 timeseg = [606,687]
-plot_SG(disp_modal,disp_pt,disp_condit,1,SGs,tpts=timeseg)
+plot_SG(disp_modal,disp_pt,disp_condit,'Left',SGs,tpts=timeseg)
 
 #%%
 #Extract known chirp for DBS906 and put into a file for template search in (a) voltage sweep LFP and (b) voltage sweep EEG
@@ -684,6 +686,8 @@ plt.figure()
 plt.plot(conv_tvect,tl_ip)
 plt.legend(['Channel 0','Channel 1'])
 
+plt.figure()
+plt.plot(chirp_templ)
 
 
 #%%

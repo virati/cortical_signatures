@@ -10,8 +10,8 @@ Captures chirp changes
 
 import sys
 sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
-import DBS_Osc as dbo
-from DBS_Osc import nestdict
+import DBSpace as dbo
+from DBSpace import nestdict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -120,18 +120,21 @@ elif Phase == '6Mo':
     
 
 SGs = nestdict()
-
-for pp, pt in enumerate(['901']):
+#%%
+for pp, pt in enumerate(['908']):
     for cc, condit in enumerate(['OnTarget','OffTarget']):
-        Data_In = dbo.load_BR_dict(Ephys[pt][condit]['Filename'],sec_end=0)
+        Data_In = dbo.load_BR_dict(Ephys[pt][condit]['Filename'],sec_offset=0)
         
         SGs[pt][condit] = dbo.gen_SG(Data_In)
         
-#%%
-for pp, pt in enumerate(['901']):
+
+for pp, pt in enumerate(['908']):
     plt.figure()
+    plt.suptitle(pt)
     for cc, condit in enumerate(['OnTarget','OffTarget']):
         plt.subplot(2,2,2*cc+1)
+        plt.title(condit)
         plt.pcolormesh(SGs[pt][condit]['Left']['T'],SGs[pt][condit]['Left']['F'],10*np.log10(SGs[pt][condit]['Left']['SG']))
         plt.subplot(2,2,2*cc+2)
+        plt.title(condit)
         plt.pcolormesh(SGs[pt][condit]['Right']['T'],SGs[pt][condit]['Right']['F'],10*np.log10(SGs[pt][condit]['Right']['SG']))
