@@ -8,13 +8,13 @@ dEEG Continuous
 Load in continuous, raw dEEG from the mat converted files
 """
 
-from stream_dEEG import streamEEG
 
 
 #import sys
 #sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
 import DBSpace as dbo
 from DBSpace import nestdict
+from DBSpace.control.stream_dEEG import streamEEG
 
 import itertools
 from sklearn.metrics import confusion_matrix
@@ -25,6 +25,8 @@ import numpy as np
 import pickle
 
 perf_dict = nestdict()
+import seaborn as sns
+
 
 pts = ['906']
 condits =  ['Volt']
@@ -48,6 +50,7 @@ for pp,pt in enumerate(pts):
         #%%
         sEEG.calc_baseline()
         #%%
+        sEEG.label_segments()
         if 1:
             #This CLASSIFIES the data
             perf_dict[pt][condit] = sEEG.classify_segs(ctype=class_type,train_type='stream')

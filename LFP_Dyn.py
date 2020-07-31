@@ -15,9 +15,17 @@ from DBSpace import nestdict
 
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
+
+def find_nearest(array,value):
+    idx = np.searchsorted(array, value, side="left")
+    if idx > 0 and (idx == len(array) or math.fabs(value - array[idx-1]) < math.fabs(value - array[idx])):
+        return array[idx-1]
+    else:
+        return array[idx]
+#%%
 Ephys = nestdict()
-
 Phase = 'TurnOn'
 if Phase == 'TurnOn':
     Ephys['901']['OnTarget']['Filename'] = '/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_17_10_31__MR_0.txt'
@@ -50,6 +58,12 @@ if Phase == 'TurnOn':
     Ephys['906']['OffTarget']['segments']['Bilat'] = (610,640)
     Ephys['906']['OnTarget']['segments']['PreBilat'] = (561,591)
     Ephys['906']['OffTarget']['segments']['PreBilat'] = (561,591)
+    
+    Ephys['906']['OffTarget']['segments']['C1'] = (368,389)
+    Ephys['906']['OffTarget']['segments']['C2'] = (389,422)
+    Ephys['906']['OffTarget']['segments']['C3'] = (422,475)
+    Ephys['906']['OffTarget']['segments']['C4'] = (475,486)
+    Ephys['906']['OffTarget']['segments']['C5'] = (488,530)
     
     
     Ephys['907']['OnTarget']['Filename'] = '/home/virati/MDD_Data/BR/907/Session_2015_12_16_Wednesday/DBS907_2015_12_16_12_09_04__MR_0.txt'
@@ -121,20 +135,34 @@ elif Phase == '6Mo':
 
 SGs = nestdict()
 #%%
-for pp, pt in enumerate(['908']):
+for pp, pt in enumerate(['906']):
     for cc, condit in enumerate(['OnTarget','OffTarget']):
         Data_In = dbo.load_BR_dict(Ephys[pt][condit]['Filename'],sec_offset=0)
         
         SGs[pt][condit] = dbo.gen_SG(Data_In)
-        
-
-for pp, pt in enumerate(['908']):
+   
+for pp,pt in enumerate(['906']):
+    plt.figure()
+    for cc, condit in enumerate(['OffTarget']):
+        do_segs = ['C1','C2','C3','C4']
+        for seg in do_segs:
+            #find indices for times
+            start_idx = min(range(SGs[pt][condit]['Left']['T'].shape[0]), key=lambda i: abs(SGs[pt][condit]['Left']['T'][i]-Ephys[pt][condit]['segments'][seg][0]))
+            end_idx = min(range(SGs[pt][condit]['Left']['T'].shape[0]), key=lambda i: abs(SGs[pt][condit]['Left']['T'][i]-Ephys[pt][condit]['segments'][seg][1]))
+            
+            
+            
+            plt.plot(SGs[pt][condit]['Left']['F'],10*np.log10(np.median(SGs[pt][condit]['Left']['SG'][:,start_idx:end_idx],axis=1)))
+        plt.legend(do_segs)
+#%%
+for pp, pt in enumerate(['906']):
     plt.figure()
     plt.suptitle(pt)
     for cc, condit in enumerate(['OnTarget','OffTarget']):
         plt.subplot(2,2,2*cc+1)
         plt.title(condit)
-        plt.pcolormesh(SGs[pt][condit]['Left']['T'],SGs[pt][condit]['Left']['F'],10*np.log10(SGs[pt][condit]['Left']['SG']))
+        plt.pcolormesh(SGs[pt][condit]['Left']['T'],SGs[pt][condit]['Left']['F'],10*np.log10(SGs[pt][condit]['Left']['SG']),rasterized=True)
         plt.subplot(2,2,2*cc+2)
         plt.title(condit)
-        plt.pcolormesh(SGs[pt][condit]['Right']['T'],SGs[pt][condit]['Right']['F'],10*np.log10(SGs[pt][condit]['Right']['SG']))
+        plt.pcolormesh(SGs[pt][condit]['Right']['T'],SGs[pt][condit]['Right']['F'],10*np.log10(SGs[pt][condit]['Right']['SG']),rasterized=True)
+        #%%

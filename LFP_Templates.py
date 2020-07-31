@@ -6,15 +6,17 @@ Created on Mon Aug  8 15:19:36 2016
 This is now the actual code for doing OnTarget/OffTarget LFP Ephys
 THIS APPEARS to do the chirp template search
 """
-
-#Manifold Learning Preprocessing
-
 import numpy as np
 import pandas as pd
 from collections import defaultdict, OrderedDict
 import scipy.signal as sig
 import matplotlib
 import sys
+
+import seaborn as sns
+sns.set_context('paper')
+sns.set(font_scale=3)
+sns.set_style('white')
 
 import matplotlib.pyplot as plt
 
@@ -44,17 +46,14 @@ font = {'family' : 'normal',
 matplotlib.rc('font', **font)
 matplotlib.rcParams['svg.fonttype'] = 'none'
 
-import seaborn as sns
-
-sns.set_context('talk')
-sns.set_style('white')
-sns.set_style('ticks')
-sns.set(font_scale=3)
-
 plt.rcParams['image.cmap'] = 'jet'
+plt.close('all')
 
+
+#%% Script Definitions
 #Data.view_raw_ts(channs=range(2))
 #Data.view_raw_hist(chann=[0,1])
+
 def plot_SG(mI,pI,conditI,chann,SGs,tpts=0):
             
     plt.figure()
@@ -166,10 +165,7 @@ def get_SG_Bands(m,p,condit,SGs,band):
         Band_TC[band['label']].append(np.mean(SGs[m][p][condit][cc]['SG'][band_vect,:],0))
     return Band_TC
 
-
-#%%
-
-plt.close('all')
+#%% Main Script
 
 Ephys = defaultdict(dict)
 modalities = ['LFP']
@@ -300,7 +296,6 @@ elif Phase == '6Mo':
 plt.close('all')
 
 SCC_State = defaultdict(dict)
-
 
 do_DSV = np.array([[-0.00583578, -0.00279751,  0.00131825,  0.01770169,  0.01166687],[-1.06586005e-02,  2.42700023e-05,  7.31445236e-03,  2.68723035e-03,-3.90440108e-06]])
 
@@ -637,29 +632,35 @@ def plot_allpt_SGs(pt_list = ['901','903','905','906','907','908'],condit_list =
 #plot_SG(disp_modal,disp_pt,disp_condit,0,SGs)
 #Plot all the spectrograms here, this should be a script-specific function and should be phased out soon
 #plot_allpt_SGs(['907'],['OnTarget'])
-disp_modal=['LFP']
-disp_pt = ['905']
-disp_condit = ['OnTarget']
-#for 906 bilat: timeseg = [611,690]
-timeseg = [606,687]
-plot_SG(disp_modal,disp_pt,disp_condit,'Left',SGs,tpts=timeseg)
+disp_modal=['LFP'];disp_condit = ['OnTarget']
+
+disp_pt = ['906']; timeseg = [370,500];
+
+#disp_pt = ['905'];timeseg = [606,687]; chirp_templ = chirp['Raw'][1][10:30*422]
+#plot_SG(disp_modal,disp_pt,disp_condit,'Left',SGs,tpts=timeseg)
 
 #%%
 #Extract known chirp for DBS906 and put into a file for template search in (a) voltage sweep LFP and (b) voltage sweep EEG
 chirp = plot_phase(disp_modal,disp_pt,disp_condit,1,SGs,tpts=timeseg,fileio_out=False)
 pickle.dump(chirp,open('/home/virati/DBS' + disp_pt[0] + '_chirp.pickle',"wb"))
+chirp_templ = chirp['Raw'][1][10:30*422]
 
 #%%
-chirp_templ = chirp['Raw'][1][10:30*422]
+
 #do chirplet transform on the chirp template
-pt = '905'
+pt = disp_pt[0]
 #Ignore chirplet transform/analysis and just use the template to search amongst voltage sweep data
-vsweep_fname = '/home/virati/MDD_Data/BR/905/Session_2015_09_02_Wednesday/Dbs905_2015_09_02_10_31_14__MR_0.txt'
+#vsweep_fname = '/home/virati/MDD_Data/BR/905/Session_2015_09_02_Wednesday/Dbs905_2015_09_02_10_31_14__MR_0.txt'
+
+targsweep_fname = '/home/extend/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_16_20_23__MR_0.txt'
+vsweep_fname = '/home/extend/MDD_Data/BR/906/Session_2015_08_28_Friday/DBS906_2015_08_28_15_30_07__MR_0.txt'
+
+#fsweep_fname = '/home/extend/MDD_Data/BR/906/Session_2015_08_28_Friday/DBS906_2015_08_28_16_34_45__MR_0.txt' # 906 frequency sweep
 #load in the vsweep data
 vsweepData = ts.import_BR(vsweep_fname,snip=(0,0))
 [vstv,vsraw] = vsweepData.raw_ts()
 
-vsweepData.view_tf(channs=np.arange(2))
+vsweepData.view_tf(channs=np.arange(2),noverlap=2**9)
 
 #go through vsraw and check for chirp_templ
 
@@ -672,13 +673,14 @@ n_sweep = n_tot - n_templ
 
 tl_ip = np.zeros((n_sweep,2))
 
+print(np.max(np.abs(vsraw)))
+
 for tlag in range(0,n_sweep,10):
     print('tlag = ' + str(tlag))
     #mean zero the current
     curr_sig = vsraw[tlag:tlag+n_templ] - np.mean(vsraw[tlag:tlag+n_templ])
     tl_ip[tlag] = np.dot(chirp_templ,curr_sig)
 
-#%%
 
 tvect = SGs['LFP'][pt]['OnTarget']['TRaw']
 conv_tvect = np.linspace(0,tvect[-1],tl_ip.shape[0])
