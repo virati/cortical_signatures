@@ -5,7 +5,7 @@ Created on Thu Jun 21 23:17:47 2018
 
 @author: virati
 LFP Dynamics script
-Captures chirp changes
+Captures DO changes
 """
 
 import sys
@@ -59,12 +59,19 @@ if Phase == 'TurnOn':
     Ephys['906']['OnTarget']['segments']['PreBilat'] = (561,591)
     Ephys['906']['OffTarget']['segments']['PreBilat'] = (561,591)
     
+    #for R stim
     Ephys['906']['OffTarget']['segments']['C1'] = (368,389)
     Ephys['906']['OffTarget']['segments']['C2'] = (389,422)
     Ephys['906']['OffTarget']['segments']['C3'] = (422,475)
     Ephys['906']['OffTarget']['segments']['C4'] = (475,486)
     Ephys['906']['OffTarget']['segments']['C5'] = (488,530)
-    
+
+    #for bilat
+    Ephys['906']['OffTarget']['segments']['C1'] = (603,615)
+    Ephys['906']['OffTarget']['segments']['C2'] = (615,620)
+    Ephys['906']['OffTarget']['segments']['C3'] = (620,627)
+    Ephys['906']['OffTarget']['segments']['C4'] = (627,635)
+    Ephys['906']['OffTarget']['segments']['C5'] = (635,675)    
     
     Ephys['907']['OnTarget']['Filename'] = '/home/virati/MDD_Data/BR/907/Session_2015_12_16_Wednesday/DBS907_2015_12_16_12_09_04__MR_0.txt'
     Ephys['907']['OffTarget']['Filename'] = '/home/virati/MDD_Data/BR/907/Session_2015_12_17_Thursday/DBS907_2015_12_17_10_53_08__MR_0.txt' 
@@ -140,7 +147,8 @@ for pp, pt in enumerate(['906']):
         Data_In = dbo.load_BR_dict(Ephys[pt][condit]['Filename'],sec_offset=0)
         
         SGs[pt][condit] = dbo.gen_SG(Data_In)
-   
+        CWTs[pt][condit] = dbo.gen_CWT(Data_In)
+        #%%
 for pp,pt in enumerate(['906']):
     plt.figure()
     for cc, condit in enumerate(['OffTarget']):
@@ -150,19 +158,27 @@ for pp,pt in enumerate(['906']):
             start_idx = min(range(SGs[pt][condit]['Left']['T'].shape[0]), key=lambda i: abs(SGs[pt][condit]['Left']['T'][i]-Ephys[pt][condit]['segments'][seg][0]))
             end_idx = min(range(SGs[pt][condit]['Left']['T'].shape[0]), key=lambda i: abs(SGs[pt][condit]['Left']['T'][i]-Ephys[pt][condit]['segments'][seg][1]))
             
+            middle_idx = np.ceil(np.mean([start_idx,end_idx])).astype(np.int)
             
-            
-            plt.plot(SGs[pt][condit]['Left']['F'],10*np.log10(np.median(SGs[pt][condit]['Left']['SG'][:,start_idx:end_idx],axis=1)))
+            plt.plot(SGs[pt][condit]['Left']['F'],10*np.log10(SGs[pt][condit]['Left']['SG'][:,middle_idx]))
         plt.legend(do_segs)
 #%%
-for pp, pt in enumerate(['906']):
-    plt.figure()
-    plt.suptitle(pt)
-    for cc, condit in enumerate(['OnTarget','OffTarget']):
-        plt.subplot(2,2,2*cc+1)
-        plt.title(condit)
-        plt.pcolormesh(SGs[pt][condit]['Left']['T'],SGs[pt][condit]['Left']['F'],10*np.log10(SGs[pt][condit]['Left']['SG']),rasterized=True)
-        plt.subplot(2,2,2*cc+2)
-        plt.title(condit)
-        plt.pcolormesh(SGs[pt][condit]['Right']['T'],SGs[pt][condit]['Right']['F'],10*np.log10(SGs[pt][condit]['Right']['SG']),rasterized=True)
-        #%%
+if 0:
+    for pp, pt in enumerate(['906']):
+        fig = plt.figure()
+        plt.suptitle(pt)
+        for cc, condit in enumerate(['OnTarget','OffTarget']):
+            plt.subplot(2,2,2*cc+1)
+            plt.title(condit)
+            plt.pcolormesh(SGs[pt][condit]['Left']['T'],SGs[pt][condit]['Left']['F'],10*np.log10(SGs[pt][condit]['Left']['SG']),rasterized=True)
+            plt.subplot(2,2,2*cc+2)
+            plt.title(condit)
+            plt.pcolormesh(SGs[pt][condit]['Right']['T'],SGs[pt][condit]['Right']['F'],10*np.log10(SGs[pt][condit]['Right']['SG']),rasterized=True)
+
+
+#%%
+plt.figure()
+pt = '906'
+side='Right'
+condit = 'OffTarget'
+plt.pcolormesh(SGs[pt][condit][side]['T'],SGs[pt][condit][side]['F'],10*np.log10(SGs[pt][condit][side]['SG']),rasterized=True)

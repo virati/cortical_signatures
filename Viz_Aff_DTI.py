@@ -36,18 +36,9 @@ all_sides = ['L','R','L+R']
 voltage = '3'
 
 DO_all = itertools.product(all_pts,all_condits,all_sides)
-DO_positive = [('901','OnT','L'),
-               ('901','OnT','L+R'),
-               ('901','OffT','L'),
-               ('901','OffT','L+R'),
-               ('903','OffT','L'),
-               ('903','OffT','L+R'),
-               ('905','OnT','R'),
-               ('905','OnT','L+R'),
-               ('905','OffT','R'),
-               ('905','OffT','L+R'),
-               ('906','OffT','R'),
-               ('906','OffT','L+R')] #This reflects the STIM conditions that evoked DOs
+feel_positive = [('901','OnT','L'),] #This reflects the STIM conditions that evoked DOs
+feel_negative = []
+feel_weird = []
 
 DO_negative = [x for x in DO_all if x not in DO_positive]
 

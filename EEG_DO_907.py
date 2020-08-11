@@ -21,7 +21,7 @@ import scipy.stats as stats
 import mne
 
 import h5py
-
+import pdb
 from collections import defaultdict
 
 from DBSpace.visualizations import EEG_Viz as EEG_Viz
@@ -59,26 +59,32 @@ plt.close('all')
     
 data_dir = '/run/media/virati/Stokes/MDD_Data/hdEEG/Continuous/CHIRPS/'
 data_dir = '/home/virati/MDD_Data/hdEEG/Continuous/CHIRPS/'
-
+#%%
 def extract_raw_mat():
-    pt_dir = 'DBS906/'
-    file = 'DBS906_TurnOn_Day1_Sess1_20150827_024013.mat'
+    data_dir = '/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/'
+    pt_dir = ''
+    file = 'DBS907_TurnOn_Day1_onTARGET_20151216_105913.mat'
     
-    data_dir = '/home/virati/B04/'
+    #data_dir = '/home/virati/B04/'
     Inp = sio.loadmat(data_dir + pt_dir + file)
-    #%%
+
     
     #Find the key corresponding to the data
     data_key = [key for key in Inp.keys() if key[0:3] == 'DBS']
     
-    #%%
+
     #Data matrix generation
     Data_matr = Inp[data_key[0]]
     
-    #%%
     #Spectrogram of the first channel to see
+    chann = 225
+    #sg_sig = sig.decimate(Inp[data_key[0]][chann,:],q=10)
+    sg_sig = Inp[data_key[0]][225,:]
+    T,F,SG = sig.spectrogram(sg_sig,nfft=2**10,window='blackmanharris',nperseg=512,noverlap=0,fs=1000)
+    plt.figure()
+    plt.pcolormesh(F,T,np.log10(SG))
     
-    t_bounds = {'Pre_STIM':(760,780), 'BL_STIM':(790,810)}
+    t_bounds = {'Pre_STIM':(600,620), 'BL_STIM':(670,850)}
     t_vect = np.linspace(0,Data_matr.shape[1]/1000,Data_matr.shape[1])
     
     
@@ -89,15 +95,15 @@ def extract_raw_mat():
     
     #Save DataStructure
     sio.savemat('/tmp/test',signal)
-
+#%%
 def load_raw_mat(fname):
     signal = sio.loadmat(fname)
     
-    return signal['EXPORT']['chann'][0][0]
+    return signal
 
 #for condit in ['OnTarget','OffTarget']:
 for condit in ['OnTarget']:
-    pt = 'DBS906'
+    pt = 'DBS907'
     #condit = 'OffTarget'
     
     file = data_dir + pt + '_Sample_Chirp_template/' + pt + '_' + condit + '_all.mat'
@@ -107,7 +113,7 @@ for condit in ['OnTarget']:
         data = []
         
         for ch in range(257):
-            data.append(signal[:,ch][0][0][0][0][0])
+            data.append(signal['BL_STIM'][ch,:])
         data = np.array(data)
         
         return data
@@ -123,6 +129,7 @@ for condit in ['OnTarget']:
     
     #Decimate down all the data
     test_dec = sig.decimate(data,10,zero_phase=True)
+    test_dec = sig.detrend(test_dec,axis=1,type='constant')
     plt.plot(test_dec.T)
     plt.title('Plotting the decimated Data')
     #%%
@@ -133,14 +140,14 @@ for condit in ['OnTarget']:
     alpha_t = defaultdict(dict)
     nfft=512
     #calculate PSD of each channel
-    snippets = {'Baseline':(0,21000),'EarlyStim':(27362,27362+21000)}
+    snippets = {'Baseline':(0,2000),'EarlyStim':(2000,2000+2000)}
     for elabel,ebos in snippets.items():
         
         #channel x NFFT below
         P = np.zeros((257,257))
-        alpha_pow = np.zeros((257,85))
+        alpha_pow = np.zeros((257,8))
         for ch in range(257):
-            sig_filt = sig.decimate(data[ch][ebos[0]:ebos[1]],ds_fact,zero_phase=True)
+            sig_filt = sig.decimate(data[ch,ebos[0]:ebos[1]],ds_fact,zero_phase=True)
             #just do a welch estimate
             f,Pxx = sig.welch(sig_filt,fs=fs/ds_fact,window='blackmanharris',nperseg=512,noverlap=128,nfft=2**10)
             
@@ -202,8 +209,7 @@ for condit in ['OnTarget']:
     F,T,SG = sig.spectrogram(sel_sig,nperseg=512,noverlap=500,window=sig.get_window('blackmanharris',512),fs=fs/ds_fact)
     plt.pcolormesh(T,F,10*np.log10(SG),rasterized=True)
     plt.title('TimeFrequency Signal of Channel ' + str(ch))
-    plt.figure()
-    plt.plot(sel_sig)
+    
     #take out sel_sig and sweep the chirp through it
     
     
