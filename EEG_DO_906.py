@@ -19,7 +19,7 @@ import scipy.stats as stats
 
 
 import mne
-
+import pdb
 import h5py
 
 from collections import defaultdict
@@ -60,22 +60,40 @@ plt.close('all')
 data_dir = '/run/media/virati/Stokes/MDD_Data/hdEEG/Continuous/CHIRPS/'
 data_dir = '/home/virati/MDD_Data/hdEEG/Continuous/CHIRPS/'
 
-def extract_raw_mat():
-    pt_dir = 'DBS906/'
-    file = 'DBS906_TurnOn_Day1_Sess1_20150827_024013.mat'
-    
-    data_dir = '/home/virati/B04/'
-    Inp = sio.loadmat(data_dir + pt_dir + file)
-    #%%
-    
+def extract_raw_mat(fname=[]):
+    if fname == []:
+        pt_dir = 'DBS906/'
+        file = 'DBS906_TurnOn_Day1_Sess1_20150827_024013.mat'
+        
+        data_dir = '/home/virati/B04/'
+        Inp = sio.loadmat(data_dir + pt_dir + file)
+    else:
+        Inp = sio.loadmat(fname)
+        
+
     #Find the key corresponding to the data
     data_key = [key for key in Inp.keys() if key[0:3] == 'DBS']
     
-    #%%
+    #Spectrogram of the first channel to see
+    chann = 32
+    #sg_sig = sig.decimate(Inp[data_key[0]][chann,:],q=10)
+    sg_sig = Inp[data_key[0]][chann,:]
+    
+    #do filtering here
+    sos_lpf = sig.butter(10,20,fs=1000,output='sos')
+    fsg_sig = sig.sosfilt(sos_lpf,sg_sig)
+    
+    
+    T,F,SG = sig.spectrogram(sg_sig,nfft=2**10,window='blackmanharris',nperseg=1024,noverlap=500,fs=1000)
+    fig,ax1 = plt.subplots()
+    ax1.pcolormesh(F,T,10*np.log10(SG))
+    
+    ax2 = ax1.twinx()
+    ax2.plot(np.linspace(0,fsg_sig.shape[0]/1000,fsg_sig.shape[0]),fsg_sig)
+    
     #Data matrix generation
     Data_matr = Inp[data_key[0]]
-    
-    #%%
+
     #Spectrogram of the first channel to see
     
     t_bounds = {'Pre_STIM':(760,780), 'BL_STIM':(790,810)}
@@ -89,7 +107,7 @@ def extract_raw_mat():
     
     #Save DataStructure
     sio.savemat('/tmp/test',signal)
-
+#%%
 def load_raw_mat(fname):
     signal = sio.loadmat(fname)
     
@@ -200,11 +218,94 @@ for condit in ['OnTarget']:
     
     plt.figure()
     F,T,SG = sig.spectrogram(sel_sig,nperseg=512,noverlap=500,window=sig.get_window('blackmanharris',512),fs=fs/ds_fact)
-    plt.pcolormesh(T,F,10*np.log10(SG),rasterized=True)
+    
+    def poly_sub(fVect,psd,order=1):
+        polyCoeff = np.polyfit(fVect,10*np.log10(psd),order)
+            
+        polyfunc = np.poly1d(polyCoeff)
+        polyitself = polyfunc(fVect)
+        
+        
+        postpsd = 10**(10*np.log10(psd) - polyitself)
+        if (postpsd == 0).any(): raise Exception;
+        
+        #plt.figure()
+        #plt.plot(10*np.log10(psd))
+        #plt.plot(polyitself);pdb.set_trace()
+        return postpsd
+        
+    def poly_sub_SG(f,SG):
+        post_SG = np.zeros_like(SG)
+        for ii in range(SG.shape[1]):
+            
+            post_SG[:,ii] = poly_sub(f,SG[:,ii])
+            
+        return post_SG
+    #pSG = poly_sub_SG(F,SG)
+    
+    def norm_SG(f,SG):
+        baseline = np.mean(SG[:,0:1000],axis=1)
+        plt.plot(baseline)
+        post_SG = np.zeros_like(SG)
+        for ii in range(SG.shape[1]):
+            post_SG[:,ii] = SG[:,ii]/baseline
+            
+        return post_SG
+    nSG = norm_SG(F,SG)
+    
+    plt.figure()
+    plt.pcolormesh(T,F,10*np.log10(nSG),rasterized=True)
+    alpha_idxs = np.where(np.logical_and(F < 7,F>2))
+    plt.plot(T,10*np.log10(np.mean(nSG[alpha_idxs,:].squeeze(),axis=0)))
     plt.title('TimeFrequency Signal of Channel ' + str(ch))
     plt.figure()
     plt.plot(sel_sig)
     #take out sel_sig and sweep the chirp through it
+    
+    #%%
+    #Do Chirplet Search here
+    tvect = np.linspace(0,5,5*1000)
+    simil = np.zeros((20,20))
+    index = np.zeros((20,20))
+    for f0 in range(1,20):
+        for f1 in range(1,20):
+            chirplet = sig.chirp(tvect,f0=f0,t1=5,f1=f1)
+            do_conv = sig.convolve(chirplet,sel_sig)
+            simil[f0,f1] = np.max(do_conv)
+            index[f0,f1] = int(np.argmax(do_conv))
+    
+    fig, ax = plt.subplots()
+
+    min_val, max_val, diff = 0., 20., 1.
+    
+    #imshow portion
+    N_points = int((max_val - min_val) / diff)
+    imshow_data = np.random.rand(N_points, N_points)
+    
+    ax.imshow(simil)
+    
+    #ax.imshow(imshow_data, interpolation='nearest')
+    
+    #text portion
+    ind_array = np.arange(min_val, max_val, diff)
+    x, y = np.meshgrid(ind_array, ind_array)
+    
+    for x_val, y_val in zip(x.flatten(), y.flatten()):
+        #pdb.set_trace()
+        c = index[int(x_val),int(y_val)]
+        ax.text(x_val, y_val, c, va='center', ha='center',size=7)
+    
+    #set tick marks for grid
+    #ax.set_xticks(np.arange(min_val-diff/2, max_val-diff/2))
+    #ax.set_yticks(np.arange(min_val-diff/2, max_val-diff/2))
+    #ax.set_xticklabels([])
+    #ax.set_yticklabels([])
+    #ax.set_xlim(min_val-diff/2, max_val-diff/2)
+    #ax.set_ylim(min_val-diff/2, max_val-diff/2)
+    ax.grid()
+    plt.show()
+
+    
     
     
     #%%

@@ -79,12 +79,12 @@ def extract_raw_mat():
     #Spectrogram of the first channel to see
     chann = 225
     #sg_sig = sig.decimate(Inp[data_key[0]][chann,:],q=10)
-    sg_sig = Inp[data_key[0]][225,:]
+    sg_sig = Inp[data_key[0]][chann,:]
     T,F,SG = sig.spectrogram(sg_sig,nfft=2**10,window='blackmanharris',nperseg=512,noverlap=0,fs=1000)
     plt.figure()
     plt.pcolormesh(F,T,np.log10(SG))
     
-    t_bounds = {'Pre_STIM':(290,330), 'BL_STIM':(340,510)}
+    t_bounds = {'Pre_STIM':(290,330), 'BL_STIM':(310,510)}
     t_vect = np.linspace(0,Data_matr.shape[1]/1000,Data_matr.shape[1])
     
     
@@ -203,7 +203,7 @@ for condit in ['OnTarget']:
     
     #%%
     #Do a spectrogram of one of the channels
-    ch = [140]
+    ch = [225]
     if len(ch) == 1:
         sel_sig = sig.decimate(data[ch[0]][:],ds_fact,zero_phase=True)
     else:
@@ -233,13 +233,42 @@ for condit in ['OnTarget']:
             post_SG[:,ii] = poly_sub(f,SG[:,ii])
             
         return post_SG
-    pSG = poly_sub_SG(F,SG)
+    #pSG = poly_sub_SG(F,SG)
+    #%%
+    def norm_SG(f,SG):
+        baseline = np.mean(SG[:,0:2000],axis=1)
+        plt.figure()
+        plt.plot(baseline)
+        #pdb.set_trace()
+        post_SG = np.zeros_like(SG)
+        for ii in range(SG.shape[1]):
+            post_SG[:,ii] = SG[:,ii]/baseline
+            
+        return post_SG
+    nSG = norm_SG(F,SG)
+    #%%
     
-    plt.pcolormesh(T,F,np.log10(pSG),rasterized=True)
+    plt.figure()
+    plt.pcolormesh(T,F,10*np.log10(nSG),rasterized=True)
+    alpha_idxs = np.where(np.logical_and(F < 7,F>2))
+    plt.plot(T,10*np.log10(np.mean(nSG[alpha_idxs,:].squeeze(),axis=0)))
     plt.title('TimeFrequency Signal of Channel ' + str(ch))
-    
+    #plt.figure()
+    #plt.plot(sel_sig)
     #take out sel_sig and sweep the chirp through it
     
+    
+    #%%
+    #Do Chirplet Search here
+    tvect = np.linspace(0,5,5*1000)
+    simil = np.zeros((20,20))
+    for f0 in range(1,20):
+        for f1 in range(1,20):
+            chirplet = sig.chirp(tvect,f0=f0,t1=5,f1=f1)
+            simil[f0,f1] = np.max(sig.convolve(chirplet,sel_sig))
+    
+    plt.figure()
+    plt.imshow(simil)
     
     #%%
     # focus solely on the ~5Hz power and plot the peak between 50-80 seconds
