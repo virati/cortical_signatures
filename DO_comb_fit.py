@@ -15,139 +15,105 @@ sys.path.append('/home/virati/Dropbox/projects/Research/DBSControl/autoDyn/')
 from dyn_sys import dyn_sys
 import networkx as nx
 import pdb
+from allantools import noise
 
 plt.close('all')
 
-
-def sigmoid(x, a, thr):
-    return 1 / (1 + np.exp(-a * (x - thr)))
-
-# nonlinear functions￼
-def Se(x):
-    aE = 50
-    thrE = 0.125
-    return sigmoid(x, thrE, aE) - sigmoid(0, thrE, aE)
-
-def Si(x):
-    aI = 50
-    thrI = 0.4
-    return sigmoid(x, thrI, aI) - sigmoid(0, thrI, aI)
+class delay_filt2:
+    def __init__(self,s0,se=[],s_decay=0):
+        pass
 
 class delay_filt:
-    def __init__(self,k=10,sec_delay=[]):
+    def __init__(self,k=10,sec_delay=[],k_decay=0):
 
         self.fs = 422
         self.tvect = np.linspace(0,60,60 * self.fs)
-        if sec_delay:
-            self.k = int(round(self.fs * sec_delay))
-        else:
-            self.k = k
-
-    def design_oscillation(self):
-        tvect = self.tvect
-        center_freq = 10*np.exp(-0.1*tvect)#;plt.plot(center_freq)
-        self.inp_sig = np.exp(-0.2*tvect)*(np.sin(2 * np.pi * center_freq * tvect) + 1/3 * np.sin(2 * np.pi * 3*center_freq * tvect) + 0/5 * np.sin(2 * np.pi * 5*center_freq * tvect))
-        #inp_sig = np.exp(-0.2*tvect)*(sig.square(2*np.pi*center_freq * tvect)) #DO PAC OF THIS
-        #inp_sig = np.exp(-0.1*tvect)*sig.chirp(tvect,f0=10,t1=10,f1=2,method='hyperbolic')
-        #inp_sig[0:5] = 100
-        self.y = np.zeros((self.inp_sig.shape[0] + 1,))
+        self.set_delay(k=k,delay=sec_delay,decay=k_decay)
         
+    '''
+    KEEP IN MIND delay is in seconds wrt fs
+    '''
+    def set_delay(self,k,delay,decay):
+        if decay != 0:
+            self.k = (np.round(self.fs * delay * np.ones_like(self.tvect))).astype(np.int)
+        else:
+            self.k = k * np.ones_like(self.tvect)
+            
+        self.k_decay = decay
+        self.k = np.round((np.exp(-self.k_decay * self.tvect)) * self.k).astype(np.int)
+
+    def design_oscillation(self,decay=0.1,center_freq=10,amp_decay=0,flatline=False,amplitude=1):
+        tvect = self.tvect
+        if not flatline:
+            center_freq = center_freq*np.exp(-decay*tvect)#;plt.plot(center_freq)
+            self.inp_sig = amplitude*np.exp(-amp_decay*tvect)*(np.sin(2 * np.pi * center_freq * tvect))
+            self.inp_sig += np.random.normal(0,1e-7,size=tvect.shape)# + 1/3 * np.sin(2 * np.pi * 3*center_freq * tvect) + 0/5 * np.sin(2 * np.pi * 5*center_freq * tvect))
+            #inp_sig = np.exp(-0.2*tvect)*(sig.square(2*np.pi*center_freq * tvect)) #DO PAC OF THIS
+            #inp_sig = np.exp(-0.1*tvect)*sig.chirp(tvect,f0=10,t1=10,f1=2,method='hyperbolic')
+            #inp_sig[0:5] = 100
+        else:
+            self.inp_sig = np.zeros_like(tvect) + np.random.normal(0,1,size=tvect.shape)
+    
     def run(self):
         for tt,time in enumerate(self.tvect):
-            self.y[tt] = self.inp_sig[tt] + 1*self.y[tt-self.k] + 0.01*np.random.normal(0,1)
+            self.y[tt] = self.inp_sig[tt] + self.y[tt-self.k[tt]]# + noise.brown(1,fs=self.fs)
 
+    def sim_out(self,delay,decay):
+        self.design_oscillation(decay=0,center_freq=0)
+        self.y = np.zeros((self.inp_sig.shape[0] + 1,))
+        self.run()
+        y = self.y#  + 0.01*np.random.normal(1,100,size=self.y.shape)
+        
+        return y
 
-    def simulate(self):
+    def simulate(self,insig=[]):
+        
+        if insig == []:
+            self.design_oscillation(decay=0,center_freq=130,amp_decay=0,amplitude=10)
+        elif insig == 'empty':
+            self.design_oscillation(decay=0,center_freq=0,amplitude=0)
+        else:
+            self.inp_sig = insig
+        
+        #Container for y
+        self.y = np.zeros((self.inp_sig.shape[0] + 1,))
+            
         self.run()
         
         tvect = self.tvect
         inp_sig = self.inp_sig
-        y = self.y
+        y = self.y #+ 0.009*np.random.normal(0,1,size=self.y.shape)
         fs = self.fs
         
-        #Plotting
-        plt.figure()
-        plt.plot(tvect,inp_sig)
-        plt.plot(tvect,y[:inp_sig.shape[0]],'r')
+        #LPF here
+        sos_lpf = sig.butter(3,100,fs=self.fs,output='sos')
+        y = sig.sosfilt(sos_lpf,y)
+        
+        # #Plotting
+        # plt.figure()
+        # plt.plot(tvect,inp_sig)
+        # plt.plot(tvect,y[:inp_sig.shape[0]],'r')
         
         plt.figure()
         f,pxx = sig.welch(inp_sig,fs=fs,window='blackmanharris',nperseg=512,noverlap=500)
         f,pyy = sig.welch(y,fs=fs,window='blackmanharris',nperseg=512,noverlap=500)
         plt.plot(f,np.log10(pxx))
         plt.plot(f,np.log10(pyy),'r')
+        plt.figure()
+        plt.loglog(f,pyy)
 
         plt.figure()
         nseg = 1024
         t,f,sgx = sig.spectrogram(inp_sig,fs=fs,window='blackmanharris',nperseg=nseg,noverlap=nseg-100,nfft=2**10)
         t,f,sgy = sig.spectrogram(y,fs=fs,window='blackmanharris',nperseg=nseg,noverlap=nseg-100,nfft=2**10)
         plt.pcolormesh(f,t,np.log10(sgy))
-        plt.suptitle('Delay samples:'+str(self.k))
+        plt.ylim((0,30))
+        plt.suptitle('Delay samples:'+str(self.k[0]) + ' end: ' + str(self.k[-1]))
         plt.show()
 
-delayer = delay_filt(sec_delay=0.5)
-delayer.design_oscillation()
-delayer.simulate()
-#%%
-class hopfer(dyn_sys):
-    def __init__(self,*args,**kwargs):
-        super().__init__(*args,**kwargs)
-        
-        self.params = kwargs['params']
-    
-        self.rE = 0
-        self.rI = 0
-        self.c1 = 1.5
-        self.c2 = 1
-        self.c3 = 0.25
-        self.c4 = 1
-        
-        self.wee = 1
-        self.wie = 1
-        self.wei = 1.5
-        self.wii = 0.25
-        self.thrE = 0.125
-        self.thrI = 0.4
-        self.tauE = 1/10
-        self.tauI = 0.720325/10
-        self.ae = 50
-        self.ai = 50
-        
-        self.fdyn = self.f_drift
-        
-    def f_drift(self,x,ext_e = 0):
-        
-        exog = 0
-        x_change = np.zeros((self.N,2))
-        for nn,node in enumerate(x):
-            exog = np.dot(self.L[nn,:],x[:,0])
-            #x_change[nn,0] = -node[0] + (1-self.rE * node[0]) * Se(self.c1 * node[0] - self.c2 * node[1] + exog)
-            #x_change[nn,1] = -node[1] + (1-self.rI * node[1]) * Si(self.c3 * node[0] - self.c4 * node[1])
-            x_change[nn,0] = -node[0] + (1/(1+np.exp(-self.ae*(node[0] * self.wee - node[1] * self.wei - self.thrE + ext_e))))/self.tauE
-            x_change[nn,1] = -node[1] + (1/(1+np.exp(-self.ai*(node[0] * self.wie - node[1] * self.wii - self.thrI))))/self.tauI
-        return x_change
 
-    def measure(self,x):
-        return x
-
-#%%
-
-def do_filt():
-    main_filter = delay_filt()
-    main_filter.design_oscillation()
-    main_filter.simulate()
-    
-wc_p = {'none':0}
-
-def construct_graph():
-    G = nx.Graph()
-    G.add_nodes_from(['L-SCC','R-SCC','L-Front','R-Front','L-Temp','R-Temp'])
-    G.add_edges_from([('L-SCC','R-SCC'),('L-Front','R-Front'),('L-Front','L-Temp'),('L-SCC','L-Temp'),('R-Front','R-Temp'),('R-SCC','R-Temp')])
-
-    return nx.laplacian_matrix(G).todense()
-
-SCCwm = construct_graph()
-main_sys = hopfer(N=6,L = SCCwm,params=wc_p)
-#main_sys.run(x_i = np.random.normal(0,1,size=(6,2)))
-main_sys.sim(x_i = np.random.normal(0,1,size=(6,2)))
-#%%
-main_sys.plot_measured()
+# WORKS NICE! delayer = delay_filt(sec_delay=0.1,k_decay=-0.1)
+#flip k_decay for gold: delayer = delay_filt(sec_delay=0.07,k_decay=.-1)
+delayer = delay_filt(sec_delay=0.5,k_decay=-.05)
+#delayer.design_oscillation()
+delayer.simulate(insig='empty')

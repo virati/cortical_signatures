@@ -208,6 +208,19 @@ for condit in ['OnTarget']:
     ax.xaxis.set_ticks_position('bottom')
     plt.title('Plotting the Early Stim Epoch Alone')
     
+#%%
+# Here we'll plot the decimates ts
+# choose a random subsample of channels
+from numpy.random import default_rng
+
+rand_channs = default_rng().choice(257,size=1,replace=False)
+ds_fact=2
+
+decimated_sigs = sig.decimate(data[rand_channs][:],ds_fact,zero_phase=True)
+plt.figure()
+plt.plot(decimated_sigs.T)
+
+#%%
     #%%
     #Do a spectrogram of one of the channels
     ch = [225]
@@ -216,6 +229,7 @@ for condit in ['OnTarget']:
     else:
         sel_sig = sig.decimate(data[ch[0]][:] - data[ch[1]][:],ds_fact,zero_phase=True)
     
+
     plt.figure()
     F,T,SG = sig.spectrogram(sel_sig,nperseg=512,noverlap=500,window=sig.get_window('blackmanharris',512),fs=fs/ds_fact)
     
