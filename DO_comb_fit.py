@@ -44,20 +44,21 @@ class delay_filt:
 
     def design_oscillation(self,decay=0.1,center_freq=10,amp_decay=0,flatline=False,amplitude=1):
         tvect = self.tvect
-        if not flatline:
+        if flatline:
+            self.inp_sig = np.zeros_like(tvect)# + np.random.normal(0,0.1,size=tvect.shape)
+        else:
             center_freq = center_freq*np.exp(-decay*tvect)#;plt.plot(center_freq)
             self.inp_sig = amplitude*np.exp(-amp_decay*tvect)*(np.sin(2 * np.pi * center_freq * tvect))
-            self.inp_sig += np.random.normal(0,1e-7,size=tvect.shape)# + 1/3 * np.sin(2 * np.pi * 3*center_freq * tvect) + 0/5 * np.sin(2 * np.pi * 5*center_freq * tvect))
+            #self.inp_sig += np.random.normal(0,1e-7,size=tvect.shape)# + 1/3 * np.sin(2 * np.pi * 3*center_freq * tvect) + 0/5 * np.sin(2 * np.pi * 5*center_freq * tvect))
             #inp_sig = np.exp(-0.2*tvect)*(sig.square(2*np.pi*center_freq * tvect)) #DO PAC OF THIS
             #inp_sig = np.exp(-0.1*tvect)*sig.chirp(tvect,f0=10,t1=10,f1=2,method='hyperbolic')
             #inp_sig[0:5] = 100
-        else:
-            self.inp_sig = np.zeros_like(tvect) + np.random.normal(0,1,size=tvect.shape)
     
     def run(self):
         for tt,time in enumerate(self.tvect):
             self.y[tt] = self.inp_sig[tt] + self.y[tt-self.k[tt]]# + noise.brown(1,fs=self.fs)
-
+            #self.y[tt] = self.inp_sig[tt] + self.inp_sig[tt-self.k[tt]]# + noise.brown(1,fs=self.fs)
+            
     def sim_out(self,delay,decay):
         self.design_oscillation(decay=0,center_freq=0)
         self.y = np.zeros((self.inp_sig.shape[0] + 1,))
@@ -71,7 +72,7 @@ class delay_filt:
         if insig == []:
             self.design_oscillation(decay=0,center_freq=130,amp_decay=0,amplitude=10)
         elif insig == 'empty':
-            self.design_oscillation(decay=0,center_freq=0,amplitude=0)
+            self.design_oscillation(decay=0,center_freq=0,amplitude=0,flatline=False)
         else:
             self.inp_sig = insig
         
@@ -108,12 +109,12 @@ class delay_filt:
         t,f,sgy = sig.spectrogram(y,fs=fs,window='blackmanharris',nperseg=nseg,noverlap=nseg-100,nfft=2**10)
         plt.pcolormesh(f,t,np.log10(sgy))
         plt.ylim((0,30))
-        plt.suptitle('Delay samples:'+str(self.k[0]) + ' end: ' + str(self.k[-1]))
+        plt.suptitle('Delay samples:'+str(self.k[0]) + ' decay: ' + str(self.k_decay))
         plt.show()
 
 
 # WORKS NICE! delayer = delay_filt(sec_delay=0.1,k_decay=-0.1)
 #flip k_decay for gold: delayer = delay_filt(sec_delay=0.07,k_decay=.-1)
-delayer = delay_filt(sec_delay=0.5,k_decay=-.05)
+delayer = delay_filt(sec_delay=0.1,k_decay=-.05)
 #delayer.design_oscillation()
-delayer.simulate(insig='empty')
+delayer.simulate(insig=[])

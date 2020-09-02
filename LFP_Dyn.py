@@ -153,14 +153,15 @@ elif Phase == '6Mo':
 
 SGs = nestdict()
 #%%
-pt_list = ['901','903','905','906']
+pt_list = ['906']
 for pp, pt in enumerate(pt_list):
     for cc, condit in enumerate(['OnTarget','OffTarget']):
         Data_In = dbo.load_BR_dict(Ephys[pt][condit]['Filename'],sec_offset=0)
         
         SGs[pt][condit] = dbo.gen_SG(Data_In)
         #CWTs[pt][condit] = dbo.gen_CWT(Data_In)
-        #%%
+#%%
+#Below is obviously broken for non-906 since the segment 'C's aren't defined
 for pp,pt in enumerate(pt_list):
     plt.figure()
     for cc, condit in enumerate(['OffTarget']):
@@ -192,13 +193,14 @@ if 1:
 #Here we'll zoom into the details of the 906_OFFT DO
 plt.figure()
 pt = '906'
-side='Right'   import scipy.ndimage as ndimage
+side='Right'   
 condit = 'OffTarget'
 plt.pcolormesh(SGs[pt][condit][side]['T'],SGs[pt][condit][side]['F'],10*np.log10(SGs[pt][condit][side]['SG']),rasterized=True)
+plt.colorbar()
 #%%
 # 3D plotting nonsense
 
-def 3d_plotting(pt,side,condit):
+def Plot3D(pt,side,condit):
     t_filt = [600,650]
     f_filt = [0,50]
     T = SGs[pt][condit][side]['T']

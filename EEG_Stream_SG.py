@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Aug 18 21:31:54 2020
+
+@author: virati
+
+Plot SG of an EEG stream
+"""
 # -*- coding: utf-8 -*-
 """
 Created on Fri Nov 25 12:18:37 2016
@@ -34,197 +43,42 @@ matplotlib.rc('font', **font)
 
 plt.close('all')
 
-#def plot_3d_scalp(band):
-#    fig = plt.figure()
-#    ax = fig.add_subplot(111,projection='3d')
-#    egipos = mne.channels.read_montage('/tmp/GSN-HydroCel-257.sfp')
-#    etrodes = egipos.pos
-#    
-#    
-#    ax.scatter(etrodes[:,0],etrodes[:,1],10*etrodes[:,2],c=alpha,s=300)
-# 
-#    ax.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0)) 
-#    ax.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0)) 
-#    ax.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0)) 
-#    # Get rid of the spines                         
-#    ax.w_xaxis.line.set_color((1.0, 1.0, 1.0, 0.0)) 
-#    ax.w_yaxis.line.set_color((1.0, 1.0, 1.0, 0.0)) 
-#    ax.w_zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-#    ax.set_xticks([])                               
-#    ax.set_yticks([])                               
-#    ax.set_zticks([])
-#
-#    plt.title(pt + ' ' + condit)
-#    plt.show()
-    
-data_dir = '/run/media/virati/Stokes/MDD_Data/hdEEG/Continuous/CHIRPS/'
-data_dir = '/home/virati/MDD_Data/hdEEG/Continuous/CHIRPS/'
+data_dir = '/run/media/virati/Stokes/MDD_Data/hdEEG/Continuous/ALLMATS/'
 
-def extract_raw_mat(fname=[]):
-    if fname == []:
-        pt_dir = 'DBS906/'
-        file = 'DBS906_TurnOn_Day1_Sess1_20150827_024013.mat'
-        
-        data_dir = '/home/virati/B04/'
-        Inp = sio.loadmat(data_dir + pt_dir + file)
-    else:
-        Inp = sio.loadmat(fname)
-        
+file = 'DBS906_TurnOn_Day1_Sess1_20150827_024013.mat'
 
-    #Find the key corresponding to the data
-    data_key = [key for key in Inp.keys() if key[0:3] == 'DBS']
+Inp = sio.loadmat(data_dir + file)
+   
     
-    #Spectrogram of the first channel to see
-    chann = 32
-    #sg_sig = sig.decimate(Inp[data_key[0]][chann,:],q=10)
-    sg_sig = Inp[data_key[0]][chann,:]
-    
-    #do filtering here
-    sos_lpf = sig.butter(10,20,fs=1000,output='sos')
-    fsg_sig = sig.sosfilt(sos_lpf,sg_sig)
-    
-    
-    T,F,SG = sig.spectrogram(sg_sig,nfft=2**10,window='blackmanharris',nperseg=1024,noverlap=500,fs=1000)
-    fig,ax1 = plt.subplots()
-    ax1.pcolormesh(F,T,10*np.log10(SG))
-    
-    ax2 = ax1.twinx()
-    ax2.plot(np.linspace(0,fsg_sig.shape[0]/1000,fsg_sig.shape[0]),fsg_sig)
-    
-    #Data matrix generation
-    Data_matr = Inp[data_key[0]]
 
-    #Spectrogram of the first channel to see
-    
-    t_bounds = {'Pre_STIM':(760,780), 'BL_STIM':(790,810)}
-    t_vect = np.linspace(0,Data_matr.shape[1]/1000,Data_matr.shape[1])
-    
-    
-    signal = defaultdict(dict)
-    for ts, tt in t_bounds.items():
-        t_loc = np.where(np.logical_and(t_vect > tt[0],t_vect < tt[1]))[0]
-        signal[ts] = Inp[data_key[0]][:,t_loc] - np.mean(Inp[data_key[0]][:,t_loc],0)
-    
-    #Save DataStructure
-    sio.savemat('/tmp/test',signal)
-#%%
-def load_raw_mat(fname):
-    signal = sio.loadmat(fname)
-    
-    return signal['EXPORT']['chann'][0][0]
+#Find the key corresponding to the data
+data_key = [key for key in Inp.keys() if key[0:3] == 'DBS']
 
-#for condit in ['OnTarget','OffTarget']:
-for condit in ['OnTarget']:
-    pt = 'DBS906'
-    #condit = 'OffTarget'
-    
-    file = data_dir + pt + '_Sample_Chirp_template/' + pt + '_' + condit + '_all.mat'
-    signal = load_raw_mat(fname=file)
-    
-    def EEG_to_Matr(signal):
-        data = []
-        
-        for ch in range(257):
-            data.append(signal[:,ch][0][0][0][0][0])
-        data = np.array(data)
-        
-        return data
-    
-    #%%
-    data = EEG_to_Matr(signal)
-    
-    mean_sig = np.mean(data,0)
-    
-    #Re-reference to mean
-    for ch in range(257):
-        data[ch] = data[ch] - mean_sig
-    
-    #Decimate down all the data
-    test_dec = sig.decimate(data,10,zero_phase=True)
-    plt.plot(test_dec.T)
-    plt.title('Plotting the decimated Data')
-    #%%
-    
-    ds_fact = 1
-    fs = 500
-    epoch = defaultdict(dict)
-    alpha_t = defaultdict(dict)
-    nfft=512
-    #calculate PSD of each channel
-    snippets = {'Baseline':(0,21000),'EarlyStim':(27362,27362+21000)}
-    for elabel,ebos in snippets.items():
-        
-        #channel x NFFT below
-        P = np.zeros((257,257))
-        alpha_pow = np.zeros((257,85))
-        for ch in range(257):
-            sig_filt = sig.decimate(data[ch][ebos[0]:ebos[1]],ds_fact,zero_phase=True)
-            #just do a welch estimate
-            f,Pxx = sig.welch(sig_filt,fs=fs/ds_fact,window='blackmanharris',nperseg=512,noverlap=128,nfft=2**10)
-            
-            #First, we're going to go through the timseries, segment it out, and classify each segment in a partial-responsive GMM model
-            
-            
-            #do a spectrogram and then find median
-            F,T,SG = sig.spectrogram(sig_filt,nperseg=256,noverlap=10,window=sig.get_window('blackmanharris',256),fs=fs/ds_fact,nfft=512)
-            #Take the median along the time axis of the SG to find the median PSD for the epoch label
-            Pxx = np.median(SG,axis=1)
-            #find timeseries of alpha oscillatory power
-            falpha = np.where(np.logical_and(F > 8,F < 14))
-            #Frequency is what dimension?? probably 1
-            alpha_tcourse = np.median(SG[falpha,:],1)
-            
-            P[ch,:] = Pxx
-            alpha_pow[ch,:] = alpha_tcourse
-            
-        epoch[elabel] = P
-        alpha_t[elabel] = alpha_pow
-             
-    #Compute diff PSD
-    diff_PSD = 10*np.log10(epoch['EarlyStim']) - 10*np.log10(epoch['Baseline'])
-    #%%
-    plt.figure()
-    _ = plt.plot(F,diff_PSD.T,alpha=0.2)
-    plt.axhline(y=0,linewidth=5)
-    plt.title('Plotting the change in PSD from Baseline to Early Stim')
-    #%%
-    def plot_ts_chann(data,ch,ds_fact=1):
-        plt.figure()
-        sel_sig = sig.decimate(data[ch][:],ds_fact,zero_phase=True)
-        plt.plot(sel_sig)
-    
-    #%%
-    fig,ax = plt.subplots()
-    P = epoch['EarlyStim']
-    ax.axhline(y=0)
-    ax.plot(F,10*np.log10(P.T))
-    # Only draw spine between the y-ticks
-    ax.spines['left'].set_bounds(-1, 1)
-    # Hide the right and top spines
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    # Only show ticks on the left and bottom spines
-    ax.yaxis.set_ticks_position('left')
-    ax.xaxis.set_ticks_position('bottom')
-    plt.title('Plotting the Early Stim Epoch Alone')
-    
-    #%%
-    # Here we'll plot the decimates ts
-    # choose a random subsample of channels
-    from numpy.random import default_rng
-    
-    #rand_channs = default_rng().choice(257,size=5,replace=False)
-    rand_channs = [32]
-    ds_fact=5
-    
-    decimated_sigs = sig.decimate(data[rand_channs][:],ds_fact,zero_phase=True)
-    plt.figure()
-    plt.plot(decimated_sigs.T)
+#Spectrogram of the first channel to see
+chann = 32
+#sg_sig = sig.decimate(Inp[data_key[0]][chann,:],q=10)
+sg_sig = Inp[data_key[0]][chann,:]
+
+#do filtering here
+sos_lpf = sig.butter(10,20,fs=1000,output='sos')
+fsg_sig = sig.sosfilt(sos_lpf,sg_sig)
+
+
+T,F,SG = sig.spectrogram(sg_sig,nfft=2**10,window='blackmanharris',nperseg=1024,noverlap=500,fs=1000)
+fig,ax1 = plt.subplots()
+ax1.pcolormesh(F,T,10*np.log10(SG))
+
+ax2 = ax1.twinx()
+ax2.plot(np.linspace(0,fsg_sig.shape[0]/1000,fsg_sig.shape[0]),fsg_sig)
+
+#Data matrix generation
+Data_matr = Inp[data_key[0]]
+
+#Spectrogram of the first channel to see
 
 #%%
     #%%
     #Do a spectrogram of one of the channels
-    ds_fact = 2
     ch = [225]
     if len(ch) == 1:
         sel_sig = sig.decimate(data[ch[0]][:],ds_fact,zero_phase=True)
@@ -270,11 +124,10 @@ for condit in ['OnTarget']:
     nSG = norm_SG(F,SG)
     
     plt.figure()
-    plt.pcolormesh(T,F,10*np.log10(SG),rasterized=True)
+    plt.pcolormesh(T,F,10*np.log10(nSG),rasterized=True)
     alpha_idxs = np.where(np.logical_and(F < 7,F>2))
     plt.plot(T,10*np.log10(np.mean(nSG[alpha_idxs,:].squeeze(),axis=0)))
     plt.title('TimeFrequency Signal of Channel ' + str(ch))
-    #%%
     plt.figure()
     plt.plot(sel_sig)
     #take out sel_sig and sweep the chirp through it

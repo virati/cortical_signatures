@@ -202,19 +202,59 @@ for condit in ['OnTarget']:
     
     #%%
     #Do a spectrogram of one of the channels
-    ch = [34]
+    ds_fact = 2
+    ch = [32]
     if len(ch) == 1:
         sel_sig = sig.decimate(data[ch[0]][:],ds_fact,zero_phase=True)
     else:
         sel_sig = sig.decimate(data[ch[0]][:] - data[ch[1]][:],ds_fact,zero_phase=True)
     
+
     plt.figure()
     F,T,SG = sig.spectrogram(sel_sig,nperseg=512,noverlap=500,window=sig.get_window('blackmanharris',512),fs=fs/ds_fact)
+    
+    def poly_sub(fVect,psd,order=1):
+        polyCoeff = np.polyfit(fVect,10*np.log10(psd),order)
+            
+        polyfunc = np.poly1d(polyCoeff)
+        polyitself = polyfunc(fVect)
+        
+        
+        postpsd = 10**(10*np.log10(psd) - polyitself)
+        if (postpsd == 0).any(): raise Exception;
+        
+        #plt.figure()
+        #plt.plot(10*np.log10(psd))
+        #plt.plot(polyitself);pdb.set_trace()
+        return postpsd
+        
+    def poly_sub_SG(f,SG):
+        post_SG = np.zeros_like(SG)
+        for ii in range(SG.shape[1]):
+            
+            post_SG[:,ii] = poly_sub(f,SG[:,ii])
+            
+        return post_SG
+    #pSG = poly_sub_SG(F,SG)
+    
+    def norm_SG(f,SG):
+        baseline = np.mean(SG[:,0:1000],axis=1)
+        plt.plot(baseline)
+        post_SG = np.zeros_like(SG)
+        for ii in range(SG.shape[1]):
+            post_SG[:,ii] = SG[:,ii]/baseline
+            
+        return post_SG
+    nSG = norm_SG(F,SG)
+    
+    plt.figure()
     plt.pcolormesh(T,F,10*np.log10(SG),rasterized=True)
+    alpha_idxs = np.where(np.logical_and(F < 7,F>2))
+    plt.plot(T,10*np.log10(np.mean(nSG[alpha_idxs,:].squeeze(),axis=0)))
     plt.title('TimeFrequency Signal of Channel ' + str(ch))
-    
-    #take out sel_sig and sweep the chirp through it
-    
+    #%%
+    plt.figure()
+    plt.plot(sel_sig)
     
     #%%
     # focus solely on the ~5Hz power and plot the peak between 50-80 seconds
