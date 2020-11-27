@@ -5,14 +5,15 @@ Created on Fri Jul 31 13:37:39 2020
 
 @author: virati
 Comb filtering example
+
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal as sig
 import sys
-sys.path.append('/home/virati/Dropbox/projects/Research/DBSControl/autoDyn/')
-from dyn_sys import dyn_sys
+#sys.path.append('/home/virati/Dropbox/projects/Research/DBSControl/autoDyn/')
+#from dyn_sys import dyn_sys
 import networkx as nx
 import pdb
 from allantools import noise
