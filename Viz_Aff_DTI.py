@@ -33,14 +33,42 @@ Etrode_map = DTI.Etrode_map
 all_pts = ['901','903','905','906','907','908']
 all_condits = ['OnT','OffT']
 all_sides = ['L','R','L+R']
-voltage = '3'
+voltage = '2'
 
 DO_all = itertools.product(all_pts,all_condits,all_sides)
-feel_positive = [('901','OnT','L'),] #This reflects the STIM conditions that evoked DOs
-feel_negative = []
-feel_weird = []
-
-DO_negative = [x for x in DO_all if x not in DO_positive]
+feel_positive = [('901','OnT','L'),
+                 ('901','OnT','R'),
+                 ('901','OnT','L+R'),
+                 ('903','OnT','L+R'),
+                 ('906','OnT','L'),
+                 ('906','OnT','L+R'),
+                 ('907','OnT','R'),
+                 ('907','OnT','L+R'),
+                 ('908','OnT','L+R'),
+                 ('906','OffT','L+R'),
+                 ('907','OffT','L'),
+                 ('907','OffT','L+R'),
+                 ('908','OffT','R'),] #This reflects the STIM conditions that evoked DOs
+feel_negative = [('901','OnT','L'),
+                 ('901','OnT','L'),
+                 ('906','OnT','R'),
+                 ('908','OffT','L'),
+                 ('908','OffT','L+R'),]
+feel_weird = [('901','OnT','R'),
+              ('901','OnT','L+R'),
+              ('903','OnT','L'),
+              ('906','OnT','L'),
+              ('906','OnT','R'),
+              ('906','OnT','L+R'),
+              ('907','OnT','L'),
+              ('907','OnT','R'),
+              ('907','OnT','L+R'),
+              ('908','OnT','R'),
+              ('906','OffT','L'),
+              ('906','OffT','R'),
+              ('907','OffT','L'),
+              ('907','OffT','R'),
+              ('907','OffT','L+R'),]
 
 dti_file = nestdict()
 data = nestdict()
@@ -48,9 +76,6 @@ tractos = nestdict()
 
 data_arr = np.zeros((6,2,2,182,218,182))
 combined = nestdict()
-
-fsaverage = datasets.fetch_surf_fsaverage5()
-
 
 for pp,pt in enumerate(all_pts):
     for cc,condit in enumerate(['OnT','OffT']):
@@ -60,37 +85,29 @@ for pp,pt in enumerate(all_pts):
         
             tractos[pt][condit][side] = image.smooth_img(dti_file[pp][condit][side],fwhm=1)
 
-            data_arr[pp,cc,ss,:,:,:] = np.array(tractos[pt][condit][side].dataobj)
-                
+            data_arr[pp,cc,ss,:,:,:] = np.array(tractos[pt][condit][side].dataobj)          
 
         tractos[pt][condit]['L+R'] = image.math_img("img1+img2",img1=tractos[pt][condit]['L'],img2=tractos[pt][condit]['R'])
+
 #%%
-img = [None] * len(DO_positive)
-do_pos_string = ''
-for aa,amalg in enumerate(DO_positive):
-    img[aa] = tractos[DO_positive[aa][0]][DO_positive[aa][1]][DO_positive[aa][2]]
-    do_pos_string += 'img' + str(aa) + ','
+do_feel, feel_condit  = feel_negative, 'Negative'
+do_feel, feel_condit  = feel_positive, 'Positive'
+
+for do_feel, feel_condit in [(feel_negative,'Negative'),(feel_positive,'Positive'),(feel_weird,'Weird')]:
+        
     
-do_pos = nestdict()
-
-iter_do_pos = {'img'+str(num):img[num] for num in range(len(DO_positive))}
-
-do_pos[condit] = image.math_img("np.mean(np.array(["+do_pos_string+"]),axis=0)",**iter_do_pos)
-plotting.plot_glass_brain(do_pos[condit],black_bg=True,title='DO Positives',vmin=0,vmax=2)
-
-
-#%% Now DO Negative
-do_neg = nestdict()
-img = [None] * len(DO_negative)
-do_neg_string = ''
-for aa,amalg in enumerate(DO_negative):
-    img[aa] = tractos[DO_negative[aa][0]][DO_negative[aa][1]][DO_negative[aa][2]]
-    do_neg_string += 'img' + str(aa) + ','
-
-iter_do_neg= {'img'+str(num):img[num] for num in range(len(DO_negative))}
-
-do_neg[condit] = image.math_img("np.mean(np.array(["+do_neg_string+"]),axis=0)",**iter_do_neg)
-plotting.plot_glass_brain(do_neg[condit],black_bg=True,title='DO Negatives',vmin=0,vmax=2)
+    img = [None] * len(do_feel)
+    feel_string = ''
+    for aa,amalg in enumerate(do_feel):
+        img[aa] = tractos[do_feel[aa][0]][do_feel[aa][1]][do_feel[aa][2]]
+        feel_string += 'img' + str(aa) + ','
+        
+    feel_pos = nestdict()
+    
+    iter_feel_pos = {'img'+str(num):img[num] for num in range(len(do_feel))}
+    
+    feel_pos[condit] = image.math_img("np.mean(np.array(["+feel_string+"]),axis=0)",**iter_feel_pos)
+    plotting.plot_glass_brain(feel_pos[condit],black_bg=True,title='Feel ' + feel_condit,vmin=0,vmax=2)
 
 
 

@@ -58,7 +58,8 @@ tractos = nestdict()
 data_arr = np.zeros((6,2,2,182,218,182))
 combined = nestdict()
 
-fsaverage = datasets.fetch_surf_fsaverage5()
+#I think I'm trying to incorporate 3d brain model?
+#fsaverage = datasets.fetch_surf_fsaverage5()
 
 
 for pp,pt in enumerate(all_pts):
@@ -71,7 +72,6 @@ for pp,pt in enumerate(all_pts):
 
             data_arr[pp,cc,ss,:,:,:] = np.array(tractos[pt][condit][side].dataobj)
                 
-
         tractos[pt][condit]['L+R'] = image.math_img("img1+img2",img1=tractos[pt][condit]['L'],img2=tractos[pt][condit]['R'])
 #%%
 img = [None] * len(DO_positive)
