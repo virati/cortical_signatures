@@ -23,7 +23,7 @@ sns.set_style('white')
 import mayavi
 import mayavi.mlab as mlab
 
-assert(mayavi.__version__ == '4.7.1')
+#assert(mayavi.__version__ == '4.7.1')
 
 import pickle
 import cmocean
