@@ -12,7 +12,7 @@ This file is essentially the file that loads in the raw EEG data, re-references,
 
 """
 
-from stream_dEEG import streamEEG
+from DBSpace.control.stream_dEEG import streamEEG
 
 
 import sys
