@@ -29,7 +29,7 @@ import DBSpace.control.DTI as DTI
 
 Etrode_map = DTI.Etrode_map
 
-all_pts = ['901','903','905','906','907','908']
+all_pts = ['906','907','908']
 voltage = '2'
 
 dti_file = nestdict()
@@ -37,7 +37,7 @@ data = nestdict()
 data_arr = np.zeros((6,2,2,182,218,182))
 combined = nestdict()
 
-fsaverage = datasets.fetch_surf_fsaverage5()
+#fsaverage = datasets.fetch_surf_fsaverage5()
 
 
 for pp,pt in enumerate(all_pts):
@@ -82,8 +82,8 @@ for cc, condit in enumerate(['OnT','OffT']):
     #plotting.plot_glass_brain(nibabel.Nifti1Image(np.median(np.sum(data_arr[:,0,:,:,:,:],axis=2),axis=0),affine=np.eye(4)))
 #%%
 diff_map = nestdict()
-diff_map['OnT'] = image.math_img("(img1-img2) > 0.1",img1=condit_avg['OnT'],img2=condit_avg['OffT'])
-diff_map['OffT'] = image.math_img("(img1-img2) < -0.1",img1=condit_avg['OnT'],img2=condit_avg['OffT'])
+diff_map['OnT'] = image.math_img("(img1-img2) > 0.05",img1=condit_avg['OnT'],img2=condit_avg['OffT'])
+diff_map['OffT'] = image.math_img("(img1-img2) < -0.05",img1=condit_avg['OnT'],img2=condit_avg['OffT'])
 
 for target in ['OnT','OffT']:
     #plt.figure()

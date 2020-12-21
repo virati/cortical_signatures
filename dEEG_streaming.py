@@ -61,13 +61,13 @@ for pp,pt in enumerate(pts):
     
     for condit in condits:
         print('Doing ' + pt + ' ' + condit)
-        sEEG = streamEEG(ds_fact=2,pt=pt,condit=condit,spotcheck=True,do_L_reref=local_reref)
+        sEEG = streamEEG(ds_fact=2,pt=pt,condit=condit,spotcheck=True)
         #sEEG.plot_TF(chann=32)
         
         sEEG.seg_PSDs()
         
         #%%
-        sEEG.calc_baseline(baseline_calibration = baseline_calibrate)
+        sEEG.calc_baseline()#baseline_calibration = baseline_calibrate)
         
         #This will display our experimental conditions, but from the presence of stimulation artifact
         #plt.figure()

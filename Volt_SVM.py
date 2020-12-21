@@ -30,7 +30,7 @@ import seaborn as sns
 
 pts = ['906']
 condits =  ['Volt']
-class_type = 'l2'
+class_type = 'l1'
 #%%
 pt_test = [None] * len(pts)
 pt_test_labels = [None] * len(pts)
@@ -42,7 +42,7 @@ for pp,pt in enumerate(pts):
     for condit in condits:
         print('Doing ' + pt + ' ' + condit)
         sEEG = streamEEG(ds_fact=2,pt=pt,condit=condit,spotcheck=True)
-        #sEEG.plot_TF(chann=32)
+        sEEG.plot_TF(chann=32)
         #%%
         
         sEEG.seg_PSDs()

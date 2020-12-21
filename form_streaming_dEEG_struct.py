@@ -31,7 +31,7 @@ import pickle
 
 #%%
 
-pts = ['905','906','907','908','910']
+pts = ['905','906','907','908']
 condits =  ['OnT','OffT']
 baseline_calibrate = True
 #local_reref = False

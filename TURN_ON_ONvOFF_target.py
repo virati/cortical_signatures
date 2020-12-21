@@ -3,6 +3,7 @@
 Created on Sun Jul  9 14:18:28 2017
 
 @author: aibrahim
+OBSOLETE
 """
 
 import numpy as np

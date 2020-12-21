@@ -31,7 +31,7 @@ data = nestdict()
 data_arr = np.zeros((6,2,2,182,218,182))
 combined = nestdict()
 
-fsaverage = datasets.fetch_surf_fsaverage5()
+#fsaverage = datasets.fetch_surf_fsaverage5()
 
 #%%
 
