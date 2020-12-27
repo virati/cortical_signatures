@@ -6,6 +6,7 @@ Created on Thu May 24 22:36:06 2018
 @author: virati
 Bring in and view tractography
 Focus on differentiating ONTarget and OFFTarget
+OBSOLETE I THINK
 """
 
 import numpy as np
@@ -24,7 +25,7 @@ import DBSpace as dbo
 from DBSpace import nestdict
 
 
-all_pts = ['901','903','905','906','907','908']
+do_pts = ['901','903','905','906','907','908']
 
 dti_file = nestdict()
 data = nestdict()
@@ -39,11 +40,11 @@ Etrode_map = {'OnT':{'901':(2,1),'903':(2,2),'905':(2,1),'906':(2,2),'907':(1,1)
 
 chirp_lib = {'OnT':{'901':{'BL':()}}}
 
-for pp,pt in enumerate(all_pts):
+for pp,pt in enumerate(do_pts):
     for cc,condit in enumerate(['OnT','OffT']):
         for ss,side in enumerate(['L','R']):
             cntct = Etrode_map[condit][pt][ss]+1
-            dti_file[pp][condit][side] = '/home/virati/Dropbox/projects/Research/MDD-DBS/Data/Anatomy/DTI/MDT_DBS_2_7V_Tractography/DBS'+str(pt) + '.'+side+str(cntct)+'.3V.bin.nii.gz'
+            dti_file[pp][condit][side] = '/home/virati/Dropbox/projects/Research/MDD-DBS/Data/Anatomy/DTI/MDT_DBS_2_7V_Tractography/DBS'+str(pt) + '.'+side+str(cntct)+'.2V.bin.nii.gz'
         
             data[pp][condit][side] = image.smooth_img(dti_file[pp][condit][side],fwhm=1)
             #plotting.plot_img(data[pp])
@@ -73,13 +74,13 @@ for pp,pt in enumerate(all_pts):
 #Find the mean for a condit
 condit_avg = nestdict()
 for cc, condit in enumerate(['OnT','OffT']):
-    condit_avg[condit] = image.math_img("np.mean(np.array([img4,img5,img6]),axis=0)",img1=combined['901'][condit],img2=combined['903'][condit],img3=combined['905'][condit],img4=combined['906'][condit],img5=combined['907'][condit],img6=combined['908'][condit])
+    condit_avg[condit] = image.math_img("np.median(np.array([img4,img5,img6]),axis=0)",img1=combined['901'][condit],img2=combined['903'][condit],img3=combined['905'][condit],img4=combined['906'][condit],img5=combined['907'][condit],img6=combined['908'][condit])
     #condit_avg[condit] = nilearn.image.math_img("img1+img2+img3+img4+img5+img6",img1=combined['901'][condit],img2=combined['903'][condit],img3=combined['905'][condit],img4=combined['906'][condit],img5=combined['907'][condit],img6=combined['908'][condit])
     plotting.plot_glass_brain(condit_avg[condit],black_bg=True,title=condit + ' average tractography',vmin=0,vmax=2)
     #plotting.plot_glass_brain(nibabel.Nifti1Image(np.median(np.sum(data_arr[:,0,:,:,:,:],axis=2),axis=0),affine=np.eye(4)))
 #%%
-diff_map = image.math_img("np.abs(img1-img2)",img1=condit_avg['OnT'],img2=condit_avg['OffT'])
-plotting.plot_glass_brain(diff_map,black_bg=True,title='Diff Tractography',vmin=0,vmax=1,threshold=0.5)
+diff_map = image.math_img("img1-img2 > 0.1",img1=condit_avg['OnT'],img2=condit_avg['OffT'])
+plotting.plot_glass_brain(diff_map,black_bg=True,title='Diff Tractography',vmin=0,vmax=2,threshold=0)
 #test = np.mean(np.array(dti_file),axis=0)
 #plotting.plot_img(test)
 plt.show()

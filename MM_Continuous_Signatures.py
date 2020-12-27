@@ -3,7 +3,10 @@
 Created on Fri Nov 25 12:18:37 2016
 
 @author: virati
-This script will try to import raw hdEEG data in a continuous way, preprocess it, and generate the figures needed for "Aim 2" - Mapping Cortical Responses/Signatures to Stimulation Parameters
+
+This script generates PSDs and low-level views of the EEG data
+
+
 """
 
 import scipy
