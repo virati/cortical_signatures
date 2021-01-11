@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 import scipy.signal as sig
+from matplotlib.gridspec import GridSpec
 
 #%%
 Ephys = nestdict()
@@ -224,24 +225,97 @@ plt.quiver(xg,yg,diffgrid[:,:,0],diffgrid[:,:,1])
 #%%
 import pysindy as ps
 
-chirp = state[:,255583:296095]
-plt.subplot(211)
-plt.plot(chirp.T)
-#sliding window linewidth
+#Let's take out the BL stim first from the raw timeseries
+window = np.arange(255583,296095)
+chirp = state[:,window]
+#plt.figure()
+#plt.plot(chirp.T)
 
-chirplet = chirp[:,4000:5000]
-plt.subplot(212)
-plt.plot(chirplet.T)
+## Now we get into subwindows
+subwindow_e = np.array([0,470,3500,6350,9200,12300,30000])
 
-dt = 1/422
-model = ps.SINDy()
-model.fit(chirplet.T, t=dt)
-model.print()
+
+
+# if you want to plot for documents
+for ii in range(subwindow_e.shape[0]-1):
+    
+    #sliding window linewidth
+    
+    chirplet = chirp[:,subwindow_e[ii]:subwindow_e[ii+1]]
+    
+    fig,ax = plt.subplots()
+    plt.plot(chirp.T)
+    plt.ylim((-0.5,1.0))
+    axins = ax.inset_axes([0.5,0.5,0.5,0.5])
+    axins.plot(chirp.T)
+    x1,x2,y1,y2 = subwindow_e[ii],subwindow_e[ii+1],-0.4,0.4
+    axins.set_xlim(x1,x2)
+    axins.set_ylim(y1,y2)
+    ax.indicate_inset_zoom(axins)
+    #plt.plot(chirplet.T)
+    
+    plt.figure()
+    #fig, ax = plt.subplot(2,2)
+    plt.scatter(chirplet.T[:,0],chirplet.T[:,1],c=np.arange(0,chirplet.shape[1]))
+    plt.plot(chirplet.T[:,0],chirplet.T[:,1])
+    plt.xlim((-0.4,0.4))
+    plt.ylim((-0.4,0.4))
+    
+    dt = 1/422
+    model = ps.SINDy()
+    model.fit(chirplet.T, t=dt)
+    #model.print()
+    
+    t_test = np.arange(0, 50, dt)
+    # test the prediction now
+    x_sim = model.simulate(chirplet.T[0,:],t_test)
+    
+    #ax[1,1].subplot(2,2,2)
+    plt.scatter(x_sim[:,0],x_sim[:,1])
+    plt.plot(x_sim[:,0],x_sim[:,1])
+    plt.text(0.1,0.1,model.print())
+    
+    #plt.figure()
+    #plt.plot(t_test,x_sim)
+
 #%%
-t_test = np.arange(0, 50, dt)
-# test the prediction now
-x_sim = model.simulate(chirplet.T[0,:],t_test)
-plt.figure()
-plt.plot(t_test,x_sim)
+if 0:
+    # if you want to plot pretty HERE:
+    for ii in range(subwindow_e.shape[0]-1):
+        
+        #sliding window linewidth
+        
+        chirplet = chirp[:,subwindow_e[ii]:subwindow_e[ii+1]]
+        
+        
+        fig = plt.figure(constrained_layout=True)
+        gs = GridSpec(2,2,figure=fig)
+        ax1 = fig.add_subplot(gs[0,:])
+        ax2 = fig.add_subplot(gs[1,0])
+        ax3 = fig.add_subplot(gs[1,1])
+    
+        ax1.plot(chirp.T)
+        #plt.plot(chirplet.T)
+        
+        #fig, ax = plt.subplot(2,2)
+        ax2.scatter(chirplet.T[:,0],chirplet.T[:,1],c=np.arange(0,chirplet.shape[1]))
+        ax2.plot(chirplet.T[:,0],chirplet.T[:,1])
+        ax2.set_xlim((-0.4,0.4))
+        ax2.set_ylim((-0.4,0.4))
+        
+        dt = 1/422
+        model = ps.SINDy()
+        model.fit(chirplet.T, t=dt)
+        #model.print()
+        
+        t_test = np.arange(0, 50, dt)
+        # test the prediction now
+        x_sim = model.simulate(chirplet.T[0,:],t_test)
+        
+        #ax[1,1].subplot(2,2,2)
+        ax3.scatter(x_sim[:,0],x_sim[:,1])
+        ax3.plot(x_sim[:,0],x_sim[:,1])
+        
 
-plt.plot()
+        #plt.figure()
+        #plt.plot(t_test,x_sim)
