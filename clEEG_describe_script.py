@@ -43,7 +43,8 @@ eFrame.compute_response()
 ## This looks at the stats of the response
 eFrame.response_stats(plot=True,band='Alpha')
 
-
+#%%
+eFrame.band_distrs()
 
 
 #%%

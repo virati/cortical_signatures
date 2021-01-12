@@ -148,7 +148,7 @@ class proc_dEEG:
 
         self.fs = temp_data['EEGSamplingRate'][0][0]
         self.donfft = 2**11
-        self.fvect = np.linspace(0,self.fs/2,self.donfft/2+1)
+        self.fvect = np.linspace(0,np.round(self.fs/2).astype(np.int),np.round(self.donfft/2).astype(np.int)+1)
         
         return ts_data
         
@@ -214,9 +214,39 @@ class proc_dEEG:
                 
         self.targ_response = response
         
-    def train_SVM(self,mask=False):
+    def OBStrain_SVM(self,mask=False):
         #Bring in and flatten our stack
-        SVM_stack = 1
+        SVM_stack = 1             
+            
+    def band_distrs(self):
+        print('Plotting Distribution for Bands')
+        
+        meds = nestdict()
+        mads = nestdict()
+        
+        marker=['o','s']
+        color = ['b','g']
+        plt.figure()
+        ax2 = plt.subplot(111)
+        for cc,condit in enumerate(['OnT','OffT']):
+            allsegs = np.median(self.osc_bl_norm['POOL'][condit][:,:],axis=0).squeeze()
+            #pdb.set_trace()
+            parts = ax2.violinplot(allsegs,positions=np.arange(5)+(cc-0.5)/10)
+            for pc in parts['bodies']:
+                pc.set_facecolor(color[cc])
+                pc.set_edgecolor(color[cc])
+                #pc.set_linecolor(color[cc])
+                                 
+            #plt.ylim((-0.5,0.5))
+        
+        for bb in range(5):
+            pass
+            #rsres = stats.ranksums(meds['OnT'][:,bb],meds['OffT'][:,bb])
+            #rsres = stats.wilcoxon(meds['OnT'][:,bb],meds['OffT'][:,bb])
+            #rsres = stats.ttest_ind(10**(meds['OnT'][:,bb]/10),10**(meds['OffT'][:,bb]/10))
+            #print(rsres)
+        
+        #plt.suptitle(condit)
                 
     def response_stats(self,band='Alpha',plot=False):
         band_idx = dbo.feat_order.index(band)
@@ -1067,43 +1097,7 @@ class proc_dEEG:
             EEG_Viz.plot_3d_scalp(self.ICA_x[:,cc],fig,animate=False,unwrap=True)
             plt.title('Plotting component ' + str(cc))
             plt.suptitle('ICA rotated results for OnT')
-            
-            
-    def band_distr(self):
-        print('Plotting Distribution for Bands')
-        
-        meds = nestdict()
-        mads = nestdict()
-        
-        marker=['o','s']
-        color = ['b','g']
-        plt.figure()
-        ax2 = plt.subplot(111)
-        for cc,condit in enumerate(['OnT','OffT']):
-            for bb in range(5):
-                meds[condit] = self.Seg_Med[0][condit][:,:]
-                mads[condit] = self.Seg_Med[1][condit][:,:]
-                #band_segnum[condit] = self.Seg_Med[2][condit]
-                
-                
-                #plt.scatter((bb+(cc-0.5)/10)*np.ones_like(meds[condit][:,bb]),meds[condit][:,bb],marker=marker[cc],color=color[cc],s=100,alpha=0.2)
-            #plt.boxplot(meds[condit][:,:],positions=np.arange(5)+(cc-0.5)/10,labels=dbo.feat_order)
-            parts = ax2.violinplot(meds[condit][:,:],positions=np.arange(5)+(cc-0.5)/10)
-            for pc in parts['bodies']:
-                pc.set_facecolor(color[cc])
-                pc.set_edgecolor(color[cc])
-                #pc.set_linecolor(color[cc])
-                                 
-            plt.ylim((-0.5,0.5))
-        
-        
-        for bb in range(5):
-            #rsres = stats.ranksums(meds['OnT'][:,bb],meds['OffT'][:,bb])
-            #rsres = stats.wilcoxon(meds['OnT'][:,bb],meds['OffT'][:,bb])
-            rsres = stats.ttest_ind(10**(meds['OnT'][:,bb]/10),10**(meds['OffT'][:,bb]/10))
-            print(rsres)
-        
-        #plt.suptitle(condit)
+   
         
     def plot_meds(self,band='Alpha',flatten=True,condits=['OnT','OffT']):
         print('Doing Population Level Medians and MADs')
