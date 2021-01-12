@@ -34,7 +34,7 @@ plv_dict = nestdict()
 
 
 for pt in pts:
-    with open('/home/virati/Dropbox/Data/DBS'+pt+'_coh_dict.pickle','rb') as handle:
+    with open('/home/virati/Dropbox/projects/Research/MDD-DBS/Data/DBS'+pt+'_coh_dict.pickle','rb') as handle:
         import_dict = pickle.load(handle)
         
         csd_dict[pt] = import_dict['CSD'][pt]
