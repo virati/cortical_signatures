@@ -77,6 +77,6 @@ class VT:
         self.secondary_parcels = second_order > inputs_threshold
         
     def dist_P_to_EEG(self,threshold=45):
-        
+        pass
 
 
