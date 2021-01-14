@@ -43,7 +43,7 @@ matplotlib.rc('font', **font)
 
 plt.close('all')
 
-data_dir = '/run/media/virati/Stokes/MDD_Data/hdEEG/Continuous/ALLMATS/'
+data_dir = '/home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/'
 
 file = 'DBS906_TurnOn_Day1_Sess1_20150827_024013.mat'
 
@@ -76,7 +76,7 @@ Data_matr = Inp[data_key[0]]
 
 #Spectrogram of the first channel to see
 
-#%%
+if 1:
     #%%
     #Do a spectrogram of one of the channels
     ch = [225]

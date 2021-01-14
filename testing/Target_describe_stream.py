@@ -7,7 +7,7 @@ Created on Wed Jan 16 15:32:53 2019
 Script to load and characterize Voltage-sweep data; Most likely just from 906
 """
 
-from stream_dEEG import streamEEG
+from DBSpace.control.stream_dEEG import streamEEG
 import DBSpace as dbo
 from DBSpace import nestdict
 

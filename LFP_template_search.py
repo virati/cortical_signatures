@@ -12,6 +12,7 @@ from collections import defaultdict, OrderedDict
 import scipy.signal as sig
 import matplotlib
 import sys
+import DBSpace.control.dyn_osc as dyn_osc
 
 import matplotlib.pyplot as plt
 
@@ -33,6 +34,9 @@ import DBSpace as dbo
 from DBSpace import nestdict
 
 import pickle
+
+#%%
+Ephys = dyn_osc.Ephys
 
 #%%
 def plot_phase(mI,pI,conditI,chann,SGs,tpts,filt=True,fileio_out=False):
@@ -78,12 +82,13 @@ def plot_phase(mI,pI,conditI,chann,SGs,tpts,filt=True,fileio_out=False):
 
 
 #%%
+SGs = nestdict()
 for mm, modal in enumerate(['LFP']):
     for pp, pt in enumerate(['905']):
         SGs[modal][pt] = defaultdict(dict)
         for cc, condit in enumerate(['OnTarget','OffTarget']):
             Data = []
-            Data = ts.import_BR(Ephys[modal][pt][condit]['Filename'],snip=(0,0))
+            Data = ts.import_BR(Ephys[pt][condit]['Filename'],snip=(0,0))
             #Data = dbo.load_BR_dict(Ephys[modal][pt][condit]['Filename'],sec_end=0)
             #Compute the TF representation of the above imported data
             F,T,SG,BANDS = Data.compute_tf()

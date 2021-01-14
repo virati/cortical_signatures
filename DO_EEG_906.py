@@ -31,33 +31,11 @@ font = {'family' : 'normal',
         'size'   : 30}
 
 matplotlib.rc('font', **font)
-
 plt.close('all')
+#%%
 
-#def plot_3d_scalp(band):
-#    fig = plt.figure()
-#    ax = fig.add_subplot(111,projection='3d')
-#    egipos = mne.channels.read_montage('/tmp/GSN-HydroCel-257.sfp')
-#    etrodes = egipos.pos
-#    
-#    
-#    ax.scatter(etrodes[:,0],etrodes[:,1],10*etrodes[:,2],c=alpha,s=300)
-# 
-#    ax.w_xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0)) 
-#    ax.w_yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0)) 
-#    ax.w_zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0)) 
-#    # Get rid of the spines                         
-#    ax.w_xaxis.line.set_color((1.0, 1.0, 1.0, 0.0)) 
-#    ax.w_yaxis.line.set_color((1.0, 1.0, 1.0, 0.0)) 
-#    ax.w_zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-#    ax.set_xticks([])                               
-#    ax.set_yticks([])                               
-#    ax.set_zticks([])
-#
-#    plt.title(pt + ' ' + condit)
-#    plt.show()
-    
-data_dir = '/run/media/virati/Stokes/MDD_Data/hdEEG/Continuous/CHIRPS/'
+
+#data_dir = '/run/media/virati/Stokes/MDD_Data/hdEEG/Continuous/CHIRPS/'
 data_dir = '/home/virati/MDD_Data/hdEEG/Continuous/CHIRPS/'
 
 def extract_raw_mat(fname=[]):
@@ -224,7 +202,7 @@ for condit in ['OnTarget']:
 #%%
     #%%
     #Do a spectrogram of one of the channels
-    ds_fact = 2
+    ds_fact = 1
     ch = [225]
     if len(ch) == 1:
         sel_sig = sig.decimate(data[ch[0]][:],ds_fact,zero_phase=True)
@@ -312,13 +290,6 @@ for condit in ['OnTarget']:
         c = index[int(x_val),int(y_val)]
         ax.text(x_val, y_val, c, va='center', ha='center',size=7)
     
-    #set tick marks for grid
-    #ax.set_xticks(np.arange(min_val-diff/2, max_val-diff/2))
-    #ax.set_yticks(np.arange(min_val-diff/2, max_val-diff/2))
-    #ax.set_xticklabels([])
-    #ax.set_yticklabels([])
-    #ax.set_xlim(min_val-diff/2, max_val-diff/2)
-    #ax.set_ylim(min_val-diff/2, max_val-diff/2)
     ax.grid()
     plt.show()
 
@@ -328,13 +299,15 @@ for condit in ['OnTarget']:
     #%%
     # focus solely on the ~5Hz power and plot the peak between 50-80 seconds
     t_idxs = np.where(np.logical_and(T > 60,T < 75))
-    F_idxs = np.where(np.logical_and(F > 2, F < 10))
+    F_idxs = np.where(np.logical_and(F > 5, F < 10))
     ch_blip = []
     
     for ch in range(257):
         #find the power in 2-6 hertz at 60-65 seconds in
         sel_sig = sig.decimate(data[ch][t_idxs[0]],ds_fact,zero_phase=True)
-        _,_,SG = sig.spectrogram(sel_sig,nperseg=512,noverlap=500,window=sig.get_window('blackmanharris',512),fs=fs/ds_fact)
+        
+        try: _,_,SG = sig.spectrogram(sel_sig,nperseg=512,noverlap=500,window=sig.get_window('blackmanharris',512),fs=fs/ds_fact)
+        except: pdb.set_trace()
         ch_blip.append(np.max(SG[F_idxs[0],:]) - np.min(SG[F_idxs[0],:]))
     ch_blip = np.array(ch_blip)
     
@@ -343,7 +316,7 @@ for condit in ['OnTarget']:
     #%%
     thresh = 0
     ch_blip_z = stats.zscore(ch_blip)
-    plt.hist(ch_blip_z,bins=50,range=(-1,1))
+    plt.hist(ch_blip_z,bins=100,range=(-1,1))
     
     #%%
     EEG_Viz.maya_band_display(ch_blip_z > thresh)
@@ -373,43 +346,13 @@ for condit in ['OnTarget']:
         
     #EEG_Viz.plot_3d_scalp(alpha,unwrap=False,scale=100,alpha=0.3,marker_scale=5)
     EEG_Viz.maya_band_display(alpha,label=pt + ' ' + condit + ' alpha change')
-    #plt.title(pt + ' ' + condit + ' alpha change')
+    plt.title(pt + ' ' + condit + ' alpha change')
     #plt.show()
     
     EEG_Viz.maya_band_display(theta)
-    #plt.title(pt + ' ' + condit + ' theta change')
+    plt.title(pt + ' ' + condit + ' theta change')
     #plt.show()
     
     #%%
     snip = (26400,27600)
 
-
-#%%
-#ch = 7
-
-#ts_test = data[:,ch][0][0][0][0][0]
-
-#plt.figure()
-#plt.plot(ts_test)
-
-
-#%%
-
-def OBSMNE_Setup():
-    fs = 1000
-    ch_names = ["{:02d}".format(x) for x in range(257)]
-    
-    ch_types = ['eeg'] * 257
-    info = mne.create_info(ch_names=ch_names,sfreq=fs,ch_types=ch_types)
-    raw = mne.io.RawArray(signal['Pre_STIM'],info)
-    event_id = 1
-    events = np.array([[200,0,event_id],[1200,0,event_id],[2000,0,event_id]])
-    epochs_data = np.array()
-    
-    #%%
-    
-    for ts, tt in t_bounds.items():    
-        F,T,SG = sig.spectrogram(signal[0,:],nperseg=512,noverlap=256,window=sig.get_window('blackmanharris',512),fs=1000)
-        plt.figure()
-        plt.pcolormesh(T,F,10*np.log10(SG))
-        plt.title(ts)

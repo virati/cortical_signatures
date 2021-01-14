@@ -28,27 +28,10 @@ import cmocean
 
 pt_list = ['906','907','908']
 ## Basic initialization methods, need to suppress figures from these and clean these up
-eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT'])
+eFrame = proc_dEEG.proc_dEEG(pts=pt_list,procsteps='conservative',condits=['OnT','OffT'])
 eFrame.standard_pipeline()
 #%% Generate the control modes
 #eFrame.OnT_ctrl_modes(pt='POOL') #THIS HAS BEEN MOVED TO control_modes.py
 
 #%% Plot the median response
-eFrame.plot_median_response(pt='POOL',use_maya=False) #This can be moved to ONTOFFT_cort_response.py TODO
-
-#%% ALL BELOW IS FORWARD MODELING moved to forward_modeling.py
-
-#The feature vector, in this case the frequencies
-fvect = np.linspace(0,500,513)
-do_coherence = False
-
-#%%
-# Here we do the forward modeling to do network dissection
-#eFrame.pool_patients()
-for band in ['Alpha']:
-    for pt in ['906']:
-        #30, 25 is good
-        EEG_support = DTI_support_model(pt,4,dti_parcel_thresh=15,eeg_thresh=55)
-        plot_support_model(EEG_support,pt)
-        eFrame.support_analysis(support_struct=EEG_support,pt=pt,band=band,voltage=str(3))
-        
+eFrame.topo_median_response(do_condits=['OnT','OffT'],pt='POOL',band='Alpha',use_maya=False)
