@@ -93,6 +93,22 @@ if Phase == 'TurnOn':
     Ephys['907']['OnTarget']['segments']['PreBilat'] = (590,620)
     Ephys['907']['OffTarget']['segments']['PreBilat'] = (560,590)
     
+    #for R stim
+    Ephys['907']['OffTarget']['segments']['C1'] = (368,389)
+    Ephys['907']['OffTarget']['segments']['C2'] = (389,422)
+    Ephys['907']['OffTarget']['segments']['C3'] = (422,475)
+    Ephys['907']['OffTarget']['segments']['C4'] = (475,486)
+    Ephys['907']['OffTarget']['segments']['C5'] = (488,530)
+
+    #for bilat
+    Ephys['907']['OffTarget']['segments']['C1'] = (603,615)
+    Ephys['907']['OffTarget']['segments']['C2'] = (615,620)
+    Ephys['907']['OffTarget']['segments']['C3'] = (620,627)
+    Ephys['907']['OffTarget']['segments']['C4'] = (627,635)
+    Ephys['907']['OffTarget']['segments']['C5'] = (635,675)    
+    
+    
+    
     Ephys['908']['OnTarget']['Filename'] = '/home/virati/MDD_Data/BR/908/Session_2016_02_10_Wednesday/DBS908_2016_02_10_13_03_10__MR_0.txt'
     Ephys['908']['OffTarget']['Filename'] = '/home/virati/MDD_Data/BR/908/Session_2016_02_11_Thursday/DBS908_2016_02_11_12_34_21__MR_0.txt'
     Ephys['908']['OnTarget']['segments']['Bilat'] = (611,641)
@@ -153,7 +169,7 @@ elif Phase == '6Mo':
 
 SGs = nestdict()
 #%%
-pt_list = ['906']
+pt_list = ['907']
 for pp, pt in enumerate(pt_list):
     for cc, condit in enumerate(['OnTarget','OffTarget']):
         Data_In = dbo.load_BR_dict(Ephys[pt][condit]['Filename'],sec_offset=0)
@@ -331,5 +347,5 @@ def grid_dyn(pt,condit):
     plt.figure()
     xg,yg = np.meshgrid(xg,yg)
     plt.quiver(xg,yg,diffgrid[:,:,0],diffgrid[:,:,1])
-    ipdb.set_trace()
-grid_dyn('906','OffTarget')
+
+#grid_dyn('906','OffTarget')

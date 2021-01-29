@@ -34,17 +34,20 @@ font = {'family' : 'normal',
 
 matplotlib.rc('font', **font)
 plt.close('all')
-#%%
 
-        
-#%%
-pt906_head = EEG_DO()
 
-pt906_head.sgs()
+pt906_head = EEG_DO(pt='DBS906',condit='OnTarget')
 #%%
-pt906_head.map_blips(thresh=1)
-pt906_head.phase(chs=[163,162],interval=(7400,8200),plot=True)
-
+pt906_head.sgs(chs=[251,250])
+#%%
+pt906_head.map_blips(thresh=90,render=True)
+#%%
+#pt906_head.phase(chs=[163,162],interval=(7400,8200),plot=True)
+pt906_head.phase(chs=[172,250],interval=(2000,5000),plot=True)
+pt906_head.phase(chs=[172,250],interval=(8000,8500),plot=True)
+pt906_head.phase(chs=[187,240],interval=(9000,9300),plot=True)
+#%%
+pt906_head.multiphase(chs=[187,240,256],interval=(9000,9500),plot=True)
 
 if 0:
     pt906_head.phase(chs=[255,256],interval=(7400,8200),plot=True)

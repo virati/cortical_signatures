@@ -25,7 +25,7 @@ import h5py
 from collections import defaultdict
 
 from DBSpace.visualizations import EEG_Viz as EEG_Viz
-plt.rcParams['image.cmap'] = 'viridis'
+plt.rcParams['image.cmap'] = 'jet'
 plt.close('all')
 
 #def plot_3d_scalp(band):

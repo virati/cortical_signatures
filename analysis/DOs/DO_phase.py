@@ -140,7 +140,7 @@ window = pt_windows[pt]
 subwindow_e = pt_regimes[pt]
 
 #Let's take out the BL stim first from the raw timeseries
-chirp = state[:,window]
+chirp = sig.decimate(state[:,window],q=1)
 #plt.figure()
 #plt.plot(chirp.T)
 
@@ -189,6 +189,3 @@ for ii in range(subwindow_e.shape[0]-1):
     
     #plt.figure()
     #plt.plot(t_test,x_sim)
-    
-    
-class dyn_learn
