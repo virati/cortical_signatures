@@ -52,6 +52,6 @@ for band in ['Alpha']:
     for pt in ['906']:
         #30, 25 is good
         EEG_support = DTI_support_model(pt,4,dti_parcel_thresh=20,eeg_thresh=50) #15,55 work
-        plot_support_model(EEG_support,pt,layers=[1,0,0]) 
+        plot_support_model(EEG_support,pt,layers=[1,0,0])  
         plot_EEG_masks(EEG_support)
         eFrame.support_analysis(support_struct=EEG_support,condit=condit,pt=pt,band=band,voltage=str(3))
