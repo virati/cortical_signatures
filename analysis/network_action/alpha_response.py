@@ -34,5 +34,10 @@ eFrame.standard_pipeline()
 #eFrame.OnT_ctrl_modes(pt='POOL') #THIS HAS BEEN MOVED TO control_modes.py
 
 #%% Plot the median response
-eFrame.topo_median_response(do_condits=['OnT','OffT'],pt='POOL',band='Alpha',use_maya=False,scale_w_mad=True)
-eFrame.topo_median_variability(do_condits=['OnT','OffT'],pt='POOL',band='Alpha',use_maya=False)
+eFrame.topo_median_response(do_condits=['OnT','OffT'],pt='POOL',band='Alpha',use_maya=True,scale_w_mad=False,avg_func=np.mean)
+#eFrame.topo_median_variability(do_condits=['OnT','OffT'],pt='POOL',band='Alpha',use_maya=False)
+
+#%% Plot individual patients
+for pp in pt_list:
+    eFrame.topo_median_response(do_condits=['OnT','OffT'],pt=pp,band='Alpha',use_maya=True,scale_w_mad=False)
+#eFrame.topo_median_variability(do_condits=['OnT','OffT'],pt='POOL',band='Alpha',use_maya=False)

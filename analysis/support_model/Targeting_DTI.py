@@ -29,7 +29,7 @@ import DBSpace.control.DTI as DTI
 
 Etrode_map = DTI.Etrode_map
 
-do_pts = ['906','907','908']
+do_pts = ['901','903','905','906','907','908']
 voltage = '2'
 
 dti_file = nestdict()
@@ -78,8 +78,11 @@ for cc, condit in enumerate(['OnT','OffT']):
     
 #%%
 diff_map = nestdict()
-diff_map['OnT'] = image.math_img("(img1-img2) > 0.1",img1=pt_pos['OnT'],img2=pt_pos['OffT'])
-diff_map['OffT'] = image.math_img("(img1-img2) < -0.1",img1=pt_pos['OnT'],img2=pt_pos['OffT'])
+#diff_map['OnT'] = image.math_img("(img1-img2) > 0.1",img1=pt_pos['OnT'],img2=pt_pos['OffT'])
+#diff_map['OffT'] = image.math_img("(img1-img2) < -0.1",img1=pt_pos['OnT'],img2=pt_pos['OffT'])
+
+diff_map['OnT'] = image.math_img("img1 > img2",img1=pt_pos['OnT'],img2=pt_pos['OffT'])
+diff_map['OffT'] = image.math_img("img1 < img2",img1=pt_pos['OnT'],img2=pt_pos['OffT'])
 
 for target in ['OnT','OffT']:
     #plt.figure()
@@ -91,3 +94,18 @@ for target in ['OnT','OffT']:
     #test = np.mean(np.array(dti_file),axis=0)
     #plotting.plot_img(test)
     plt.show()
+
+
+#%%
+
+nibabel.viewers.OrthoSlicer3D(np.array(diff_map['OnT'].dataobj)).show() 
+
+#%%
+from scipy.spatial import ConvexHull
+from mayavi import mlab
+
+ch = ConvexHull(np.array(diff_map[target].dataobj))
+hull_ids = ch.vertices
+
+mlab.points3d(x[hull_ids], y[hull_ids], z[hull_ids])
+mlab.show()

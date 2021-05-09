@@ -134,7 +134,7 @@ import scipy.stats as stats
 plt.close('all')
 ## Now we get into subwindows
 pt_windows = {'906':np.arange(255550,296095), '903':np.arange(231200,329300)}
-pt_regimes= {'906':np.array([0,500,800,3500,6350,9200,12300,30000]),'903':np.array([0,1470,6260,27020,80000,97940])}
+pt_regimes= {'906':np.array([0,800,3500,6350,9200,12300,30000]),'903':np.array([0,1470,6260,27020,80000,97940])}
 
 window = pt_windows[pt]
 subwindow_e = pt_regimes[pt]
@@ -147,10 +147,10 @@ chirp = sig.decimate(state[:,window],q=1)
 #chirp[0,:] = stats.zscore(chirp[0,:])
 #chirp[1,:] = stats.zscore(chirp[1,:])
 
-
+coeffs = []
 # if you want to plot for documents
 for ii in range(subwindow_e.shape[0]-1):
-    
+    print(ii)
     #sliding window linewidth
     
     chirplet = chirp[:,subwindow_e[ii]:subwindow_e[ii+1]]
@@ -186,6 +186,14 @@ for ii in range(subwindow_e.shape[0]-1):
     #plt.scatter(x_sim[:,0],x_sim[:,1])
     plt.plot(x_sim[:,0],x_sim[:,1],linewidth=2,alpha=1)
     plt.text(0.1,0.1,model.print())
+    
+    
+    coeffs.append(model.coefficients().reshape(-1,1))
+    #%%
+plt.figure()
+plt.imshow(np.array(coeffs).squeeze().T,clim=(-5,5))
+plt.colorbar(cmap='jet')
+plt.title(pt + ' '  + condit)
     
     #plt.figure()
     #plt.plot(t_test,x_sim)
