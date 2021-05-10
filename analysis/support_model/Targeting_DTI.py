@@ -17,6 +17,7 @@ from nilearn import plotting, image
 import matplotlib.pyplot as plt
 from nilearn import datasets
 from nilearn import surface
+import os
 
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -101,6 +102,8 @@ thresh = 0.05
 diff_map['OnT'] = image.math_img("img1 > img2+" + str(thresh),img1=pt_pos['OnT'],img2=pt_pos['OffT'])
 diff_map['OffT'] = image.math_img("img2 > img1+" + str(thresh),img1=pt_pos['OnT'],img2=pt_pos['OffT'])
 
+import nilearn.input_data.nifti_masker as nifti_masker
+
 for target in ['OnT','OffT']:
     #plt.figure()
     #voxels = np.array(condit_avg[target].dataobj)
@@ -112,6 +115,12 @@ for target in ['OnT','OffT']:
     #plotting.plot_img(test)
     plt.show()
     
+    #nibabel.save(targ_mask,'mask.nii.gz')
+    #targ_mask.to_filename('test.nii.gz')
+    nibabel.save(pt_pos[target],target+'_mask.nii.gz')
+#%%
+#from nilearn.plotting import plot_roi, show
+#plot_roi(diff_map['OnT'])
     
 #%%
 #Now apply the mask to the raw tracto for pretty pictures!
@@ -120,6 +129,7 @@ for target in ['OnT','OffT']:
     
     final = image.math_img("img1 * img2",img1=diff_map[target],img2=pt_pos[target])
     plotting.plot_glass_brain(final,black_bg=True,title=target + ' Preference Flow',vmin=-1,vmax=1)
+
 
 
 #%%
