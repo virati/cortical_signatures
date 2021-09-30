@@ -134,7 +134,9 @@ import scipy.stats as stats
 plt.close('all')
 ## Now we get into subwindows
 pt_windows = {'906':np.arange(255550,296095), '903':np.arange(231200,329300)}
+#pt_regimes= {'906':np.array([0,800,3500,6350,9200,12300,30000]),'903':np.array([0,1470,6260,27020,80000,97940])}
 pt_regimes= {'906':np.array([0,800,3500,6350,9200,12300,30000]),'903':np.array([0,1470,6260,27020,80000,97940])}
+
 
 window = pt_windows[pt]
 subwindow_e = pt_regimes[pt]
@@ -197,3 +199,17 @@ plt.title(pt + ' '  + condit)
     
     #plt.figure()
     #plt.plot(t_test,x_sim)
+    
+    
+    #%%
+    #Audio fun
+from scipy.io.wavfile import write
+import pandas as pd
+
+#mono
+#data = chirp[0,:]
+#both
+data = np.copy(chirp.T)
+scaled = np.int16(data/np.max(np.abs(data))*32767)
+updata = sig.resample(scaled,160000).astype('int16')
+write('906_both.wav', 44100, updata)
