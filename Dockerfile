@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN apt-get update
 RUN apt-get install ffmpeg libsm6 libxext6 -y
 
-RUN pip --upgrade pip setuptools wheel && pip install numpy==1.21.3
+RUN pip install --upgrade pip setuptools wheel && pip install numpy==1.21.3
 RUN pip install -r requirements.txt
 
 COPY src/ .
