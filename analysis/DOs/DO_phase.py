@@ -7,7 +7,7 @@ Created on Thu Dec 31 23:07:30 2020
 DO_Phase portrait and dynamics work
 """
 import sys
-sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
+sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/')
 import DBSpace as dbo
 from DBSpace import nestdict
 import DBSpace.control.dyn_osc as DO
@@ -156,6 +156,9 @@ for ii in range(subwindow_e.shape[0]-1):
     #sliding window linewidth
     
     chirplet = chirp[:,subwindow_e[ii]:subwindow_e[ii+1]]
+    
+    for jj in range(chirplet.shape[0]):
+        chirplet[jj,:] = stats.zscore(chirplet[jj,:])
     
     fig,ax = plt.subplots()
     plt.plot(chirp.T)
