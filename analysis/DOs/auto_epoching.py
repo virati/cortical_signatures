@@ -28,12 +28,12 @@ import scipy.stats as stats
 
 
 #%%
-with open("DO_landmarks.json", "r") as file:
+with open("../../assets/experiment/metadata/Targeting_Conditions.json", "r") as file:
     Ephys = json.load(file)
-pt, condit = "906", "OffTarget"  # swap this out for DOs[0] from json
-
 
 #%%
+pt, condit = "906", "OffTarget"  # swap this out for DOs[0] from json
+
 timeseries = dbo.load_BR_dict(Ephys[pt][condit]["Filename"], sec_offset=0)
 num_samples = timeseries["Left"].shape[0]
 tvect = np.linspace(0, num_samples / 422, num_samples)
