@@ -1,11 +1,20 @@
 {
     "901": {
         "OnTarget": {
-            "Filename":"",
+            "Filename":"/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_17_10_31__MR_0.txt",
             "Conditions": {
                 "Bilateral": {
-                    "Baseline": [],
+                    "Baseline": [500,530],
                     "Stim": [600,630]
+                }
+            },
+        "OffTarget":{
+            "Filename":"",
+            "Conditions":{
+                "Bilateral":{
+                    "Baseline":[],
+                    "Stim": []
+                    }
                 }
             }
         },

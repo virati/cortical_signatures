@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#%%
 # -*- coding: utf-8 -*-
 """
 Created on Thu Jun 21 23:17:47 2018
@@ -9,16 +10,27 @@ Captures DO changes
 """
 
 import sys
-sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/src/')
-import DBSpace as dbo
-from DBSpace import nestdict
 
-from matplotlib import cm
-from mpl_toolkits import mplot3d
+sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/src/')
+import math
+
+import DBSpace as dbo
 import matplotlib.pyplot as plt
 import numpy as np
-import math
 import scipy.signal as sig
+from DBSpace import nestdict
+from matplotlib import cm
+from mpl_toolkits import mplot3d
+
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.ndimage as ndimage
+from matplotlib import cm
+#3d plotting fun
+from mayavi import mlab
+from mpl_toolkits import mplot3d
+
+#%%
 
 
 def find_nearest(array,value):
@@ -27,17 +39,6 @@ def find_nearest(array,value):
         return array[idx-1]
     else:
         return array[idx]#3d plotting fun
-from mayavi import mlab
-from matplotlib import cm
-from mpl_toolkits import mplot3d
-import numpy as np
-import matplotlib.pyplot as plt
-
-#3d plotting fun
-from mayavi import mlab
-
-import numpy as np
-import scipy.ndimage as ndimage
 
 #%%
 Ephys = nestdict()
