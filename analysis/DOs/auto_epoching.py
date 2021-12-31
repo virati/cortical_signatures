@@ -28,7 +28,7 @@ import scipy.stats as stats
 
 
 #%%
-with open("../../assets/experiment/metadata/Targeting_Conditions.json", "r") as file:
+with open("../../assets/experiments/metadata/Targeting_Conditions.json", "r") as file:
     Ephys = json.load(file)
 
 #%%
