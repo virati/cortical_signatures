@@ -24,7 +24,17 @@ import DBSpace.control.dyn_osc as DO
 
 
 import pysindy as ps
+from pysindy.feature_library import GeneralizedLibrary
 import scipy.stats as stats
+
+
+optimizer = ps.STLSQ(threshold=0.1, fit_intercept=True)
+fourier_library = ps.FourierLibrary()
+polynomial_library = ps.PolynomialLibrary()
+
+functions = [lambda x: np.exp(x), lambda x, y: np.sin(x + y)]
+lib_custom = ps.CustomLibrary(library_functions=functions)
+lib_generalized = GeneralizedLibrary([lib_custom, fourier_library, polynomial_library])
 
 #%%
 def auto_epoch(pt, condit, downsample=5):
@@ -75,7 +85,7 @@ def auto_epoch(pt, condit, downsample=5):
     current_start_idx = 0
     default_epoch_length = 100
     candidate_epochs = np.linspace(
-        422 / downsample * 5, 422 / downsample * 60, 20
+        422 / downsample * 10, 422 / downsample * 60, 20
     ).astype(int)
 
     dt = 1 / 422
@@ -96,7 +106,7 @@ def auto_epoch(pt, condit, downsample=5):
         for end_idx in candidate_epochs:
             epoch_try = chirp[:, current_start_idx : current_start_idx + end_idx]
 
-            model = ps.SINDy()
+            model = ps.SINDy(optimizer=optimizer, feature_library=lib_generalized)
             model.fit(epoch_try.T, t=dt)
             candidate_model_score.append(model.score(epoch_try.T))
             candidate_model_end_idx.append(end_idx)
@@ -126,8 +136,15 @@ def auto_epoch(pt, condit, downsample=5):
     plt.plot(epoch_fit)
     plt.show()
 
+    return epoch_list, epoch_models
+
+
+def plot_epoch_models(pt, condit, epoching):
+    pass
+
 
 #%%
 # pt, condit = "906", "OffTarget"  # swap this out for DOs[0] from json
 pt, condit = "906", "OffTarget"
-auto_epoch(pt, condit)
+epoching, epoch_models = auto_epoch(pt, condit)
+# plot_epoch_models(pt, condit, epoching)
