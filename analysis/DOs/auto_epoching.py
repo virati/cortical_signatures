@@ -27,7 +27,7 @@ import pysindy as ps
 import scipy.stats as stats
 
 #%%
-def auto_epoch(pt, condit):
+def auto_epoch(pt, condit, downsample=5):
     with open(
         "../../assets/experiments/metadata/Targeting_Conditions.json", "r"
     ) as file:
@@ -69,11 +69,14 @@ def auto_epoch(pt, condit):
 
     window_idxs = np.logical_and(tvect > pt_window[0], tvect < pt_window[1])
     # Let's take out the BL stim first from the raw timeseries
-    chirp = sig.decimate(state[:, window_idxs], q=5)
+    chirp = sig.decimate(state[:, window_idxs], q=downsample)
 
     epoch_list = []
     current_start_idx = 0
     default_epoch_length = 100
+    candidate_epochs = np.linspace(
+        422 / downsample * 5, 422 / downsample * 60, 20
+    ).astype(int)
 
     dt = 1 / 422
     done_epoching = False
@@ -86,12 +89,11 @@ def auto_epoch(pt, condit):
         candidate_model_score = []
         candidate_model_end_idx = []
 
-        if current_start_idx + default_epoch_length > chirp.shape[1]:
+        if current_start_idx + candidate_epochs[-1] > chirp.shape[1]:
             done_epoching = True
             continue
 
-        for jj in range(1, 25):
-            end_idx = default_epoch_length * jj
+        for end_idx in candidate_epochs:
             epoch_try = chirp[:, current_start_idx : current_start_idx + end_idx]
 
             model = ps.SINDy()
@@ -127,5 +129,5 @@ def auto_epoch(pt, condit):
 
 #%%
 # pt, condit = "906", "OffTarget"  # swap this out for DOs[0] from json
-pt, condit = "903", "OffTarget"
+pt, condit = "906", "OffTarget"
 auto_epoch(pt, condit)

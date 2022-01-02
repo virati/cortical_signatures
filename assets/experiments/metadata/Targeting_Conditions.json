@@ -75,7 +75,7 @@
             "Configurations": {
                 "Bilateral": {
                     "Baseline": [560,590],
-                    "Stim": [610,640]
+                    "Stim": [610,790]
                 }
             }
         },
@@ -84,7 +84,7 @@
             "Configurations": {
                 "Bilateral":{
                     "Baseline":[560,590],
-                    "Stim":[610,640]
+                    "Stim":[610,790]
                 }
             }
         },
