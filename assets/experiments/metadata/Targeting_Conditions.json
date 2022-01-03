@@ -4,17 +4,17 @@
             "Filename":"/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_17_10_31__MR_0.txt",
             "Configurations": {
                 "Bilateral": {
-                    "Baseline": [500,530],
+                    "Baseline": [530,590],
                     "Stim": [600,780]
                 }
-            },
+            }
+        },
         "OffTarget":{
             "Filename":"/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_16_25_07__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[480,510],
+                    "Baseline":[520,580],
                     "Stim": [600,780]
-                    }
                 }
             }
         },
@@ -28,30 +28,30 @@
             "Filename":"/home/virati/MDD_Data/BR/903/Session_2014_09_03_Wednesday/DBS903_2014_09_03_14_16_57__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[500,530],
+                    "Baseline":[480,540],
                     "Stim": [550,730]
-                    }
                 }
-            },
+            }
+        },
         "OffTarget":{
             "Filename":"/home/virati/MDD_Data/BR/903/Session_2014_09_04_Thursday/DBS903_2014_09_04_12_53_09__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[500,530],
+                    "Baseline":[480,540],
                     "Stim": [550,730]
-                    }
                 }
-            },
-            "DOs":[
-                ["OffTarget","Bilateral"]
-            ]
+            }
+        },
+        "DOs":[
+            ["OffTarget","Bilateral"]
+        ]
         },
     "905": {
         "OnTarget":{
             "Filename":"/home/virati/MDD_Data/BR/905/Session_2015_09_28_Monday/Dbs905_2015_09_28_13_51_42__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[560,590],
+                    "Baseline":[540,600],
                     "Stim": [600, 780]
                     }
                 }
@@ -60,7 +60,7 @@
             "Filename":"/home/virati/MDD_Data/BR/905/Session_2015_09_29_Tuesday/Dbs905_2015_09_29_12_32_47__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[560,590],
+                    "Baseline":[545,605],
                     "Stim": [600,780]
                     }
                 }
@@ -74,7 +74,7 @@
             "Filename":"/home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_15_10_44__MR_0.txt",
             "Configurations": {
                 "Bilateral": {
-                    "Baseline": [560,590],
+                    "Baseline": [540,600],
                     "Stim": [610,790]
                 }
             }
@@ -83,7 +83,7 @@
             "Filename":"/home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_16_20_23__MR_0.txt",
             "Configurations": {
                 "Bilateral":{
-                    "Baseline":[560,590],
+                    "Baseline":[545,605],
                     "Stim":[610,790]
                 }
             }
@@ -97,8 +97,8 @@
             "Filename":"/home/virati/MDD_Data/BR/907/Session_2015_12_16_Wednesday/DBS907_2015_12_16_12_09_04__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[590,620],
-                    "Stim": [640,670]
+                    "Baseline":[545,625],
+                    "Stim": [640,820]
                     }
                 }
             },
@@ -106,8 +106,8 @@
             "Filename":"/home/virati/MDD_Data/BR/907/Session_2015_12_17_Thursday/DBS907_2015_12_17_10_53_08__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[560,590],
-                    "Stim": [625,655]
+                    "Baseline":[575,655],
+                    "Stim": [625,805]
                     }
                 }
             }
@@ -117,8 +117,8 @@
             "Filename":"/home/virati/MDD_Data/BR/908/Session_2016_02_10_Wednesday/DBS908_2016_02_10_13_03_10__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[],
-                    "Stim": []
+                    "Baseline":[545,605],
+                    "Stim": [610,790]
                     }
                 }
             },
@@ -126,8 +126,8 @@
             "Filename":"/home/virati/MDD_Data/BR/908/Session_2016_02_11_Thursday/DBS908_2016_02_11_12_34_21__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[550,580],
-                    "Stim": [610,640]
+                    "Baseline":[540,600],
+                    "Stim": [610,790]
                     }
                 }
             }

@@ -53,7 +53,7 @@ import json
 #%%
 
 with open("../../assets/experiments/metadata/Targeting_Conditions.json", "r") as file:
-    Ephys = json.load(file)
+    ephys_meta = json.load(file)
 
 Ephys = nestdict()
 Phase = "TurnOn"
@@ -188,7 +188,7 @@ pt_list = ["901", "903", "905", "906", "907", "908"]
 TS = nestdict()
 for pp, pt in enumerate(pt_list):
     for cc, condit in enumerate(["OnTarget", "OffTarget"]):
-        Data_In = dbo.load_BR_dict(Ephys[pt][condit]["Filename"], sec_offset=0)
+        Data_In = dbo.load_BR_dict(ephys_meta[pt][condit]["Filename"], sec_offset=0)
 
         TS[pt][condit] = Data_In
         SGs[pt][condit] = dbo.gen_SG(Data_In)
@@ -197,12 +197,12 @@ for pp, pt in enumerate(pt_list):
 #%%
 # Here we'll zoom into the details of the 906_OFFT DO
 time_zoom = {
-    "901": (460, 800),
-    "903": (480, 800),
-    "905": (520, 800),
-    "906": (550, 800),
-    "907": (580, 800),
-    "908": (547, 800),
+    "901": "Baseline",  # (460, 800),
+    "903": "Baseline",  # (480, 800),
+    "905": "Baseline",  # (520, 800),
+    "906": "Baseline",  # (550, 800),
+    "907": "Baseline",  # (540, 800),
+    "908": "Baseline",  # (547, 800),
 }
 
 #%%
@@ -214,9 +214,6 @@ for pt in pt_list:
     plt.figure()
 
     plt.plot(tvect, TS[pt][condit][side])
-    if time_zoom[pt] is not None:
-        pass
-        plt.xlim(time_zoom[pt])
     plt.title(f"{pt} at {condit} with recording {side}")
 
     plt.figure()
@@ -226,11 +223,12 @@ for pt in pt_list:
 
     plt.pcolormesh(tvect, Fvect, 10 * np.log10(SGdata), rasterized=True)
     if time_zoom[pt] is not None:
-        plt.xlim(time_zoom[pt])
-
-        x_idxs = np.where(
-            np.logical_and(tvect > time_zoom[pt][0], tvect < time_zoom[pt][1])
-        )
+        if time_zoom[pt] == "Baseline":
+            plt.xlim(ephys_meta[pt][condit]["Configurations"]["Bilateral"]["Baseline"])
+        elif time_zoom[pt] == "Stim":
+            plt.xlim(ephys_meta[pt][condit]["Configurations"]["Bilateral"]["Stim"])
+        else:
+            plt.xlim(time_zoom[pt])
 
     plt.title(f"{pt} at {condit} with recording {side}")
     plt.colorbar()
@@ -252,8 +250,10 @@ for pp, pt in enumerate(pt_list):
     sg_data = SGs[pt][do_condit][do_rec_side]["SG"]
 
     # find indices for times
-    baseline_start_idx = Ephys[pt][do_condit]["segments"]["PreBilat"][0]
-    baseline_end_idx = Ephys[pt][do_condit]["segments"]["PreBilat"][1]
+    baseline_start_idx = ephys_meta[pt][do_condit]["Configurations"]["Bilateral"][
+        "Stim"
+    ][0]
+    baseline_end_idx = baseline_start_idx + 20
     baseline_time_idxs = np.where(
         np.logical_and(t_vect > baseline_start_idx, t_vect < baseline_end_idx)
     )
@@ -300,8 +300,12 @@ for pp, pt in enumerate(pt_list):
     sg_data = SGs[pt][do_condit][do_rec_side]["SG"]
 
     # find indices for times
-    baseline_start_idx = Ephys[pt][do_condit]["segments"]["PreBilat"][0]
-    baseline_end_idx = Ephys[pt][do_condit]["segments"]["PreBilat"][1]
+    baseline_start_idx = ephys_meta[pt][do_condit]["Configurations"]["Bilateral"][
+        "Baseline"
+    ][0]
+    baseline_end_idx = ephys_meta[pt][do_condit]["Configurations"]["Bilateral"][
+        "Baseline"
+    ][1]
     baseline_time_idxs = np.where(
         np.logical_and(t_vect > baseline_start_idx, t_vect < baseline_end_idx)
     )
@@ -320,13 +324,14 @@ fig.legend()
 plt.savefig("all_baseline.svg")
 
 #%%
-plt.figure()
-for pp, pt in enumerate(["906"]):
+
+for pp, pt in enumerate(pt_list):
+    plt.figure(figsize=(15, 10))
     do_condit = do_presence[pt][0]
     do_rec_side = do_presence[pt][1]
     stim_side = "Bilat"
 
-    print(f"{pt} with {condit}")
+    print(f"{pt} with {do_condit}")
     seg = "C1"
     t_vect = SGs[pt][condit][do_rec_side]["T"]
     f_vect = SGs[pt][condit][do_rec_side]["F"]
@@ -356,4 +361,5 @@ for pp, pt in enumerate(["906"]):
     plt.xlim((0, 32))
     plt.ylim((-11, 66))
     plt.title(f"{pt} PSD Deviation from Pre-Stimulation")
+    plt.savefig(f"{pt}_early_window.svg")
 plt.legend()
