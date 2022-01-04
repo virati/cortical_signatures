@@ -60,7 +60,7 @@
             "Filename":"/home/virati/MDD_Data/BR/905/Session_2015_09_29_Tuesday/Dbs905_2015_09_29_12_32_47__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[545,605],
+                    "Baseline":[545,600],
                     "Stim": [600,780]
                     }
                 }
@@ -83,7 +83,7 @@
             "Filename":"/home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_16_20_23__MR_0.txt",
             "Configurations": {
                 "Bilateral":{
-                    "Baseline":[545,605],
+                    "Baseline":[545,600],
                     "Stim":[610,790]
                 }
             }
@@ -97,7 +97,7 @@
             "Filename":"/home/virati/MDD_Data/BR/907/Session_2015_12_16_Wednesday/DBS907_2015_12_16_12_09_04__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[545,625],
+                    "Baseline":[575,630],
                     "Stim": [640,820]
                     }
                 }
@@ -117,7 +117,7 @@
             "Filename":"/home/virati/MDD_Data/BR/908/Session_2016_02_10_Wednesday/DBS908_2016_02_10_13_03_10__MR_0.txt",
             "Configurations":{
                 "Bilateral":{
-                    "Baseline":[545,605],
+                    "Baseline":[550,600],
                     "Stim": [610,790]
                     }
                 }

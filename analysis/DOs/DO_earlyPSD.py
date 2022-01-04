@@ -23,6 +23,10 @@ import numpy as np
 import math
 import scipy.signal as sig
 
+import seaborn as sns
+
+sns.set_style("white")
+sns.set_context("paper", font_scale=3)
 from mpl_toolkits.axes_grid.inset_locator import inset_axes, InsetPosition, mark_inset
 
 
@@ -55,6 +59,8 @@ import json
 with open("../../assets/experiments/metadata/Targeting_Conditions.json", "r") as file:
     ephys_meta = json.load(file)
 
+
+#%%
 Ephys = nestdict()
 Phase = "TurnOn"
 if Phase == "TurnOn":
@@ -192,7 +198,6 @@ for pp, pt in enumerate(pt_list):
 
         TS[pt][condit] = Data_In
         SGs[pt][condit] = dbo.gen_SG(Data_In)
-        # CWTs[pt][condit] = dbo.gen_CWT(Data_In)
 
 #%%
 # Here we'll zoom into the details of the 906_OFFT DO
@@ -259,8 +264,8 @@ for pp, pt in enumerate(pt_list):
     )
     mean_baseline_data = sg_data[:, baseline_time_idxs].squeeze().mean(axis=1)
 
-    start_idx = Ephys[pt][do_condit]["segments"][seg][0]
-    end_idx = Ephys[pt][do_condit]["segments"][seg][1]
+    start_idx = ephys_meta[pt][condit]["Configurations"]["Bilateral"]["Stim"][0]
+    end_idx = ephys_meta[pt][condit]["Configurations"]["Bilateral"]["Stim"][0] + 30
     time_idxs = np.where(np.logical_and(t_vect > start_idx, t_vect < end_idx))
     mean_data = sg_data[:, time_idxs].squeeze().mean(axis=1)
     std_data = np.std(sg_data[:, time_idxs].squeeze(), axis=1)
@@ -278,6 +283,9 @@ plt.legend()
 
 #%%
 # Plot all the baselines
+sns.set_style("white")
+sns.set_context("paper", font_scale=3)
+
 fig, ax1 = plt.subplots(figsize=(15, 10))
 pt_colors = ["r", "b", "g", "k", "m", "c"]
 
@@ -292,7 +300,7 @@ mark_inset(ax1, ax2, loc1=2, loc2=4, fc="none", ec="0.5", linestyle="dotted")
 for pp, pt in enumerate(pt_list):
     do_condit = do_presence[pt][0]
     do_rec_side = do_presence[pt][1]
-    stim_side = "Bilat"
+    stim_side = "Bilateral"
 
     print(f"{pt} with {condit}")
     t_vect = SGs[pt][condit][do_rec_side]["T"]
@@ -300,10 +308,10 @@ for pp, pt in enumerate(pt_list):
     sg_data = SGs[pt][do_condit][do_rec_side]["SG"]
 
     # find indices for times
-    baseline_start_idx = ephys_meta[pt][do_condit]["Configurations"]["Bilateral"][
+    baseline_start_idx = ephys_meta[pt][do_condit]["Configurations"][stim_side][
         "Baseline"
     ][0]
-    baseline_end_idx = ephys_meta[pt][do_condit]["Configurations"]["Bilateral"][
+    baseline_end_idx = ephys_meta[pt][do_condit]["Configurations"][stim_side][
         "Baseline"
     ][1]
     baseline_time_idxs = np.where(
@@ -324,6 +332,8 @@ fig.legend()
 plt.savefig("all_baseline.svg")
 
 #%%
+sns.set_style("white")
+sns.set_context("paper", font_scale=4)
 
 for pp, pt in enumerate(pt_list):
     plt.figure(figsize=(15, 10))
@@ -361,5 +371,6 @@ for pp, pt in enumerate(pt_list):
     plt.xlim((0, 32))
     plt.ylim((-11, 66))
     plt.title(f"{pt} PSD Deviation from Pre-Stimulation")
+    plt.legend()
     plt.savefig(f"{pt}_early_window.svg")
 plt.legend()

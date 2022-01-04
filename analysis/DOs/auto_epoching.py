@@ -83,9 +83,8 @@ def auto_epoch(pt, condit, downsample=5):
 
     epoch_list = []
     current_start_idx = 0
-    default_epoch_length = 100
     candidate_epochs = np.linspace(
-        422 / downsample * 10, 422 / downsample * 60, 20
+        422 / downsample * 5, 422 / downsample * 30, 20
     ).astype(int)
 
     dt = 1 / 422
@@ -144,7 +143,19 @@ def plot_epoch_models(pt, condit, epoching):
 
 
 #%%
+do_presence = {
+    "901": ("OffTarget", "Left"),
+    "903": ("OffTarget", "Left"),
+    "905": ("OffTarget", "Left"),
+    "906": ("OffTarget", "Right"),
+    "907": ("OnTarget", "Left"),
+    "908": ("OnTarget", "Left"),
+}
 # pt, condit = "906", "OffTarget"  # swap this out for DOs[0] from json
-pt, condit = "906", "OffTarget"
-epoching, epoch_models = auto_epoch(pt, condit)
+
+# pt, condit = "901", "OffTarget"
+
+pt_list = ["901", "903", "905", "906", "907", "908"]
+for pt in pt_list:
+    epoching, epoch_models = auto_epoch(pt, do_presence[pt][0])
 # plot_epoch_models(pt, condit, epoching)
