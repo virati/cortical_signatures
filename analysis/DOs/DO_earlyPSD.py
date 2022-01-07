@@ -26,7 +26,7 @@ import scipy.signal as sig
 import seaborn as sns
 
 sns.set_style("white")
-sns.set_context("paper", font_scale=3)
+sns.set_context("paper", font_scale=2)
 from mpl_toolkits.axes_grid.inset_locator import inset_axes, InsetPosition, mark_inset
 
 
@@ -250,7 +250,7 @@ for pt in pt_list:
     plt.pcolormesh(tvect, Fvect, 10 * np.log10(SGdata), rasterized=True, cmap="jet")
     plt.xlim(plot_lims)
 
-    plt.title(f"{pt} at {condit} with recording {side}")
+    plt.title(f"{pt},{condit},{side}")
     plt.colorbar()
 
 
