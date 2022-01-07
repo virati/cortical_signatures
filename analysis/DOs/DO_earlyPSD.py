@@ -201,6 +201,7 @@ for pp, pt in enumerate(pt_list):
 
 #%%
 # Here we'll zoom into the details of the 906_OFFT DO
+# BELOW IS OBSOLETE NOW
 time_zoom = {
     "901": "Baseline",  # (460, 800),
     "903": "Baseline",  # (480, 800),
@@ -209,31 +210,45 @@ time_zoom = {
     "907": "Baseline",  # (540, 800),
     "908": "Baseline",  # (547, 800),
 }
-
 #%%
+from matplotlib.patches import Rectangle
+
+condition_focus = "Stim"
 for pt in pt_list:
     side = do_presence[pt][1]
     condit = do_presence[pt][0]
     tvect = np.linspace(0, len(TS[pt][condit][side]) / 422, len(TS[pt][condit][side]))
 
-    plt.figure()
+    fig, ax = plt.subplots()
 
-    plt.plot(tvect, TS[pt][condit][side])
+    ax.plot(tvect, TS[pt][condit][side])
     plt.title(f"{pt} at {condit} with recording {side}")
+
+    if condition_focus == "Baseline":
+        plot_lims = ephys_meta[pt][condit]["Configurations"]["Bilateral"]["Baseline"]
+    elif condition_focus == "Stim":
+        plot_lims = ephys_meta[pt][condit]["Configurations"]["Bilateral"]["Stim"]
+    else:
+        plot_lims = None
+
+    ax.add_patch(
+        Rectangle(
+            (plot_lims[0], -1),
+            plot_lims[1] - plot_lims[0],
+            3,
+            edgecolor="red",
+            facecolor="none",
+            lw=4,
+        )
+    )
 
     plt.figure()
     tvect = SGs[pt][condit][side]["T"]
     Fvect = SGs[pt][condit][side]["F"]
     SGdata = SGs[pt][condit][side]["SG"]
 
-    plt.pcolormesh(tvect, Fvect, 10 * np.log10(SGdata), rasterized=True)
-    if time_zoom[pt] is not None:
-        if time_zoom[pt] == "Baseline":
-            plt.xlim(ephys_meta[pt][condit]["Configurations"]["Bilateral"]["Baseline"])
-        elif time_zoom[pt] == "Stim":
-            plt.xlim(ephys_meta[pt][condit]["Configurations"]["Bilateral"]["Stim"])
-        else:
-            plt.xlim(time_zoom[pt])
+    plt.pcolormesh(tvect, Fvect, 10 * np.log10(SGdata), rasterized=True, cmap="jet")
+    plt.xlim(plot_lims)
 
     plt.title(f"{pt} at {condit} with recording {side}")
     plt.colorbar()
