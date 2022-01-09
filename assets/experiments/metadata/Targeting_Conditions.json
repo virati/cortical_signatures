@@ -84,7 +84,7 @@
             "Configurations": {
                 "Bilateral":{
                     "Baseline":[545,600],
-                    "Stim":[610,790]
+                    "Stim":[610,770]
                 }
             }
         },
@@ -110,7 +110,10 @@
                     "Stim": [625,805]
                     }
                 }
-            }
+            },
+        "DOs":[
+            ["OffTarget","Bilateral"]
+        ]
     },
     "908":{
         "OnTarget":{
@@ -130,6 +133,9 @@
                     "Stim": [610,790]
                     }
                 }
-            }
+            },
+        "DOs":[
+            ["OffTarget","Bilateral"]
+        ]
     }
 }

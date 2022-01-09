@@ -29,6 +29,8 @@ sns.set_style("white")
 sns.set_context("paper", font_scale=2)
 from mpl_toolkits.axes_grid.inset_locator import inset_axes, InsetPosition, mark_inset
 
+#%%
+
 
 def find_nearest(array, value):
     idx = np.searchsorted(array, value, side="left")
