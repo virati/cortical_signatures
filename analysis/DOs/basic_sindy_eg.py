@@ -77,9 +77,30 @@ do_presence = {
 }
 
 #%%
+dyn_feat_names = lib_generalized.get_feature_names()
+split_dyn_feat_names = ["L: " + a for a in dyn_feat_names] + [
+    "R: " + a for a in dyn_feat_names
+]
+
+x_0_coeffs = [a for a in split_dyn_feat_names if a.find("x0") != -1]
+x_1_coeffs = [a for a in split_dyn_feat_names if a.find("x1") != -1]
+
+x_1_coeff_mask = [1 if a.find("x0") != -1 else 0 for a in split_dyn_feat_names]
+x_0_coeff_mask = [1 if a.find("x1") != -1 else 0 for a in split_dyn_feat_names]
+
+
+# find the cross terms
+cross_coeffs = [
+    a for a in split_dyn_feat_names if a.find("x0") != -1 and a[0] == "R"
+] + [a for a in split_dyn_feat_names if a.find("x1") != -1 and a[0] == "L"]
+cross_coeffs_idx = [split_dyn_feat_names.index(item) for item in cross_coeffs]
+
+#%%
 downsample_rate = 5
 
-for pt in ["906"]:  # pt_list:
+coeff_grams = {pt: [] for pt in pt_list}
+
+for pt in pt_list:  # pt_list:
     print(f"Analysing patient {pt}")
     DO, tvect = load_scc_lfp(pt, do_presence[pt][0], downsample_rate)
     dt = 1 / 422 * downsample_rate
@@ -87,13 +108,13 @@ for pt in ["906"]:  # pt_list:
     # DO[1, :] = 10 * DO[1, :]
     # DO = stats.zscore(DO,axis=1)
 
-    plt.figure(figsize=(15, 15))
-    plt.plot(DO.T)
-    plt.savefig(f"ts_{pt}.png")
+    # plt.figure(figsize=(15, 15))
+    # plt.plot(DO.T, alpha=0.3)
+    # plt.savefig(f"ts_{pt}.png")
 
     coeff_gram = []
     model_scores = []
-    skips = 50
+    skips = 10
     length_window = int(1 / dt * 30)
 
     sample_vect = np.arange(DO.shape[1])
@@ -106,17 +127,60 @@ for pt in ["906"]:  # pt_list:
         model.fit(DO_snip.T, t=dt)
         coeff_gram.append(model.coefficients())
         model_scores.append(model.score(DO_snip.T))
-    coeff_gram = np.array(coeff_gram)
+    coeff_grams[pt] = np.array(coeff_gram)
+
+#%%
+for pt in pt_list:
+    coeff_gram = coeff_grams[pt]
+    # Plotting of all coefficients
     fig, ax = plt.subplots(figsize=(15, 15))
     # ax[0].pcolormesh()  # plot the SG here
     ax.pcolormesh(
         np.tanh(coeff_gram.reshape(coeff_gram.shape[0], -1).T / 1e3), cmap="jet"
     )
-    dyn_feat_names = lib_generalized.get_feature_names()
-    dyn_feat_names = ["dx0 (L):" + a for a in dyn_feat_names] + [
+    display_dyn_feat_names = ["dx0 (L):" + a for a in dyn_feat_names] + [
         "dx1 (R):" + a for a in dyn_feat_names
     ]
     ax.set_yticks(np.arange(0, 26) + 0.5)
-    ax.set_yticklabels(dyn_feat_names, rotation=0)
+    ax.set_yticklabels(display_dyn_feat_names, rotation=0)
     plt.savefig(f"sindy_coeff_{pt}.svg")
+
+
+#%%
+for pt in pt_list:
+    # Plotting of cross terms
+    fig, ax = plt.subplots(figsize=(15, 15))
+
+    ax.pcolormesh(
+        np.tanh(
+            coeff_gram.reshape(coeff_gram.shape[0], -1)[
+                :, np.array(x_0_coeff_mask) == 1
+            ].T
+            / 1e3
+        ),
+        cmap="jet",
+    )
+    ax.set_yticks(np.arange(0, len(x_0_coeffs)) + 0.5)
+    ax.set_yticklabels(x_0_coeffs, rotation=0)
+
+    plt.show()
+
+    # Split out the "cross interactions" from the "self interaction"
+
+#%%
+#%%
+for pt in pt_list:
+    coeff_gram = coeff_grams[pt]
+    coeff_gram = coeff_gram.reshape(coeff_gram.shape[0], -1)
+
+    # Plotting of cross terms
+    fig, ax = plt.subplots(1, 2, figsize=(15, 15))
+
+    ax.pcolormesh(
+        np.tanh(coeff_gram[:, np.array(cross_coeffs_idx)].T / 1e3),
+        cmap="jet",
+    )
+    ax.set_yticks(np.arange(0, len(cross_coeffs_idx)) + 0.5)
+    ax.set_yticklabels(cross_coeffs, rotation=0)
+
     plt.show()
