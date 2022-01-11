@@ -17,14 +17,13 @@ import DBSpace.control.dyn_osc as DO
 optimizer = ps.STLSQ(threshold=0.1, fit_intercept=True)
 fourier_library = ps.FourierLibrary()
 polynomial_library = ps.PolynomialLibrary()
+# linear_library
 
 functions = [lambda x: np.exp(x), lambda x, y: np.sin(x + y)]
 lib_custom = ps.CustomLibrary(library_functions=functions)
-lib_generalized = GeneralizedLibrary([lib_custom, fourier_library, polynomial_library])
+lib_generalized = GeneralizedLibrary([fourier_library, polynomial_library])
 
 #%%
-
-
 def load_scc_lfp(pt, condit, downsample=5):
     with open(
         "../../assets/experiments/metadata/Targeting_Conditions.json", "r"
@@ -50,9 +49,6 @@ def load_scc_lfp(pt, condit, downsample=5):
     # t = np.linspace(0, 1, filt_L[tidxs[0::50]].shape[0])
 
     state = np.vstack((filt_L, filt_R))
-    #%%
-
-    sd = np.diff(state, axis=1, append=0)
 
     #%%
     ## Now we get into subwindows
@@ -77,6 +73,41 @@ do_presence = {
 }
 
 #%%
+
+#%%
+downsample_rate = 5
+
+coeff_grams = {pt: [] for pt in pt_list}
+
+for pt in pt_list:  # pt_list:
+    print(f"Analysing patient {pt}")
+    DO, tvect = load_scc_lfp(pt, do_presence[pt][0], downsample_rate)
+    dt = 1 / 422 * downsample_rate
+
+    # LPF?
+
+    # DO[1, :] = 10 * DO[1, :]
+    # DO = stats.zscore(DO,axis=1)
+
+    coeff_gram = []
+    model_scores = []
+    skips = 10
+    length_window = int(1 / dt * 30)
+
+    sample_vect = np.arange(DO.shape[1])
+    for tt in sample_vect[::skips]:
+        if tt + length_window > DO.shape[1]:
+            continue
+        model = ps.SINDy(optimizer=optimizer, feature_library=lib_generalized)
+
+        DO_snip = DO[:, tt : tt + length_window]
+        model.fit(DO_snip.T, t=dt)
+        coeff_gram.append(model.coefficients())
+        model_scores.append(model.score(DO_snip.T))
+    coeff_grams[pt] = np.array(coeff_gram)
+#%%
+
+
 dyn_feat_names = lib_generalized.get_feature_names()
 split_dyn_feat_names = ["L: " + a for a in dyn_feat_names] + [
     "R: " + a for a in dyn_feat_names
@@ -95,39 +126,17 @@ cross_coeffs = [
 ] + [a for a in split_dyn_feat_names if a.find("x1") != -1 and a[0] == "L"]
 cross_coeffs_idx = [split_dyn_feat_names.index(item) for item in cross_coeffs]
 
+
 #%%
-downsample_rate = 5
-
-coeff_grams = {pt: [] for pt in pt_list}
-
-for pt in pt_list:  # pt_list:
-    print(f"Analysing patient {pt}")
+downsample_rate = 10
+for pt in pt_list:
     DO, tvect = load_scc_lfp(pt, do_presence[pt][0], downsample_rate)
     dt = 1 / 422 * downsample_rate
 
-    # DO[1, :] = 10 * DO[1, :]
-    # DO = stats.zscore(DO,axis=1)
-
-    # plt.figure(figsize=(15, 15))
-    # plt.plot(DO.T, alpha=0.3)
-    # plt.savefig(f"ts_{pt}.png")
-
-    coeff_gram = []
-    model_scores = []
-    skips = 10
-    length_window = int(1 / dt * 30)
-
-    sample_vect = np.arange(DO.shape[1])
-    for tt in sample_vect[::skips]:
-        if tt + length_window > DO.shape[1]:
-            continue
-        model = ps.SINDy(optimizer=optimizer, feature_library=lib_generalized)
-
-        DO_snip = DO[:, tt : tt + length_window]
-        model.fit(DO_snip.T, t=dt)
-        coeff_gram.append(model.coefficients())
-        model_scores.append(model.score(DO_snip.T))
-    coeff_grams[pt] = np.array(coeff_gram)
+    plt.figure(figsize=(15, 15))
+    plt.plot(DO.T, alpha=0.3)
+    plt.ylim((-0.6, 0.6))
+    plt.savefig(f"ts_{pt}.svg")
 
 #%%
 for pt in pt_list:
@@ -135,14 +144,17 @@ for pt in pt_list:
     # Plotting of all coefficients
     fig, ax = plt.subplots(figsize=(15, 15))
     # ax[0].pcolormesh()  # plot the SG here
-    ax.pcolormesh(
-        np.tanh(coeff_gram.reshape(coeff_gram.shape[0], -1).T / 1e3), cmap="jet"
+    pcm = ax.pcolormesh(
+        np.tanh(coeff_gram.reshape(coeff_gram.shape[0], -1).T / 1e3),
+        cmap="jet",
+        rasterized=True,
     )
-    display_dyn_feat_names = ["dx0 (L):" + a for a in dyn_feat_names] + [
-        "dx1 (R):" + a for a in dyn_feat_names
+    display_dyn_feat_names = ["(L):" + a for a in dyn_feat_names] + [
+        "(R):" + a for a in dyn_feat_names
     ]
-    ax.set_yticks(np.arange(0, 26) + 0.5)
+    ax.set_yticks(np.arange(0, len(display_dyn_feat_names)) + 0.5)
     ax.set_yticklabels(display_dyn_feat_names, rotation=0)
+    fig.colorbar(pcm)
     plt.savefig(f"sindy_coeff_{pt}.svg")
 
 
@@ -174,13 +186,15 @@ for pt in pt_list:
     coeff_gram = coeff_gram.reshape(coeff_gram.shape[0], -1)
 
     # Plotting of cross terms
-    fig, ax = plt.subplots(1, 2, figsize=(15, 15))
+    fig, ax = plt.subplots(figsize=(15, 15))
 
     ax.pcolormesh(
         np.tanh(coeff_gram[:, np.array(cross_coeffs_idx)].T / 1e3),
         cmap="jet",
+        rasterized=True,
     )
     ax.set_yticks(np.arange(0, len(cross_coeffs_idx)) + 0.5)
     ax.set_yticklabels(cross_coeffs, rotation=0)
 
+    plt.savefig(f"cross_sindy_coeff_{pt}.svg")
     plt.show()
