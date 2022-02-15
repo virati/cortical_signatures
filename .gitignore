@@ -1,3 +1,6 @@
 /.spyproject/
-/.ipynb_checkpoints/
+.ipynb_checkpoints/
 /.venv/
+__pycache__/
+*.png
+*.svg
