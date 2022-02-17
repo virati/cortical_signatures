@@ -1,6 +1,6 @@
 # Cortical Signatures of SCCwm-DBS
 
-![https://images.app.goo.gl/jfgxjK5YvhJFXpev9]()
+![](https://images.app.goo.gl/jfgxjK5YvhJFXpev9)
 
 ## Overview
 DBS of the SCCwm alleviates symptoms of depression, but its therapeutic mechanism remains unclear.
