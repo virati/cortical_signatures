@@ -1,8 +1,7 @@
 # Cortical Signatures of SCCwm-DBS
 
 ![DBS of the SCCwm targets specific tracts in the brain that likely mediate the immediate effects.](https://med.emory.edu/education/vme/assets/images/gallery/dbs-depression/dbs-for-major-depression.jpg)
-DBS of the SCCwm targets specific tracts in the brain that likely mediate the immediate effects.
-Source: https://med.emory.edu/education/vme/pages/gallery/pf-dbs-depression-image.html
+<p align="center">DBS of the SCCwm targets specific tracts in the brain that likely mediate the immediate effects. Source: https://med.emory.edu/education/vme/pages/gallery/pf-dbs-depression-image.html</p>
 
 ## Overview
 DBS of the SCCwm alleviates symptoms of depression, but its therapeutic mechanism remains unclear.
