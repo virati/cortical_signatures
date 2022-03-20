@@ -12,26 +12,14 @@ This one now looks at the DO tractography at granularity of left/right, Ont/OffT
 
 #%%
 
-import numpy as np
-import nibabel
-import nilearn
-from nilearn import plotting, image
-import matplotlib.pyplot as plt
-from nilearn import datasets
-from nilearn import surface
-
-from mpl_toolkits.mplot3d import Axes3D
-
-import sys
-
-sys.path.append("/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/")
-import dbspace as dbo
-from dbspace.utils.structures import nestdict
-
-import dbspace.control.DTI as DTI
 import itertools
 
-Etrode_map = DTI.Etrode_map
+import dbspace as dbo
+import dbspace.control.DTI as DTI
+import matplotlib.pyplot as plt
+import numpy as np
+from dbspace.utils.structures import nestdict
+from nilearn import image, plotting
 
 all_pts = ["901", "903", "905", "906", "907", "908"]
 all_condits = ["OnT", "OffT"]
