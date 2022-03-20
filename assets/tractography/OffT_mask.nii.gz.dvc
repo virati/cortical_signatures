@@ -1,0 +1,4 @@
+outs:
+- md5: 8931b31f102c433d36acd83d24ecec55
+  size: 589519
+  path: OffT_mask.nii.gz

@@ -1,0 +1,4 @@
+outs:
+- md5: cd874afb50af058dfc34d248c698d28f
+  size: 591601
+  path: OnT_mask.nii.gz
