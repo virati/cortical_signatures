@@ -1,7 +1,8 @@
-aiohttp==3.7.4.post0
+aiohttp==3.8.1
+aiosignal==1.2.0
 apptools==5.1.0
 asttokens==2.0.5
-async-timeout==3.0.1
+async-timeout==4.0.2
 attrs==21.2.0
 autobahn==21.3.1
 Automat==20.2.0
@@ -18,6 +19,7 @@ cycler==0.10.0
 decorator==5.1.0
 envisage==6.0.1
 executing==0.8.3
+frozenlist==1.3.0
 hyperlink==21.0.0
 idna==3.3
 importlib-metadata==4.8.1
