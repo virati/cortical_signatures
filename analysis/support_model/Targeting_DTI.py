@@ -10,6 +10,8 @@ Focus on differentiating ONTarget and OFFTarget
 OBSOLETE
 """
 
+#%%
+
 import numpy as np
 import nibabel
 import nilearn
