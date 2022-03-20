@@ -29,7 +29,9 @@ import dbspace.control.DTI as DTI
 
 Etrode_map = DTI.Etrode_map
 
-do_pts = ["906", "907", "908"]  # ['901','903','905','906','907','908']
+# do_pts = ["906", "907", "908"]  #
+do_pts = ["901", "903", "905", "906", "907", "908"]
+
 voltage = "2"
 vrange = range(2, 7)
 

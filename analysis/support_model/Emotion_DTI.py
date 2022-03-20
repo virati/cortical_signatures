@@ -10,6 +10,8 @@ Focus on differentiating ONTarget and OFFTarget
 This one now looks at the DO tractography at granularity of left/right, Ont/OffT, patients, etc.
 """
 
+#%%
+
 import numpy as np
 import nibabel
 import nilearn
@@ -23,10 +25,10 @@ from mpl_toolkits.mplot3d import Axes3D
 import sys
 
 sys.path.append("/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/")
-import DBSpace as dbo
-from DBSpace import nestdict
+import dbspace as dbo
+from dbspace.utils.structures import nestdict
 
-import DBSpace.control.DTI as DTI
+import dbspace.control.DTI as DTI
 import itertools
 
 Etrode_map = DTI.Etrode_map
