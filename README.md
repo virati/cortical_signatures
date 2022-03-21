@@ -31,21 +31,11 @@ With an eye towards temporal changes, we studied the immediate effects of SCCwm-
 
 The code for [Dynamic Oscillations...](https://www.frontiersin.org/articles/10.3389/fnins.2022.768355/full) is available in the ```analysis/DOs``` folder.
 
-### Suport Model
+### Support Model
 If you squint your eyes, you should see that the right-side of the EEG demonstrates more changes than the left-side.
 Similarly, if you look at the tractography that is most reliably stimulated under the therapeutic OnTarget condition you'll see a central role for the right-CB.
 
 I'll formalize this a bit better by bridging the tractography with dEEG with [The Virtual Brain]() platform.
 
-## Target Engagement Classifier
-If we can confirm adequate stimulation of the SCCwm using neural recordings, we may not need to wake up patients in the operating room, making the surgery quicker and more standardized.
-Using the dEEG I developed a classifier that can confirm adequate SCCwm-DBS.
-
-### Offline Classifier
-[In Prep]
-
-### Online Classifier
-[In Prep]
-
-
 ## References
+* ...
