@@ -27,45 +27,6 @@ all_sides = ["L", "R", "L+R"]
 voltage = "2"
 
 DO_all = itertools.product(all_pts, all_condits, all_sides)
-feel_positive = [
-    ("901", "OnT", "L"),
-    ("901", "OnT", "R"),
-    ("901", "OnT", "L+R"),
-    ("903", "OnT", "L+R"),
-    ("906", "OnT", "L"),
-    ("906", "OnT", "L+R"),
-    ("907", "OnT", "R"),
-    ("907", "OnT", "L+R"),
-    ("908", "OnT", "L+R"),
-    ("906", "OffT", "L+R"),
-    ("907", "OffT", "L"),
-    ("907", "OffT", "L+R"),
-    ("908", "OffT", "R"),
-]  # This reflects the STIM conditions that evoked DOs
-feel_negative = [
-    ("901", "OnT", "L"),
-    ("901", "OnT", "L"),
-    ("906", "OnT", "R"),
-    ("908", "OffT", "L"),
-    ("908", "OffT", "L+R"),
-]
-feel_weird = [
-    ("901", "OnT", "R"),
-    ("901", "OnT", "L+R"),
-    ("903", "OnT", "L"),
-    ("906", "OnT", "L"),
-    ("906", "OnT", "R"),
-    ("906", "OnT", "L+R"),
-    ("907", "OnT", "L"),
-    ("907", "OnT", "R"),
-    ("907", "OnT", "L+R"),
-    ("908", "OnT", "R"),
-    ("906", "OffT", "L"),
-    ("906", "OffT", "R"),
-    ("907", "OffT", "L"),
-    ("907", "OffT", "R"),
-    ("907", "OffT", "L+R"),
-]
 
 dti_file = nestdict()
 data = nestdict()
