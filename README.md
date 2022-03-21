@@ -26,11 +26,10 @@ I also take a computational modeling approach to demonstrate that empirical chan
 ### Spatial Modes
 [In Prep]
 
-### Temporal Modes
+### Temporal Modes [publication](https://www.frontiersin.org/articles/10.3389/fnins.2022.768355/full)
 With an eye towards temporal changes, we studied the immediate effects of SCCwm-DBS on the trajectory of whole brain oscillatory activity.
 
-Publication: [here](https://www.frontiersin.org/articles/10.3389/fnins.2022.768355/full)
-The code for this publication is available in the ```analysis/DOs``` folder.
+The code for [Dynamic Oscillations...](https://www.frontiersin.org/articles/10.3389/fnins.2022.768355/full) is available in the ```analysis/DOs``` folder.
 
 ### Suport Model
 If you squint your eyes, you should see that the right-side of the EEG demonstrates more changes than the left-side.
