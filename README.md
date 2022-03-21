@@ -1,8 +1,4 @@
 # Cortical Signatures of SCCwm-DBS
-
-![DBS of the SCCwm targets specific tracts in the brain that likely mediate the immediate effects.](https://med.emory.edu/education/vme/assets/images/gallery/dbs-depression/dbs-for-major-depression.jpg)
-<p align="center">DBS of the SCCwm targets specific tracts in the brain that likely mediate the immediate effects. Source: https://med.emory.edu/education/vme/pages/gallery/pf-dbs-depression-image.html</p>
-
 ## Overview
 Deep brain stimulation (DBS) targeted at a patient's specific subcallosal cingulate white matter (SCCwm) alleviates symptoms of depression.
 But how this SCCwm-DBS affects the brain, where and how does it change ongoing brain dynamics, remains unclear.
@@ -11,6 +7,9 @@ I'll call this SCCwm-DBS _network action_ - the where, what, and how of its imme
 This is the first piece of the larger question: what is the therapeutic mechanism of action of SCCwm-DBS.
 
 In this repository I address the question: what does SCCwm-DBS do immediately to brain dynamics across multiple scales of measurement.
+
+![DBS of the SCCwm targets specific tracts in the brain that likely mediate the immediate effects.](https://med.emory.edu/education/vme/assets/images/gallery/dbs-depression/dbs-for-major-depression.jpg)
+<p align="center">DBS of the SCCwm targets specific tracts in the brain that likely mediate the immediate effects. Source: https://med.emory.edu/education/vme/pages/gallery/pf-dbs-depression-image.html</p>
 
 ### Requirements
 This repository requires the custom library ```DBSpace``` 
