@@ -7,6 +7,7 @@ Created on Fri Sep 14 16:32:20 2018
 Script to generate the EEG Response Violinplots
 
 """
+#%%
 
 from DBSpace.control import proc_dEEG
 from DBSpace.visualizations import EEG_Viz
