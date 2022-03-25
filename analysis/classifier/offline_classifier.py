@@ -14,7 +14,6 @@ from dbspace.control import segmented_dEEG
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.decomposition import PCA, FastICA
 
 
 #%%
