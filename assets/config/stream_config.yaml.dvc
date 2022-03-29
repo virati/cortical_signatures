@@ -1,0 +1,4 @@
+outs:
+- md5: 59a07fb42b1f3ee48bff4e557793282e
+  size: 4880
+  path: stream_config.yaml
