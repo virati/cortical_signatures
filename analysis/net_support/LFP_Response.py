@@ -14,7 +14,7 @@ from dbspace.control import network_action
 
 do_pts = ["901", "903", "905", "906", "907", "908"]
 analysis = network_action.local_response(
-    config_file="../../assets/config/stream_config.yaml", do_pts=do_pts
+    config_file="../../assets/config/stream_config.json", do_pts=do_pts
 )
 analysis.extract_baselines()
 analysis.extract_response()
