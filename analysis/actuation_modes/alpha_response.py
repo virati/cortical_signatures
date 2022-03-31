@@ -29,7 +29,7 @@ eFrame = offline_segments.network_action_dEEG(
     pts=pt_list,
     procsteps="conservative",
     condits=["OnT", "OffT"],
-    config_file="../../assets/config/targeting_experiment.json",
+    config_file="../configs/targeting_experiment.json",
 )
 eFrame.standard_pipeline()
 #%% Generate the control modes
