@@ -7,18 +7,12 @@ Created on Wed Jan 16 15:32:53 2019
 Script to load and characterize Voltage-sweep data; Most likely just from 906
 """
 
+import matplotlib.pyplot as plt
+import numpy as np
 from dbspace.control.stream_buffers import streamEEG
 from dbspace.utils.structures import nestdict
-
-import itertools
-from sklearn.metrics import confusion_matrix
-
-import matplotlib.pyplot as plt
-import numpy as np 
-
-import pickle
-
 from dbspace.viz.MM import EEG_Viz
+from sklearn.metrics import confusion_matrix
 
 #%%
 #First, let's bring in the timeseries from DBS906 Voltage Sweep Experiment
@@ -60,6 +54,7 @@ EEG_Viz.plot_3d_scalp(np.mean(median_response,axis=0)[:,2],unwrap=True)
 #%%
 #Need to go into each channel and figure out which ones "GROW" and which ones don't
 from scipy.stats import linregress
+
 
 def isMonotonic(A): 
   
