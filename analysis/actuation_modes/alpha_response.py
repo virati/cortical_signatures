@@ -40,7 +40,7 @@ eFrame.topo_median_response(
     do_condits=["OnT", "OffT"],
     pt="POOL",
     band="Alpha",
-    use_maya=True,
+    use_maya=False,
     scale_w_mad=False,
     avg_func=np.mean,
 )
@@ -52,7 +52,7 @@ for pp in pt_list:
         do_condits=["OnT", "OffT"],
         pt=pp,
         band="Alpha",
-        use_maya=True,
+        use_maya=False,
         scale_w_mad=False,
     )
 # eFrame.topo_median_variability(do_condits=['OnT','OffT'],pt='POOL',band='Alpha',use_maya=False)
