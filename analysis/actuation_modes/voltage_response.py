@@ -7,9 +7,8 @@ Created on Wed Jan 16 15:32:53 2019
 Script to load and characterize Voltage-sweep data; Most likely just from 906
 """
 
-from DBSpace.control.stream_dEEG import streamEEG
-import DBSpace as dbo
-from DBSpace import nestdict
+from dbspace.control.stream_buffers import streamEEG
+from dbspace.utils.structures import nestdict
 
 import itertools
 from sklearn.metrics import confusion_matrix
@@ -19,7 +18,7 @@ import numpy as np
 
 import pickle
 
-from DBSpace.visualizations import EEG_Viz
+from dbspace.viz.MM import EEG_Viz
 
 #%%
 #First, let's bring in the timeseries from DBS906 Voltage Sweep Experiment

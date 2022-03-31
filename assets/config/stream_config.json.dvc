@@ -1,0 +1,4 @@
+outs:
+- md5: 3845667d64871176bea2561c2622fa3b
+  size: 3861
+  path: stream_config.json
