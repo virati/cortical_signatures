@@ -12,16 +12,14 @@ Includes some DTI support modeling which should be split out
 #%%
 
 from dbspace.control import offline_segments
-from dbspace.viz.MM import EEG_Viz
-from dbspace.control.DTI_support import DTI_support_model, plot_support_model
 
 import numpy as np
-import matplotlib.pyplot as plt
 import seaborn as sns
 
 sns.set_context("paper")
 sns.set(font_scale=3)
 sns.set_style("white")
+#%%
 
 pt_list = ["906", "907", "908"]
 ## Basic initialization methods, need to suppress figures from these and clean these up

@@ -15,7 +15,7 @@ configobj==5.0.6
 constantly==15.1.0
 cryptography==35.0.0
 cycler==0.10.0
--e git+https://github.com/virati/DBSpace.git@d64cc5c6d30fe3a513fd485c1f1d715f89442c78#egg=DBSpace
+-e git+https://github.com/virati/DBSpace.git@d64cc5c6d30fe3a513fd485c1f1d715f89442c78#egg=dbspace
 decorator==5.1.0
 envisage==6.0.1
 executing==0.8.3
@@ -71,7 +71,7 @@ threadpoolctl==3.0.0
 traitlets==5.1.0
 traits==6.3.1
 traitsui==7.2.1
-Twisted==22.2.0
+Twisted==22.4.0
 txaio==21.2.1
 typing-extensions==3.10.0.2
 urllib3==1.26.7

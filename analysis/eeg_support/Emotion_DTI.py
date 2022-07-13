@@ -14,7 +14,6 @@ This one now looks at the DO tractography at granularity of left/right, Ont/OffT
 
 import itertools
 
-import dbspace as dbo
 import dbspace.control.DTI as DTI
 import matplotlib.pyplot as plt
 import numpy as np
