@@ -1,15 +1,18 @@
 # Cortical Signatures of SCCwm-DBS
 ## Overview
-Deep brain stimulation (DBS) targeted at a patient's specific subcallosal cingulate white matter (SCCwm) alleviates symptoms of depression.
-But how this SCCwm-DBS affects the brain, where and how does it change ongoing brain dynamics, remains unclear.
-SCCwm-DBS, when stimulation is initiated at the proper SCCwm target, evokes immediate changes in the brain dynamics along certain brain subnetworks.
-I'll call this SCCwm-DBS _network action_ - the where, what, and how of its immediate mechanistic effects.
-This is the first piece of the larger question: what is the therapeutic mechanism of action of SCCwm-DBS.
-
-In this repository I address the question: what does SCCwm-DBS do immediately to brain dynamics across multiple scales of measurement.
+Deep brain stimulation (DBS) is proving to be an effective treatment for severe, treatment resistant depression (TRD).
+One of the most well-studied targets for DBS is the subcallosal cingulate cortex (SCC), and demonstrations of SCC-DBS have yielded positive \cite{} and equivocal \cite{} results.
 
 ![DBS of the SCCwm targets specific tracts in the brain that likely mediate the immediate effects.](https://med.emory.edu/education/vme/assets/images/gallery/dbs-depression/dbs-for-major-depression.jpg)
 <p align="center">DBS of the SCCwm targets specific tracts in the brain that likely mediate the immediate effects. Source: https://med.emory.edu/education/vme/pages/gallery/pf-dbs-depression-image.html</p>
+
+Precise stimulation of the subcallosal cingulate white matter (SCCwm) is now thought to be necessary to achieve antidepressant effect when implementing SCC-DBS.
+However, we need objective signatures to confirm, study, and engineer around antidepressant SCCwm-DBS.
+Neural recordings are a great modality to derive and use these objective signatures.
+
+## This Repository
+This repository contains all the code needed to regenerate the figures from Chapter ? from my [dissertation]().
+This chapter is focused on characterized the direct effects of SCCwm-DBS across whole-brain networks - its *network action*.
 
 ### Requirements
 This repository requires the custom library ```DBSpace``` 
@@ -17,24 +20,20 @@ This repository requires the custom library ```DBSpace```
 * PyPI: [link](https://pypi.org/project/dbspace/)
 
 
-### Methods (brief)
-Using combined SCC-LFP and dense-EEG, I characterize what modalities I see signal changes in, what spatial pattern I see those signal changes, and what the spatiotemporal nature of those signal changes are.
-I also take a computational modeling approach to demonstrate that empirical changes in the EEG are aligned with the stimulated tractography, and that a simple linear classifier can differentiate proper target engagement.
+## Publications
 
-## Network Action
 ### Spatial Modes
-[In Prep]
+Preprint: [Network Action of...](https://www.medrxiv.org/content/10.1101/2022.07.27.22278130v1)
 
-### Temporal Modes [publication](https://www.frontiersin.org/articles/10.3389/fnins.2022.768355/full)
-With an eye towards temporal changes, we studied the immediate effects of SCCwm-DBS on the trajectory of whole brain oscillatory activity.
+First, I wanted to understand *where* in the brain we would see changes - locally around the SCCwm target, remotely in scalp-measurable cortex, some combination of both, or neither.
+This gives us the spatial modes of the network action.
 
-The code for [Dynamic Oscillations...](https://www.frontiersin.org/articles/10.3389/fnins.2022.768355/full) is available in the ```analysis/DOs``` folder.
+### Temporal Modes
+Pub: [Dynamic Oscillations...](https://www.frontiersin.org/articles/10.3389/fnins.2022.768355/full)
 
-### Support Model
-If you squint your eyes, you should see that the right-side of the EEG demonstrates more changes than the left-side.
-Similarly, if you look at the tractography that is most reliably stimulated under the therapeutic OnTarget condition you'll see a central role for the right-CB.
+With an eye towards temporal changes, we studied the immediate effects of SCCwm-DBS on the trajectory of wide-brain oscillatory activity.
 
-I'll formalize this a bit better by bridging the tractography with dEEG with [The Virtual Brain]() platform.
+The code for this publication is in the ```analysis/DOs``` folder.
 
 ## References
 * ...
