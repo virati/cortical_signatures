@@ -1,10 +1,4 @@
-/.spyproject/
-.ipynb_checkpoints/
-/.venv/
 __pycache__/
 *.png
 *.svg
-.vscode/
-.venv/
-.venv*/
-*.code-workspace
+.ipynb_checkpoints
