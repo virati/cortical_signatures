@@ -1,7 +1,7 @@
 # Cortical Signatures of SCCwm-DBS
 ## Overview
 Deep brain stimulation (DBS) is proving to be an effective treatment for severe, treatment resistant depression (TRD).
-One of the most well-studied targets for DBS is the subcallosal cingulate cortex (SCC), and demonstrations of SCC-DBS have yielded positive \cite{} and equivocal \cite{} results.
+One of the most well-studied targets for DBS is the subcallosal cingulate cortex (SCC), and demonstrations of SCC-DBS have yielded positive \cite{} but equivocal \cite{} results.
 
 ![DBS of the SCCwm targets specific tracts in the brain that likely mediate the immediate effects.](https://med.emory.edu/education/vme/assets/images/gallery/dbs-depression/dbs-for-major-depression.jpg)
 <p align="center">DBS of the SCCwm targets specific tracts in the brain that likely mediate the immediate effects. Source: https://med.emory.edu/education/vme/pages/gallery/pf-dbs-depression-image.html</p>
