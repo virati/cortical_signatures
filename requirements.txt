@@ -15,7 +15,7 @@ configobj==5.0.6
 constantly==15.1.0
 cryptography==35.0.0
 cycler==0.10.0
--e git+https://github.com/virati/DBSpace.git@d64cc5c6d30fe3a513fd485c1f1d715f89442c78#egg=dbspace
+-e git+https://github.com/virati/DBSpace.git@9dedac4f704e0f00f283ceae0c8b4e35b337e789#egg=dbspace
 decorator==5.1.0
 envisage==6.0.1
 executing==0.8.3
