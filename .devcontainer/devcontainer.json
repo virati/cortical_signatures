@@ -44,18 +44,12 @@
 			]
 		}
 	},
+	"mounts": ["source=/home/virati/Projects/dbspace_cortical_sigs,target=/dbspace,type=bind"]
 	// Configure mount points for the dev container.
-	"mounts": [
-		{
-			"source": "${env:DATA_DIRECTORY}/",
-			"target": "/data",
-			"type": "bind"
-		}
-	],
+	//"mounts": ["type=bind,source=/home/virati/data/,target=/data"],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	"remoteUser": "vscode"
 }

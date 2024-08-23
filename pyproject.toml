@@ -4,10 +4,11 @@ version = "0.1.0"
 description = ""
 authors = ["Vineet Tiruvadi <virati@gmail.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.8.12"
-dbspace = "^0.3.1"
+python = "3.8.17"
+dbspace = { path="/dbspace", develop=true }
 
 [build-system]
 requires = ["poetry-core"]
