@@ -1,3 +1,4 @@
+#%%
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -7,11 +8,8 @@ Created on Thu Jun 21 23:17:47 2018
 LFP Dynamics script
 Captures DO changes
 """
-
-import sys
-sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/src/')
-import DBSpace as dbo
-from DBSpace import nestdict
+import dbspace as dbo
+from dbspace.utils.structures import nestdict
 
 from matplotlib import cm
 from mpl_toolkits import mplot3d
@@ -19,14 +17,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 import scipy.signal as sig
+#%%
 
-
-def find_nearest(array,value):
-    idx = np.searchsorted(array, value, side="left")
-    if idx > 0 and (idx == len(array) or math.fabs(value - array[idx-1]) < math.fabs(value - array[idx])):
-        return array[idx-1]
-    else:
-        return array[idx]#3d plotting fun
 from mayavi import mlab
 from matplotlib import cm
 from mpl_toolkits import mplot3d
@@ -39,6 +31,14 @@ from mayavi import mlab
 import numpy as np
 import scipy.ndimage as ndimage
 
+#%%
+def find_nearest(array,value):
+    idx = np.searchsorted(array, value, side="left")
+    if idx > 0 and (idx == len(array) or math.fabs(value - array[idx-1]) < math.fabs(value - array[idx])):
+        return array[idx-1]
+    else:
+        return array[idx]#3d plotting fun
+    
 #%%
 Ephys = nestdict()
 Phase = 'TurnOn'
