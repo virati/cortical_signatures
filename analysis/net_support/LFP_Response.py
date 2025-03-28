@@ -1,3 +1,4 @@
+# %%
 #!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 """
@@ -8,8 +9,8 @@ Network Action - Compare ONT vs OFFT for SCC-LFP
 
 """
 
-#%%
-from dbspace.utils.structures import nestdict
+# %%
+from na.utils.structures import nestdict
 from dbspace.control import network_action
 
 do_pts = ["901", "903", "905", "906", "907", "908"]
@@ -20,7 +21,7 @@ analysis.extract_baselines()
 analysis.extract_response()
 analysis.gen_osc_distr()
 
-#%%
+# %%
 # Results plotting
 
 analysis.plot_responses(do_pts=do_pts)
