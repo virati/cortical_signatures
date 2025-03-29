@@ -373,6 +373,8 @@ dependencies = [
     { name = "pandas", version = "1.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.7.1' and python_full_version < '3.8'" },
     { name = "pandas", version = "2.0.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
     { name = "pandas", version = "2.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pyvista", version = "0.38.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8'" },
+    { name = "pyvista", version = "0.44.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.8'" },
     { name = "scikit-learn", version = "1.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8'" },
     { name = "scikit-learn", version = "1.3.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
     { name = "scikit-learn", version = "1.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
@@ -395,6 +397,7 @@ requires-dist = [
     { name = "nilearn", specifier = ">=0.10.2" },
     { name = "numpy", specifier = ">=1.21.6" },
     { name = "pandas", specifier = ">=1.1.5" },
+    { name = "pyvista", specifier = ">=0.38.6" },
     { name = "scikit-learn", specifier = ">=1.0.2" },
     { name = "scipy", specifier = ">=1.7.3" },
     { name = "seaborn", specifier = ">=0.12.2" },
@@ -558,6 +561,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f1/70/7703c29685631f5a7590aa73f1f1d3fa9a380e654b86af429e0934a32f7d/idna-3.10.tar.gz", hash = "sha256:12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9", size = 190490 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/76/c6/c88e154df9c4e1a2a66ccf0005a88dfb2650c1dffb6f5ce603dfbd452ce3/idna-3.10-py3-none-any.whl", hash = "sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3", size = 70442 },
+]
+
+[[package]]
+name = "imageio"
+version = "2.31.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy", version = "1.21.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8'" },
+    { name = "pillow", version = "9.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/45/41/852ecc8f33c32d16bebdec7f777fe7479654d317503cef385ef993638a39/imageio-2.31.2.tar.gz", hash = "sha256:ae19221f4a8f118f1c9451e8f5357faeeacdf956198cf374bc8ab00f1ff7d525", size = 386793 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7b/88/59411e1a652ac3338d348901ffa5a73daf1f67fcb3f97d750237d4fa0821/imageio-2.31.2-py3-none-any.whl", hash = "sha256:a78fbcb33432042a4d6993c87f3ea1f136d908318ce7dda857846ccff73294de", size = 313218 },
 ]
 
 [[package]]
@@ -2588,6 +2604,63 @@ wheels = [
 ]
 
 [[package]]
+name = "pyvista"
+version = "0.38.6"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "(python_full_version >= '3.7.1' and python_full_version < '3.8' and platform_machine != 'aarch64' and platform_machine != 'arm64' and platform_machine != 'x86') or (python_full_version >= '3.7.1' and python_full_version < '3.8' and platform_machine != 'aarch64' and platform_machine != 'arm64' and sys_platform != 'win32')",
+    "python_full_version >= '3.7.1' and python_full_version < '3.8' and platform_machine == 'x86' and sys_platform == 'win32'",
+    "python_full_version >= '3.7.1' and python_full_version < '3.8' and platform_machine == 'aarch64'",
+    "python_full_version >= '3.7.1' and python_full_version < '3.8' and platform_machine == 'arm64'",
+    "(python_full_version < '3.7.1' and platform_machine != 'x86') or (python_full_version < '3.7.1' and sys_platform != 'win32')",
+    "python_full_version < '3.7.1' and platform_machine == 'x86' and sys_platform == 'win32'",
+]
+dependencies = [
+    { name = "imageio", marker = "python_full_version < '3.8'" },
+    { name = "numpy", version = "1.21.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8'" },
+    { name = "pillow", version = "9.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8'" },
+    { name = "pooch", marker = "python_full_version < '3.8'" },
+    { name = "scooby", version = "0.7.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.8'" },
+    { name = "vtk", marker = "python_full_version < '3.8'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/57/f8/57a8596034b437e10677937e3c3bdfff825b909d41542d53ec694adefb70/pyvista-0.38.6.tar.gz", hash = "sha256:022ef79f7051c84aa210d82b4ca6574d8b7186e719c61e6f407fd4c84ca56a48", size = 1630837 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f7/67/21198db0c97bdff0cd5b6c3913765cca1faf1168068c66370e2fe13c01aa/pyvista-0.38.6-py3-none-any.whl", hash = "sha256:661c0c550fa63a748a2361bc4bbff52ba5e8f22a32991be64ec8ec6b14754a1d", size = 1565248 },
+]
+
+[[package]]
+name = "pyvista"
+version = "0.44.2"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12'",
+    "python_full_version == '3.11.*'",
+    "python_full_version == '3.10.*'",
+    "python_full_version == '3.9.*'",
+    "python_full_version == '3.8.*' and sys_platform == 'win32'",
+    "python_full_version == '3.8.*' and sys_platform != 'win32'",
+]
+dependencies = [
+    { name = "matplotlib", version = "3.7.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
+    { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "matplotlib", version = "3.10.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "numpy", version = "1.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
+    { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "numpy", version = "2.2.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "pillow", version = "10.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
+    { name = "pillow", version = "11.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pooch", marker = "python_full_version >= '3.8'" },
+    { name = "scooby", version = "0.10.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.8'" },
+    { name = "typing-extensions", marker = "python_full_version >= '3.8'" },
+    { name = "vtk", marker = "python_full_version >= '3.8'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/56/01/a7ebede7d5c0bb3b895a7d6afd4d51f0aa328b50ba93d8bc72eb0fb5856b/pyvista-0.44.2.tar.gz", hash = "sha256:db65943c3c1c9ba49fe16f5a25a5bc23b74bf1ea7a38aae4ef9c4dc5838ccf5e", size = 2192634 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/65/07/699a032f8b5a1b70c9681185541f18523936a76ac5846e93c5eaaa1e2f33/pyvista-0.44.2-py3-none-any.whl", hash = "sha256:8530d35f57cdaa33507ac9aec19e3292be0bc9026b28e4f12df7e8054438d028", size = 2244442 },
+]
+
+[[package]]
 name = "requests"
 version = "2.31.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2963,6 +3036,40 @@ wheels = [
 ]
 
 [[package]]
+name = "scooby"
+version = "0.7.3"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "(python_full_version >= '3.7.1' and python_full_version < '3.8' and platform_machine != 'aarch64' and platform_machine != 'arm64' and platform_machine != 'x86') or (python_full_version >= '3.7.1' and python_full_version < '3.8' and platform_machine != 'aarch64' and platform_machine != 'arm64' and sys_platform != 'win32')",
+    "python_full_version >= '3.7.1' and python_full_version < '3.8' and platform_machine == 'x86' and sys_platform == 'win32'",
+    "python_full_version >= '3.7.1' and python_full_version < '3.8' and platform_machine == 'aarch64'",
+    "python_full_version >= '3.7.1' and python_full_version < '3.8' and platform_machine == 'arm64'",
+    "(python_full_version < '3.7.1' and platform_machine != 'x86') or (python_full_version < '3.7.1' and sys_platform != 'win32')",
+    "python_full_version < '3.7.1' and platform_machine == 'x86' and sys_platform == 'win32'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ec/aa/af42f3a13c403607cd333253bfe59e8762dff66ea039caac60b2154df4cd/scooby-0.7.3.tar.gz", hash = "sha256:fc2c593304b92e9bcb33db15a27435474493dd4c5fc318a71715ee48d27b604d", size = 18725 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1f/8d/c1b80ded31efe000bace4cb8277f0cd9078062e42f9ac26609cfbaaf8f06/scooby-0.7.3-py3-none-any.whl", hash = "sha256:94775ab985d76f81dcdb09b7ab3de5e47e8c7f37784fbf63b01887905fcbdbe4", size = 16690 },
+]
+
+[[package]]
+name = "scooby"
+version = "0.10.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12'",
+    "python_full_version == '3.11.*'",
+    "python_full_version == '3.10.*'",
+    "python_full_version == '3.9.*'",
+    "python_full_version == '3.8.*' and sys_platform == 'win32'",
+    "python_full_version == '3.8.*' and sys_platform != 'win32'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a9/38/54178f17193660fab9574317dd1c350febcaf9b7b6fb3af197d2dd07a9f5/scooby-0.10.0.tar.gz", hash = "sha256:7ea33c262c0cc6a33c6eeeb5648df787be4f22660e53c114e5fff1b811a8854f", size = 20627 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2f/4b/ea1c1c4ecaa97baf8001568d502eaff1bbc3d5c1b48cce3f3fd5a77b8f52/scooby-0.10.0-py3-none-any.whl", hash = "sha256:0a3d7e304f8ebb16f69ff7f6360c345d7f50b45f2ddbf7c3d18a6a0dc2cb03a6", size = 18479 },
+]
+
+[[package]]
 name = "seaborn"
 version = "0.12.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3296,6 +3403,41 @@ resolution-markers = [
 sdist = { url = "https://files.pythonhosted.org/packages/aa/63/e53da845320b757bf29ef6a9062f5c669fe997973f966045cb019c3f4b66/urllib3-2.3.0.tar.gz", hash = "sha256:f8c5449b3cf0861679ce7e0503c7b44b5ec981bec0d1d3795a07f1ba96f0204d", size = 307268 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/19/4ec628951a74043532ca2cf5d97b7b14863931476d117c471e8e2b1eb39f/urllib3-2.3.0-py3-none-any.whl", hash = "sha256:1cee9ad369867bfdbbb48b7dd50374c0967a0bb7710050facf0dd6911440e3df", size = 128369 },
+]
+
+[[package]]
+name = "vtk"
+version = "9.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "matplotlib", version = "3.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8'" },
+    { name = "matplotlib", version = "3.7.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.8.*'" },
+    { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "matplotlib", version = "3.10.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/95/1f/91780093a0cf2afc234063bb9697d1285ccba138c1531700bc2986e65adc/vtk-9.3.1-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:c41ed344b9cc90ee9dcfc5967815de272985647d0c8e0a57f0e8b4229bc1b0b9", size = 76687544 },
+    { url = "https://files.pythonhosted.org/packages/eb/7c/124cc6047d2b67283c66444e3dd5e7bf8250c782ac22e599b03c4265f0fa/vtk-9.3.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:84c04327becc4c4dfe1fb04248baa4b5c480f188a9d52f4b912b163d33622442", size = 70350341 },
+    { url = "https://files.pythonhosted.org/packages/3b/d0/eda704215c82810cdb853ad5b8881bf1ea3ee4e963a5366258b30af520dd/vtk-9.3.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:890aee533fc0caca70bd1c8a4026b0d7f877518f237cc976ed4fb509d5f1dd83", size = 92116314 },
+    { url = "https://files.pythonhosted.org/packages/b5/90/9f2fd4382d29b87404f79a265cf82ff5b4e0c2b42a67dbc3517e16e1a425/vtk-9.3.1-cp310-cp310-win_amd64.whl", hash = "sha256:b8feed5029486703f4f8f81d8544a30d1788de87dc3396e16a281c343e1ac1cc", size = 52527111 },
+    { url = "https://files.pythonhosted.org/packages/58/08/94e2d38ae35ebb85cad96cb11738208307341cac8b16e162ed95ccb26860/vtk-9.3.1-cp311-cp311-macosx_10_10_x86_64.whl", hash = "sha256:55e2df9e6993b959b482b79a6d68b8d46397b479d69738d41b1501396fcad50c", size = 76687738 },
+    { url = "https://files.pythonhosted.org/packages/35/36/357ba7a02bc07a4d0df075e5a213a02020d509b312222445a05e354f52ff/vtk-9.3.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:c977486b0e4d87cddb3f2c7c0710d1c86243cdd01286cbd036231143d8eb4f6e", size = 70350272 },
+    { url = "https://files.pythonhosted.org/packages/d0/f8/1517f4f755233bb77542c222b173c760908f8f8d4330fc72526c295ab1e7/vtk-9.3.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f8edc04e0f8b6719cfc769e575a777267d667f447d1948c62fa97fb756cd75bb", size = 92115989 },
+    { url = "https://files.pythonhosted.org/packages/7a/44/3797d3367180a38bb41e24a6735860d94d16351fbe12e3f6bf6efb8940c8/vtk-9.3.1-cp311-cp311-win_amd64.whl", hash = "sha256:59cc043f611e3eca2870cc50f27e67852a182857de322415e942bdc133594acd", size = 52526922 },
+    { url = "https://files.pythonhosted.org/packages/6f/ba/1571d61013f3f5778c11741d5de19db197b437d1a52215560f016662597b/vtk-9.3.1-cp312-cp312-macosx_10_10_x86_64.whl", hash = "sha256:05a4b6e387a906e8c8d6844441f9200116e937069fcf81f43e2600f26eb046de", size = 76832738 },
+    { url = "https://files.pythonhosted.org/packages/8e/75/c637c620d23ccecb8ddf58fdb80af1dc56ecdd60f3e018c55e041663398b/vtk-9.3.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:bdbefb1aef9599a0a0b8222c9582f26946732a93534e6ec37d4b8e2c524c627e", size = 70385880 },
+    { url = "https://files.pythonhosted.org/packages/01/ee/730d57c6d7353c1afb919ceedfac387a190ccb92e611c4b14f88e6f39066/vtk-9.3.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f728bb61f43fce850d622ced3b3d51b3116f767685ca4e4e0076f624e2d2307d", size = 92159868 },
+    { url = "https://files.pythonhosted.org/packages/b1/34/b9b6de4009be2fe90919c4943ae99ae3d465ada73061e928d4744683f915/vtk-9.3.1-cp312-cp312-win_amd64.whl", hash = "sha256:685988e09070e06c8605886591698fd42d8225489509b6537a5046cd034cc93e", size = 52529544 },
+    { url = "https://files.pythonhosted.org/packages/c0/11/eeb973ed69da48082885f63b3553459cbff7a7dccf1a17ec75955c9a89e0/vtk-9.3.1-cp37-cp37m-macosx_10_10_x86_64.whl", hash = "sha256:279da9aee0fda31ee975e97b7b23480b54ea3b12d24ad8260760a3ededc32fad", size = 76673732 },
+    { url = "https://files.pythonhosted.org/packages/8b/9e/d13fc4ddb868da7cfa450da60edefd824a7748ff96bff064d37e7ff44365/vtk-9.3.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:102ac70e8dad0b111347f00ccef39aea1771f4f0381a4b0ff3f1ea6539e500c8", size = 92089206 },
+    { url = "https://files.pythonhosted.org/packages/bc/cd/b5794f7c959c002fc2f5ad069dc50cefca3d20e6f491b1d67a67b9ff65a9/vtk-9.3.1-cp37-cp37m-win_amd64.whl", hash = "sha256:ee95c741a1ec3dc223c8233b1b59c5735c8249d4a15ee0b6370e7b010188397e", size = 52301118 },
+    { url = "https://files.pythonhosted.org/packages/b3/15/40f8264f1b5379f12caf0e5153006a61c1f808937877c996e907610e8f23/vtk-9.3.1-cp38-cp38-macosx_10_10_x86_64.whl", hash = "sha256:6adf4b812528a4658667602de8f023400c4381b8166f11b0ea8e0ab83c066539", size = 76699386 },
+    { url = "https://files.pythonhosted.org/packages/5a/36/eafd9073a6f31d808f321d508eb034e579bd21457d6eadd805f4aa0317a6/vtk-9.3.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:eaf90d0a797b5b7ada3fd0100c072dd146e674a2ccd25411036a4aca676f9101", size = 92112382 },
+    { url = "https://files.pythonhosted.org/packages/18/71/f13b98497f2a60d6fd2ee87f7ac7df048741d1e456a0fa08f08bb3537f97/vtk-9.3.1-cp38-cp38-win_amd64.whl", hash = "sha256:872e964c38dc1d969aaa29d10a5e56fd0324d61392e21dc044c679797fbdf0ef", size = 52791994 },
+    { url = "https://files.pythonhosted.org/packages/2a/8d/ec320eda9f60f0f48c030f6804d907ca9ce7cdae2839e6792e18f418c519/vtk-9.3.1-cp39-cp39-macosx_10_10_x86_64.whl", hash = "sha256:3ae62397364be3a40f89025fa844cbf38b422633c0dff1065d90eec74ca6facb", size = 76687485 },
+    { url = "https://files.pythonhosted.org/packages/ec/17/c4805af7f01a84801b01acf399ac1e4cdc3a7728f7d9b5f1a0f53c724fae/vtk-9.3.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:ab96d6923fa37a202874cb8b8b4202d537bd4702bb151638d384e1966d877e3a", size = 70348335 },
+    { url = "https://files.pythonhosted.org/packages/a0/f4/0fd6ce305b70927a326b2d26de2eaa61404fa71cdbeaf9aa2ac367b94968/vtk-9.3.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:592b303f96b4cf907df7914bbf8c1f374df382c70c1d0b4fa4bd32ac1f4365ce", size = 92115566 },
+    { url = "https://files.pythonhosted.org/packages/52/c3/a42bec64d8cea04b17e96e40449f52382b90008886e6f3315e355a05443e/vtk-9.3.1-cp39-cp39-win_amd64.whl", hash = "sha256:6dee68abcd15603ad8ef6cef21fb13e2996d520a16880780abc41eb409dbec0c", size = 52533075 },
 ]
 
 [[package]]
