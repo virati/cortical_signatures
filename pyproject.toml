@@ -1,0 +1,13 @@
+[project]
+name = "cortical-signatures"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "matplotlib>=3.5.3",
+    "mne>=1.3.1",
+    "numpy>=1.21.6",
+    "pandas>=1.1.5",
+    "scipy>=1.7.3",
+]
