@@ -47,6 +47,6 @@ for pt in pt_list:
 #    eFrame.topo_median_response(do_condits=do_condits,pt=pt,band='Beta*')
 
 # %%%
-#eFrame.topo_median_response(
-#    do_condits=do_condits, pt="POOL", band="Beta*", use_maya=True
-#)
+eFrame.topo_median_response(
+    do_condits=do_condits, pt="POOL", band="Beta*", use_maya=True
+)
