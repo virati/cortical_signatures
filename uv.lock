@@ -1096,6 +1096,7 @@ dependencies = [
     { name = "numpy", version = "1.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
     { name = "numpy", version = "2.2.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "pyvista" },
     { name = "scipy", version = "1.10.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "scipy", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
     { name = "scipy", version = "1.15.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -1109,6 +1110,7 @@ dependencies = [
 requires-dist = [
     { name = "mne", specifier = ">=1.6.1" },
     { name = "numpy", specifier = ">=1.24.4" },
+    { name = "pyvista", specifier = ">=0.44.1" },
     { name = "scipy", specifier = ">=1.10.1" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "statsmodels", specifier = ">=0.14.1" },
@@ -1671,6 +1673,29 @@ wheels = [
 ]
 
 [[package]]
+name = "pyvista"
+version = "0.44.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "matplotlib", version = "3.7.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "matplotlib", version = "3.10.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "numpy", version = "1.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "numpy", version = "2.2.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "pillow", version = "10.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pillow", version = "11.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+    { name = "pooch" },
+    { name = "scooby" },
+    { name = "typing-extensions" },
+    { name = "vtk" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5e/58/839f30990b29a40e3be40d677dfd60820ffcb58e26e0993d56d9df2469cd/pyvista-0.44.1.tar.gz", hash = "sha256:63976f5d57d151b3f7e1616dde40dcf56a66d1f37f6db067087fa9cc9667f512", size = 2192657 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e9/ec/ebc65900d1bbc4aec23d15c1d60472565b55ab7c4f9d2bcfba29b8406c38/pyvista-0.44.1-py3-none-any.whl", hash = "sha256:7a80e8114220ca36d57a4def8e6a3067c908b53b62aa426ea76c76069bb6d1c0", size = 2244444 },
+]
+
+[[package]]
 name = "requests"
 version = "2.32.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1821,6 +1846,15 @@ wheels = [
 ]
 
 [[package]]
+name = "scooby"
+version = "0.10.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a9/38/54178f17193660fab9574317dd1c350febcaf9b7b6fb3af197d2dd07a9f5/scooby-0.10.0.tar.gz", hash = "sha256:7ea33c262c0cc6a33c6eeeb5648df787be4f22660e53c114e5fff1b811a8854f", size = 20627 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2f/4b/ea1c1c4ecaa97baf8001568d502eaff1bbc3d5c1b48cce3f3fd5a77b8f52/scooby-0.10.0-py3-none-any.whl", hash = "sha256:0a3d7e304f8ebb16f69ff7f6360c345d7f50b45f2ddbf7c3d18a6a0dc2cb03a6", size = 18479 },
+]
+
+[[package]]
 name = "seaborn"
 version = "0.13.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1957,6 +1991,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl", hash = "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2", size = 78540 },
+]
+
+[[package]]
+name = "typing-extensions"
+version = "4.13.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0e/3e/b00a62db91a83fff600de219b6ea9908e6918664899a2d85db222f4fbf19/typing_extensions-4.13.0.tar.gz", hash = "sha256:0a4ac55a5820789d87e297727d229866c9650f6521b64206413c4fbada24d95b", size = 106520 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e0/86/39b65d676ec5732de17b7e3c476e45bb80ec64eb50737a8dce1a4178aba1/typing_extensions-4.13.0-py3-none-any.whl", hash = "sha256:c8dd92cc0d6425a97c18fbb9d1954e5ff92c1ca881a309c45f06ebc0b79058e5", size = 45683 },
 ]
 
 [[package]]

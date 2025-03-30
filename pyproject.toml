@@ -7,6 +7,7 @@ requires-python = ">=3.8"
 dependencies = [
     "mne>=1.6.1",
     "numpy>=1.24.4",
+    "pyvista>=0.44.1",
     "scipy>=1.10.1",
     "seaborn>=0.13.2",
     "statsmodels>=0.14.1",
