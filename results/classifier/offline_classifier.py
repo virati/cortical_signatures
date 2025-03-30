@@ -1,13 +1,8 @@
 # %%
 %load_ext autoreload
 %autoreload 2
-"""
-Created on Sun Jan 13 20:25:09 2019
 
-@author: virati
-clClassif Script
-Binary Classification for Cleaned EEG Data
-"""
+# Confirmed Running Fully 3/29/2025
 
 # %%
 from dbspace.control.offline_segments import network_action_dEEG

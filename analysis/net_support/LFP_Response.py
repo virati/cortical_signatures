@@ -1,4 +1,6 @@
 # %%
+%load_ext autoreload
+%autoreload 2
 #!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 """
@@ -10,13 +12,10 @@ Network Action - Compare ONT vs OFFT for SCC-LFP
 """
 
 # %%
-from na.utils.structures import nestdict
 from dbspace.control import network_action
 
 do_pts = ["901", "903", "905", "906", "907", "908"]
-analysis = network_action.local_response(
-    config_file="../../assets/config/stream_config.json", do_pts=do_pts
-)
+analysis = network_action.local_response(config_file=None, do_pts=do_pts)
 analysis.extract_baselines()
 analysis.extract_response()
 analysis.gen_osc_distr()
