@@ -1,16 +1,8 @@
 # %%
 %load_ext autoreload
 %autoreload 2
-#!/usr/bin/env python3.7
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Sep 21 22:05:44 2018
 
-@author: virati
-Network Action - Compare ONT vs OFFT for SCC-LFP
-
-"""
-
+# Confirmed Running Fully 3/29/2025
 # %%
 from dbspace.control import network_action
 
