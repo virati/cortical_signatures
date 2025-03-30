@@ -2,14 +2,7 @@
 %load_ext autoreload
 %autoreload 2
 #%%
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Dec 25 15:54:53 2019
-
-@author: virati
-Network Action - Compare ONT vs OFFT for EEG
-"""
+# Confirmed Working 3/29/2025
 
 from dbspace.control import proc_dEEG
 import dbspace as dbo
