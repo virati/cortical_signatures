@@ -1,0 +1,3 @@
+[submodule "dbspace"]
+	path = dbspace
+	url = git@github.com:dbspaceLab/dbspace.git
