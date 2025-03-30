@@ -5,9 +5,6 @@
 # Confirmed Working 3/29/2025
 
 from dbspace.control import proc_dEEG
-import dbspace as dbo
-from dbspace.visualizations.d2 import EEG_Viz
-from dbspace.control.TVB_DTI import DTI_support_model, plot_support_model
 
 import matplotlib.pyplot as plt
 import seaborn as sns
