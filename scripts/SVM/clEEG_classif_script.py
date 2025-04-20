@@ -1,4 +1,6 @@
 # %%
+%load_ext autoreload
+%autoreload 2
 # Confirmed Working 3/29/2025
 from dbspace.control import proc_dEEG
 import numpy as np
@@ -25,7 +27,7 @@ EEG_analysis = proc_dEEG.proc_dEEG(
 EEG_analysis.standard_pipeline()
 
 # %%
-EEG_analysis.train_binSVM(mask=False)
+EEG_analysis.train_binary_svm(mask=False)
 
 # %%
 # EEG_analysis.new_SVM_dsgn(do_plot=True)

@@ -32,5 +32,5 @@ for pt in pt_list:
 
 # %%%
 eFrame.topo_median_response(
-    do_condits=do_condits, pt="POOL", band="Alpha", use_maya=True
+    do_condits=do_condits, pt="POOL", band="Alpha", use_maya=False
 )
