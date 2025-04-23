@@ -18,10 +18,10 @@ do_condits = ["OnT", "OffT"]
 
 ## Basic initialization methods, need to suppress figures from these and clean these up
 eFrame = proc_dEEG.proc_dEEG(pts=pt_list, procsteps="conservative", condits=do_condits)
-eFrame.standard_pipeline()
+eFrame.standard_pipeline(blank_out_gamma=False)
 
 # %% PSD plotting
-eFrame.plot_psd(pt="907", condit="OnT", epoch="BONT")  #'Off_3')
+#eFrame.plot_psd(pt="907", condit="OnT", epoch="BONT")  #'Off_3')
 
 # %%
 # Channel-marginalized Response Histogram
@@ -30,7 +30,10 @@ for pt in pt_list:
     eFrame.band_distr(do_moment="mads")
     plt.suptitle(pt)
 
+eFrame.pop_meds(response=True,pt='POOL')
+eFrame.band_distr(do_moment="mads")
+
 # %%%
 eFrame.topo_median_response(
-    do_condits=do_condits, pt="POOL", band="Alpha", use_maya=False
+    do_condits=do_condits, pt="POOL", band="Beta*", use_maya=False
 )
