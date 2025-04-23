@@ -29,8 +29,3 @@ eFrame.topo_OnT_actionmode(pt='POOL',do_plot=True,plot_maya=True)
 #%%
 # This one focuses on a single oscillatory band and tracks channels that 'change together'
 eFrame.topo_OnT_alpha_ctrl(pt='POOL',do_plot=True,band='Alpha')
-#%%
-# THIS IS FOR SEPARATE/LATER PAPER
-#Plot the \alpha specific control across time
-eFrame.plot_alpha_ctrl_L(top_comp=5)
-eFrame.plot_alpha_ctrl_S(top_comp=1)
