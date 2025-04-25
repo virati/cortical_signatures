@@ -33,7 +33,9 @@ combined = nestdict()
 fsaverage = datasets.fetch_surf_fsaverage()
 
 # %%
+base_data_dir = "/home/virati/Data/phd_vrt_2013/neural/imaging/DTI/"
 
+# %%
 Etrode_map = {
     "OnT": {
         "901": (2, 1),
@@ -60,7 +62,8 @@ for pp, pt in enumerate(all_pts):
         for ss, side in enumerate(["L", "R"]):
             cntct = Etrode_map[condit][pt][ss] + 1
             dti_file[pp][condit][side] = (
-                "/home/virati/Dropbox/projects/Research/MDD-DBS/Data/Anatomy/DTI/MDT_DBS_2_7V_Tractography/DBS"
+                base_data_dir
+                + "MDT_DBS_2_7V_Tractography/DBS"
                 + str(pt)
                 + "."
                 + side
