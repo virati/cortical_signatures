@@ -17,7 +17,11 @@ all_DTI = DTI.engaged_tractography(
 )
 all_DTI.load_dti(hide_progress=False)
 
-for condition in ["OnT", "OffT"]:
+#%%
+all_DTI.plot_engaged_tractography(condits = ["OnT"])
+#%%
+
+for condition in [["OnT"], ["OffT"]]:
 
     all_DTI.plot_engaged_tractography(condits=condition)#%%
 
