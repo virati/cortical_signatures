@@ -14,13 +14,16 @@ sns.set_style("white")
 all_pts = ["906", "907", "908"]
 
 EEG_analysis = proc_dEEG.proc_dEEG(
-    pts=all_pts, procsteps="liberal", condits=["OnT", "OffT"]
+    pts=all_pts, procsteps="conservative", condits=["OnT", "OffT"]
 )
 # %%
+## CV SVM Analyses
 EEG_analysis.standard_pipeline()
 EEG_analysis.train_binary_svm(mask=False)
 
 #%%
+## One Shot SVM Analyses
+## Expect this to be more variable between runs
 EEG_analysis.oneshot_binSVM()
 EEG_analysis.bootstrap_binSVM()
 EEG_analysis.analyse_binSVM(plotting=True, analysis_approach='raw')
