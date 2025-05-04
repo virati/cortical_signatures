@@ -1,4 +1,4 @@
-#%%
+# %%
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -29,7 +29,7 @@ sns.set_style("white")
 sns.set_context("paper", font_scale=2)
 from mpl_toolkits.axes_grid.inset_locator import inset_axes, InsetPosition, mark_inset
 
-#%%
+# %%
 
 
 def find_nearest(array, value):
@@ -43,35 +43,32 @@ def find_nearest(array, value):
         return array[idx]  # 3d plotting fun
 
 
-from mayavi import mlab
 from matplotlib import cm
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
 
-# 3d plotting fun
-from mayavi import mlab
 
 import numpy as np
 import scipy.ndimage as ndimage
 import json
 
-#%%
+# %%
 
 with open("../../assets/experiments/metadata/Targeting_Conditions.json", "r") as file:
     ephys_meta = json.load(file)
 
 
-#%%
+# %%
 Ephys = nestdict()
 Phase = "TurnOn"
 if Phase == "TurnOn":
-    Ephys["901"]["OnTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_17_10_31__MR_0.txt"
-    Ephys["901"]["OffTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_16_25_07__MR_0.txt"
+    Ephys["901"]["OnTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_17_10_31__MR_0.txt"
+    )
+    Ephys["901"]["OffTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_16_25_07__MR_0.txt"
+    )
     Ephys["901"]["OnTarget"]["segments"]["Bilat"] = (600, 630)
     Ephys["901"]["OnTarget"]["segments"]["PreBilat"] = (500, 530)
     Ephys["901"]["OffTarget"]["segments"]["Bilat"] = (600, 630)
@@ -86,12 +83,12 @@ if Phase == "TurnOn":
     Ephys["901"]["OffTarget"]["segments"]["C4"] = (627, 635)
     Ephys["901"]["OffTarget"]["segments"]["C5"] = (635, 675)
 
-    Ephys["903"]["OnTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/903/Session_2014_09_03_Wednesday/DBS903_2014_09_03_14_16_57__MR_0.txt"
-    Ephys["903"]["OffTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/903/Session_2014_09_04_Thursday/DBS903_2014_09_04_12_53_09__MR_0.txt"
+    Ephys["903"]["OnTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/903/Session_2014_09_03_Wednesday/DBS903_2014_09_03_14_16_57__MR_0.txt"
+    )
+    Ephys["903"]["OffTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/903/Session_2014_09_04_Thursday/DBS903_2014_09_04_12_53_09__MR_0.txt"
+    )
     Ephys["903"]["OnTarget"]["segments"]["Bilat"] = (550, 580)
     Ephys["903"]["OffTarget"]["segments"]["Bilat"] = (550, 580)
     Ephys["903"]["OnTarget"]["segments"]["PreBilat"] = (501, 531)
@@ -106,12 +103,12 @@ if Phase == "TurnOn":
     Ephys["903"]["OffTarget"]["segments"]["C4"] = (627, 635)
     Ephys["903"]["OffTarget"]["segments"]["C5"] = (635, 675)
 
-    Ephys["905"]["OnTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/905/Session_2015_09_28_Monday/Dbs905_2015_09_28_13_51_42__MR_0.txt"
-    Ephys["905"]["OffTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/905/Session_2015_09_29_Tuesday/Dbs905_2015_09_29_12_32_47__MR_0.txt"
+    Ephys["905"]["OnTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/905/Session_2015_09_28_Monday/Dbs905_2015_09_28_13_51_42__MR_0.txt"
+    )
+    Ephys["905"]["OffTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/905/Session_2015_09_29_Tuesday/Dbs905_2015_09_29_12_32_47__MR_0.txt"
+    )
     Ephys["905"]["OnTarget"]["segments"]["Bilat"] = (610, 640)
     Ephys["905"]["OffTarget"]["segments"]["Bilat"] = (610, 640)
     Ephys["905"]["OnTarget"]["segments"]["PreBilat"] = (561, 591)
@@ -126,12 +123,12 @@ if Phase == "TurnOn":
     Ephys["905"]["OffTarget"]["segments"]["C5"] = (635, 675)
     Ephys["905"]["OffTarget"]["segments"]["C3"] = (620, 627)
 
-    Ephys["906"]["OnTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_15_10_44__MR_0.txt"
-    Ephys["906"]["OffTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_16_20_23__MR_0.txt"
+    Ephys["906"]["OnTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_15_10_44__MR_0.txt"
+    )
+    Ephys["906"]["OffTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_16_20_23__MR_0.txt"
+    )
     Ephys["906"]["OnTarget"]["segments"]["Bilat"] = (610, 640)
     Ephys["906"]["OffTarget"]["segments"]["Bilat"] = (610, 640)
     Ephys["906"]["OnTarget"]["segments"]["PreBilat"] = (550, 600)
@@ -147,12 +144,12 @@ if Phase == "TurnOn":
     Ephys["906"]["OffTarget"]["segments"]["C4"] = (627, 635)
     Ephys["906"]["OffTarget"]["segments"]["C5"] = (635, 675)
 
-    Ephys["907"]["OnTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/907/Session_2015_12_16_Wednesday/DBS907_2015_12_16_12_09_04__MR_0.txt"
-    Ephys["907"]["OffTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/907/Session_2015_12_17_Thursday/DBS907_2015_12_17_10_53_08__MR_0.txt"
+    Ephys["907"]["OnTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/907/Session_2015_12_16_Wednesday/DBS907_2015_12_16_12_09_04__MR_0.txt"
+    )
+    Ephys["907"]["OffTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/907/Session_2015_12_17_Thursday/DBS907_2015_12_17_10_53_08__MR_0.txt"
+    )
     Ephys["907"]["OnTarget"]["segments"]["Bilat"] = (640, 670)
     Ephys["907"]["OffTarget"]["segments"]["Bilat"] = (625, 655)
     Ephys["907"]["OnTarget"]["segments"]["PreBilat"] = (590, 620)
@@ -164,12 +161,12 @@ if Phase == "TurnOn":
         Ephys["907"]["OnTarget"]["segments"]["Bilat"][0] + 15,
     )
 
-    Ephys["908"]["OnTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/908/Session_2016_02_10_Wednesday/DBS908_2016_02_10_13_03_10__MR_0.txt"
-    Ephys["908"]["OffTarget"][
-        "Filename"
-    ] = "/home/virati/MDD_Data/BR/908/Session_2016_02_11_Thursday/DBS908_2016_02_11_12_34_21__MR_0.txt"
+    Ephys["908"]["OnTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/908/Session_2016_02_10_Wednesday/DBS908_2016_02_10_13_03_10__MR_0.txt"
+    )
+    Ephys["908"]["OffTarget"]["Filename"] = (
+        "/home/virati/MDD_Data/BR/908/Session_2016_02_11_Thursday/DBS908_2016_02_11_12_34_21__MR_0.txt"
+    )
     Ephys["908"]["OnTarget"]["segments"]["Bilat"] = (611, 641)
     Ephys["908"]["OffTarget"]["segments"]["Bilat"] = (611, 641)
     Ephys["908"]["OnTarget"]["segments"]["PreBilat"] = (551, 581)
@@ -191,7 +188,7 @@ do_presence = {
 }
 
 SGs = nestdict()
-#%%
+# %%
 pt_list = ["901", "903", "905", "906", "907", "908"]
 TS = nestdict()
 for pp, pt in enumerate(pt_list):
@@ -201,7 +198,7 @@ for pp, pt in enumerate(pt_list):
         TS[pt][condit] = Data_In
         SGs[pt][condit] = dbo.gen_SG(Data_In)
 
-#%%
+# %%
 # Here we'll zoom into the details of the 906_OFFT DO
 # BELOW IS OBSOLETE NOW
 time_zoom = {
@@ -212,7 +209,7 @@ time_zoom = {
     "907": "Baseline",  # (540, 800),
     "908": "Baseline",  # (547, 800),
 }
-#%%
+# %%
 from matplotlib.patches import Rectangle
 
 condition_focus = "Stim"
@@ -256,7 +253,7 @@ for pt in pt_list:
     plt.colorbar()
 
 
-#%%
+# %%
 # Below is obviously broken for non-906 since the segment 'C's aren't defined
 plt.figure()
 pt_colors = ["r", "b", "g", "k", "m", "c"]
@@ -298,7 +295,7 @@ for pp, pt in enumerate(pt_list):
     # plt.xlim((0,32))
 plt.legend()
 
-#%%
+# %%
 # Plot all the baselines
 sns.set_style("white")
 sns.set_context("paper", font_scale=3)
@@ -348,7 +345,7 @@ for pp, pt in enumerate(pt_list):
 fig.legend()
 plt.savefig("all_baseline.svg")
 
-#%%
+# %%
 sns.set_style("white")
 sns.set_context("paper", font_scale=4)
 

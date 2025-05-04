@@ -1,15 +1,10 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Sep 14 16:32:20 2018
+# %%
+%load_ext autoreload
+%autoreload 2
+# Confirmed Running Fully 3/29/2025
+# %%
 
-@author: virati
-Script to generate the EEG Response Violinplots
-
-"""
-#%%
-
-from dbspace.control import segmented_dEEG
+from dbspace.control.offline_segments import network_action_dEEG
 from dbspace.viz.MM import EEG_Viz
 
 import numpy as np
@@ -27,7 +22,7 @@ fvect = np.linspace(0, 500, 513)
 do_coherence = False
 
 ## Basic initialization methods, need to suppress figures from these and clean these up
-eFrame = segmented_dEEG.network_action_dEEG(
+eFrame = network_action_dEEG(
     pts=pt_list, procsteps="conservative", condits=["OnT", "OffT"]
 )
 eFrame.standard_pipeline()

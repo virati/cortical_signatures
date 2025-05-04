@@ -14,6 +14,10 @@
 			"NODE_VERSION": "lts/*"
 		}
 	},
+	"runArgs": [
+		"--env-file",
+		".devcontainer/devcontainer.env"
+	],
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
@@ -39,14 +43,19 @@
 			"extensions": [
 				"ms-python.python",
 				"ms-python.vscode-pylance",
-				"eamodio.gitlens"
+				"eamodio.gitlens",
+				"ms-toolsai.jupyter"
 			]
 		}
 	},
+	"mounts": [
+		"source=/home/virati/Data/phd_vrt_2013,target=/data,type=bind"
+	]
+	// Configure mount points for the dev container.
+	//"mounts": ["type=bind,source=/home/virati/data/,target=/data"],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	"remoteUser": "vscode"
 }
