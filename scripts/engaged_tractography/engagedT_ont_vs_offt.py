@@ -7,7 +7,7 @@ import dbspace.control.DTI as DTI
 base_data_dir = "/home/virati/Data/phd_vrt_2013/neural/imaging/DTI/"
 
 do_pts = ["906", "907", "908"]
-electrode_map = "../../assets/experiments/metadata/Electrode_Map.json"
+electrode_map = "../../assets/experiments/metadata/mayberg_900S_electrode_map.json"
 
 #%%
 all_DTI = DTI.engaged_tractography(

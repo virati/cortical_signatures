@@ -8,9 +8,11 @@ from dbspace.utils.structures import nestdict
 from nilearn import image, plotting
 import numpy as np
 import itertools
+import json
 
 
-Etrode_map = dbspace.Etrode_map # THIS NEEDS TO BE SHIFTED TO JSON
+with open("../../assets/experiments/metadata/mayberg_900S_electrode_map.json") as electrode_map_path:
+    Etrode_map = json.load(electrode_map_path)
 BASE_DATA_DIR = "/home/virati/Data/phd_vrt_2013/neural/imaging/DTI/MDT_DBS_2_7V_Tractography/" #NEEDS TO BE SHIFTED TO JSON
 
 #%%
