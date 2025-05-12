@@ -1,35 +1,19 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu May 24 22:36:06 2018
-
-@author: virati
-Bring in and view tractography
-Focus on differentiating ONTarget and OFFTarget
-
-This one now looks at the DO tractography at granularity of left/right, Ont/OffT, patients, etc.
-"""
-
+# %%
+%load_ext autoreload
+%autoreload 2
+#%%
+import dbspace.control.DTI as DTI
+import dbspace
+from dbspace.utils.structures import nestdict
+from nilearn import image, plotting
 import numpy as np
-import nibabel
-import nilearn
-from nilearn import plotting, image
-import matplotlib.pyplot as plt
-from nilearn import datasets
-from nilearn import surface
-
-from mpl_toolkits.mplot3d import Axes3D
-
-import sys
-sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
-import DBSpace as dbo
-from DBSpace import nestdict
-
-import DBSpace.control.DTI as DTI
 import itertools
 
-Etrode_map = DTI.Etrode_map
 
+Etrode_map = dbspace.Etrode_map # THIS NEEDS TO BE SHIFTED TO JSON
+BASE_DATA_DIR = "/home/virati/Data/phd_vrt_2013/neural/imaging/DTI/MDT_DBS_2_7V_Tractography/" #NEEDS TO BE SHIFTED TO JSON
+
+#%%
 all_pts = ['901','903','905','906','907','908']
 all_condits = ['OnT','OffT']
 all_sides = ['L','R','L+R']
@@ -58,14 +42,11 @@ tractos = nestdict()
 data_arr = np.zeros((6,2,2,182,218,182))
 combined = nestdict()
 
-fsaverage = datasets.fetch_surf_fsaverage5()
-
-
 for pp,pt in enumerate(all_pts):
     for cc,condit in enumerate(['OnT','OffT']):
         for ss,side in enumerate(['L','R']):
             cntct = Etrode_map[condit][pt][ss]+1
-            dti_file[pp][condit][side] = '/home/virati/Dropbox/projects/Research/MDD-DBS/Data/Anatomy/DTI/MDT_DBS_2_7V_Tractography/DBS'+str(pt) + '.'+side+str(cntct)+'.' + voltage + 'V.bin.nii.gz'
+            dti_file[pp][condit][side] = BASE_DATA_DIR + 'DBS'+str(pt) + '.'+side+str(cntct)+'.' + voltage + 'V.bin.nii.gz'
         
             tractos[pt][condit][side] = image.smooth_img(dti_file[pp][condit][side],fwhm=1)
 
