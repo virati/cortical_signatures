@@ -4,6 +4,7 @@
 #%%
 # Confirmed Working 3/29/2025
 
+import dbspace as dbo
 from dbspace.control import proc_dEEG
 
 import matplotlib.pyplot as plt
