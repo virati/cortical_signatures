@@ -31,10 +31,10 @@ for pt in pt_list:
     eFrame.band_distr(do_moment="mads")
     plt.suptitle(pt)
 
-eFrame.pop_meds(response=True,pt='POOL')
+eFrame.pop_meds(response=True,pt='POOL', seg_lim=(0,10))
 eFrame.band_distr(do_moment="mads")
 
 # %%%
 eFrame.topo_median_response(
-    do_condits=do_condits, pt="POOL", band="Beta*", use_maya=False
+    do_condits=do_condits, pt="POOL", band="Alpha", use_maya=False, seg_lim=(0,10)
 )
