@@ -25,7 +25,7 @@ pt_list = ["906", "907", "908"]
 do_condits = ["OnT", "OffT"]
 
 ## Basic initialization methods, need to suppress figures from these and clean these up
-eFrame = proc_dEEG.proc_dEEG(pts=pt_list, procsteps="conservative", condits=do_condits)
+eFrame = proc_dEEG.proc_dEEG(pts=pt_list, procsteps="liberal", condits=do_condits)
 eFrame.standard_pipeline(blank_out_gamma=False)
 
 # %% PSD plotting
