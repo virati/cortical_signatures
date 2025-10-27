@@ -25,12 +25,15 @@ for condition in [["OnT"], ["OffT"]]:
     all_DTI.plot_engaged_tractography(condits=condition, export_files = True)#%%
 
 #%%
+preference_threshold = 0.9
+all_DTI.plot_preference_mask(threshold=preference_threshold)
+
+#%%
 all_DTI.calculate_preference_mask(
     condits=["OnT", "OffT"],
-    threshold=0.5,
+    threshold=preference_threshold,
     export_file=True,
 )
-all_DTI.plot_preference_mask(threshold=0.5)
 
 #%%
 all_DTI.plot_preference_diff(
