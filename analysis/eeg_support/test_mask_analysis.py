@@ -7,7 +7,10 @@ Tests the centroid calculation functions with synthetic data.
 """
 
 import sys
-sys.path.insert(0, '.')
+import os
+
+# Add parent directory to path for relative imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 import numpy as np
 import nibabel as nib

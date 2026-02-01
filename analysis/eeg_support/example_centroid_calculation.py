@@ -10,7 +10,10 @@ electrode locations from voltage-specific tractography masks.
 """
 
 import sys
-sys.path.insert(0, '.')
+import os
+
+# Add parent directory to path for relative imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 import numpy as np
 import nibabel as nib
@@ -19,7 +22,11 @@ matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 from nilearn import image, plotting
 from analysis.eeg_support import mask_analysis
-sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
+
+# Try to add dbspace path from environment variable or use default
+dbspace_path = os.environ.get('DBSPACE_PATH', '/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
+if os.path.exists(dbspace_path):
+    sys.path.append(dbspace_path)
 
 # Try to import dbspace utilities if available
 try:
