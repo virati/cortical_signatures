@@ -9,12 +9,16 @@ electrode locations from voltage-specific tractography masks.
 @author: virati
 """
 
+import sys
+sys.path.insert(0, '.')
+
 import numpy as np
 import nibabel as nib
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 from nilearn import image, plotting
 from analysis.eeg_support import mask_analysis
-import sys
 sys.path.append('/home/virati/Dropbox/projects/Research/MDD-DBS/Ephys/DBSpace/')
 
 # Try to import dbspace utilities if available
