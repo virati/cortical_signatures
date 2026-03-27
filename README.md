@@ -1,6 +1,7 @@
 # Cortical Signatures of SCCwm-DBS
 
 ## Overview
+This repository studies the immediate effects of SCCwm-DBS on wide-brain (SCC-LFP and Scalp-EEG) recordings.
 
 ## Setup
 
@@ -8,6 +9,14 @@ Set up a `.env` with the following fields:
 
 >BASE_DATA_DIR=
 >GSN_LOCS=
+
+
+## Structure
+* scripts/...
+
+* notebooks/...
+
+* Notebooks/...
 
 ---
 
