@@ -1,0 +1,4 @@
+outs:
+- md5: 213bd67b7a1ca75b695eb230e29c27e8
+  size: 81
+  path: test.nii.gz

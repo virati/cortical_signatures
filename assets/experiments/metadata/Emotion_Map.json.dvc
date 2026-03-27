@@ -1,0 +1,4 @@
+outs:
+- md5: ed020ace5248b0f2f3683a1336150083
+  size: 2597
+  path: Emotion_Map.json

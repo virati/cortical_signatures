@@ -1,0 +1,125 @@
+All:
+  "901":
+    OffT:
+      Volt: {}
+      epochs:
+        Bilat: !!python/tuple &id001
+          - 600
+          - 630
+        PreBilat: !!python/tuple
+          - 480
+          - 510
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS901_E52_Off_Target_20151030_022924.mat
+      lfp: /home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_16_25_07__MR_0.txt
+    OnT:
+      epochs:
+        Bilat: *id001
+        PreBilat: !!python/tuple
+          - 500
+          - 530
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS901_E52_On_Target_20151030_015625.mat
+      lfp: /home/virati/MDD_Data/BR/901/Session_2014_05_16_Friday/DBS901_2014_05_16_17_10_31__MR_0.txt
+  "903":
+    OffT:
+      Volt: {}
+      epochs:
+        Bilat: !!python/tuple &id002
+          - 550
+          - 580
+        PreBilat: !!python/tuple &id003
+          - 501
+          - 531
+      fname: ""
+      lfp: /home/virati/MDD_Data/BR/903/Session_2014_09_04_Thursday/DBS903_2014_09_04_12_53_09__MR_0.txt
+    OnT:
+      epochs:
+        Bilat: *id002
+        PreBilat: *id003
+      fname: ""
+      lfp: /home/virati/MDD_Data/BR/903/Session_2014_09_03_Wednesday/DBS903_2014_09_03_14_16_57__MR_0.txt
+  "905":
+    OffT:
+      epochs:
+        Bilat: !!python/tuple &id004
+          - 610
+          - 640
+        PreBilat: !!python/tuple &id005
+          - 561
+          - 591
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS905_TurnOn_OffTargetStims_20150929_123449.mat
+      lfp: /home/virati/MDD_Data/BR/905/Session_2015_09_29_Tuesday/Dbs905_2015_09_29_12_32_47__MR_0.txt
+    OnT:
+      epochs:
+        Bilat: *id004
+        PreBilat: *id005
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS905_TurnOn_Day1_onTARGET_20150928_015403.mat
+      lfp: /home/virati/MDD_Data/BR/905/Session_2015_09_28_Monday/Dbs905_2015_09_28_13_51_42__MR_0.txt
+    Volt: {}
+  "906":
+    OffT:
+      epochs:
+        Bilat: *id004
+        PreBilat: *id005
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess2_20150827_041726_OffTarget.mat
+      lfp: /home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_16_20_23__MR_0.txt
+    OnT:
+      epochs:
+        Bilat: *id004
+        PreBilat: *id005
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS906/DBS906_TurnOn_Day1_Sess1_20150827_024013_OnTarget.mat
+      lfp: /home/virati/MDD_Data/BR/906/Session_2015_08_27_Thursday/DBS906_2015_08_27_15_10_44__MR_0.txt
+    Volt:
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS906_TurnOn_Day2_Sess2_20150828_032515_CurrentSweep.mat
+      lfp: ""
+  "907":
+    OffT:
+      epochs:
+        Bilat: !!python/tuple
+          - 625
+          - 655
+        PreBilat: !!python/tuple
+          - 560
+          - 590
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day2_offTARGET_20151217_094245.mat
+      lfp: /home/virati/MDD_Data/BR/907/Session_2015_12_17_Thursday/DBS907_2015_12_17_10_53_08__MR_0.txt
+    OnT:
+      epochs:
+        Bilat: !!python/tuple
+          - 640
+          - 670
+        PreBilat: !!python/tuple
+          - 590
+          - 620
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day1_onTARGET_20151216_105913.mat
+      lfp: /home/virati/MDD_Data/BR/907/Session_2015_12_16_Wednesday/DBS907_2015_12_16_12_09_04__MR_0.txt
+    Volt:
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS907_TurnOn_Day3_Current_20151218_092443.mat
+      lfp: ""
+  "908":
+    OffT:
+      epochs:
+        Bilat: !!python/tuple &id006
+          - 611
+          - 641
+        PreBilat: !!python/tuple &id007
+          - 551
+          - 581
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS908/DBS908_TurnOn_Day2_offTARGET_20160211_123540.mat
+      lfp: /home/virati/MDD_Data/BR/908/Session_2016_02_11_Thursday/DBS908_2016_02_11_12_34_21__MR_0.txt
+    OnT:
+      epochs:
+        Bilat: *id006
+        PreBilat: *id007
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/Targeting/B04/DBS908/DBS908_TurnOn_Day1_onTARGET_20160210_125231.mat
+      lfp: /home/virati/MDD_Data/BR/908/Session_2016_02_10_Wednesday/DBS908_2016_02_10_13_03_10__MR_0.txt
+    Volt:
+      fname: ""
+      lfp: ""
+  "910":
+    OffT:
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS910_TurnOn_OffTarget_TO_20180530_014051.mat
+      lfp: ""
+    OnT:
+      fname: /home/virati/MDD_Data/hdEEG/Continuous/ALLMATS/DBS910_TurnOn_OnTarget_20180530_022545.mat
+      lfp: ""
+    Volt: {}
