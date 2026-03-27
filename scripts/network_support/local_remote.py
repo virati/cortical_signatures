@@ -29,3 +29,5 @@ lfp_response.extract_response()
 lfp_response.gen_osc_distr()
 
 # %%
+lfp_response.plot_responses(do_pts=pt_list)
+eeg_response.plot_band_distr(do_moment="meds")
