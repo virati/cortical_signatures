@@ -1,0 +1,83 @@
+{
+    "parameters": {
+        "subjects": [
+            "901",
+            "903",
+            "905",
+            "906",
+            "907",
+            "908"
+        ],
+        "conditions": [
+            "OnT",
+            "OffT"
+        ],
+        "sides": [
+            "L",
+            "R",
+            "L+R"
+        ]
+    },
+    "DO_positive": [
+        {
+            "subject": "901",
+            "condition": "OnT",
+            "side": "L"
+        },
+        {
+            "subject": "901",
+            "condition": "OnT",
+            "side": "L+R"
+        },
+        {
+            "subject": "901",
+            "condition": "OffT",
+            "side": "L"
+        },
+        {
+            "subject": "901",
+            "condition": "OffT",
+            "side": "L+R"
+        },
+        {
+            "subject": "903",
+            "condition": "OffT",
+            "side": "L"
+        },
+        {
+            "subject": "903",
+            "condition": "OffT",
+            "side": "L+R"
+        },
+        {
+            "subject": "905",
+            "condition": "OnT",
+            "side": "R"
+        },
+        {
+            "subject": "905",
+            "condition": "OnT",
+            "side": "L+R"
+        },
+        {
+            "subject": "905",
+            "condition": "OffT",
+            "side": "R"
+        },
+        {
+            "subject": "905",
+            "condition": "OffT",
+            "side": "L+R"
+        },
+        {
+            "subject": "906",
+            "condition": "OffT",
+            "side": "R"
+        },
+        {
+            "subject": "906",
+            "condition": "OffT",
+            "side": "L+R"
+        }
+    ]
+}

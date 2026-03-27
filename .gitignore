@@ -1,3 +1,5 @@
+.env
+*.gif
 __pycache__/
 *.png
 *.svg

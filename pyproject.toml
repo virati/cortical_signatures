@@ -1,0 +1,25 @@
+[project]
+name = "cortical-signatures"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "matplotlib>=3.5.3",
+    "mne>=1.3.1",
+    "nibabel>=4.0.2",
+    "nilearn>=0.10.2",
+    "numpy>=1.21.6",
+    "pandas>=1.1.5",
+    "python-dotenv>=0.21.1",
+    "pyvista>=0.38.6",
+    "scikit-learn>=1.0.2",
+    "scipy>=1.7.3",
+    "seaborn>=0.12.2",
+    "statsmodels>=0.13.5",
+]
+
+[dependency-groups]
+dev = [
+    "ipdb>=0.13.13",
+]
