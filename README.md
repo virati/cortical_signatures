@@ -7,16 +7,17 @@ This repository studies the immediate effects of SCCwm-DBS on wide-brain (SCC-LF
 
 Set up a `.env` with the following fields:
 
->BASE_DATA_DIR=
->GSN_LOCS=
+> BASE_DATA_DIR=
+> GSN_LOCS=
 
 
 ## Structure
 * scripts/...
+General scripts that are of interest, meant to be "notebook" style
 
-* notebooks/...
+* analyses/...
+Analyses associated with preprint/publication
 
-* Notebooks/...
 
 ---
 
