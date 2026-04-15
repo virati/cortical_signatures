@@ -27,6 +27,14 @@ local_response.extract_baselines()
 local_response.extract_response()
 local_response.gen_osc_distr()
 
+local_response.plot_patient_responses()
+
+
+local_response.plot_segment_responses(do_pts=pt_list)
+
+local_response.plot_responses(do_pts=pt_list)
+
+
 # %% [markdown] Next, let's look at the *remote* response, as measured in dense-array EEG recordings across the scalp.
 #%%
 log.info('Loading EEG Data...')
@@ -40,3 +48,6 @@ remote_response.standard_pipeline(blank_out_gamma=False)
 #%%
 local_response.plot_responses(do_pts=pt_list)
 remote_response.plot_meds()
+
+#%%
+remote_response.plot_band_distr()
