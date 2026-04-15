@@ -1,7 +1,11 @@
 #%%
 %load_ext autoreload
 %autoreload 2
-#%%
+
+# %%
+# [markdown]
+# Basic support analysis for SCCwm-DBS - determine whether there's a meaningful response in local and remote recordings.
+
 from dbspace.control import network_action
 from dbspace.control import proc_dEEG
 
