@@ -50,4 +50,4 @@ local_response.plot_responses(do_pts=pt_list)
 remote_response.plot_meds()
 
 #%%
-remote_response.plot_band_distr()s
+remote_response.plot_band_distr()
