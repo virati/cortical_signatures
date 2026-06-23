@@ -22,21 +22,26 @@ sns.set(font_scale=2)
 sns.set_style("white")
 # %%
 pt_list = ["906", "907", "908"]
-do_condits = ["OnT", "OffT", "LeftT", "RightT"]
 
-## Basic initialization methods, need to suppress figures from these and clean these up
+configurations = {
+    "Bilateral": ("BONT", "BOFFT"),
+    "Left":      ("LONT", "LOFFT"),
+    "Right":     ("RONT", "ROFFT"),
+}
+do_condits = [c for pair in configurations.values() for c in pair]
+
 eFrame = proc_dEEG.proc_dEEG(pts=pt_list, procsteps="liberal", condits=do_condits)
 eFrame.standard_pipeline(blank_out_gamma=False)
 
 # %% PSD plotting
-#eFrame.plot_psd(pt="907", condit="OnT", epoch="BONT")  #'Off_3')
+#eFrame.plot_psd(pt="907", condit="BONT", epoch="BONT")
 
 # %%
-# Channel-marginalized Response Histogram — all stimulation conditions
+# Channel-marginalized Response Histogram — all conditions
 for pt in pt_list:
     eFrame.pop_meds(response=True, pt=pt)
     eFrame.plot_band_distr(do_moment="mads")
     plt.suptitle(pt)
 
-eFrame.pop_meds(response=True, pt='POOL', seg_lim=(0,10))
+eFrame.pop_meds(response=True, pt='POOL', seg_lim=(0, 10))
 eFrame.band_distr(do_moment="mads")
