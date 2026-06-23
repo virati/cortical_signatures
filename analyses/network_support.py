@@ -5,6 +5,7 @@
 # %%
 # [markdown]
 # Basic support analysis for SCCwm-DBS - determine whether there's a meaningful response in local and remote recordings.
+# Conditions: bilateral (OnT/OffT), left-only (LeftT), right-only (RightT).
 
 from dbspace.control import network_action
 from dbspace.control import proc_dEEG
@@ -16,7 +17,7 @@ log = logging.getLogger(__name__)
 log.info("Loading modules...")
 
 pt_list = ["901", "903", "905", "906", "907", "908"]
-do_condits = ["OnT", "OffT"]
+do_condits = ["OnT", "OffT", "LeftT", "RightT"]
 
 # %%
 log.info('Loading EEG Data...')
