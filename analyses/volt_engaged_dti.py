@@ -13,11 +13,17 @@ electrode_map = "../assets/experiments/metadata/mayberg_900S_electrode_map.json"
 all_DTI = DTI.engaged_tractography(
     do_pts=do_pts,
     volt_range = range(2, 8),
-    do_condits = ['OnT','OffT'],
+    do_condits = ['OnT', 'OffT', 'LeftT', 'RightT'],
     target_electrode_map=electrode_map,
     base_data_dir=base_data_dir,
 )
 all_DTI.load_dti(hide_progress=False)
 
-#%
+#%%
+# Preference mask across all stimulation conditions
 all_DTI.plot_preference_mask(threshold=1.1)
+
+#%%
+# Lateralized preference: left vs right vs bilateral
+for active_condits in [['OnT', 'OffT'], ['LeftT', 'OffT'], ['RightT', 'OffT']]:
+    all_DTI.plot_preference_mask(threshold=1.1, condits=active_condits)
