@@ -1,7 +1,11 @@
 #%%
 %load_ext autoreload
 %autoreload 2
-#%%
+
+# %%
+# [markdown]
+# Basic support analysis for SCCwm-DBS - determine whether there's a meaningful response in local and remote recordings.
+
 from dbspace.control import network_action
 from dbspace.control import proc_dEEG
 
@@ -29,3 +33,5 @@ lfp_response.extract_response()
 lfp_response.gen_osc_distr()
 
 # %%
+lfp_response.plot_responses(do_pts=pt_list)
+eeg_response.plot_meds()

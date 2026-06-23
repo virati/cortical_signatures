@@ -21,10 +21,10 @@ eFrame.standard_pipeline(blank_out_gamma=False)
 
 #%%
 for band in ['Alpha','Beta*']:
-    eFrame.topo_median_response(do_condits=['OnT'],band=band,use_maya=True)
+    eFrame.topo_median_response(do_condits=['OnT'],band=band,render_3d=True, write_output='/tmp/cort_response/')
 
 #%%
-eFrame.topo_OnT_actionmode(pt='POOL',do_plot=True,plot_maya=True)
+eFrame.topo_OnT_actionmode(pt='POOL',do_plot=True,render_3d=True)
 
 #%%
 # This one focuses on a single oscillatory band and tracks channels that 'change together'

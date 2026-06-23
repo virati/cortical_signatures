@@ -1,5 +1,26 @@
 # Cortical Signatures of SCCwm-DBS
+
 ## Overview
+This repository studies the immediate effects of SCCwm-DBS on wide-brain (SCC-LFP and Scalp-EEG) recordings.
+
+## Setup
+Set up a `.env` with the following fields:
+
+> BASE_DATA_DIR=
+> GSN_LOCS=
+
+
+## Structure
+* scripts/...
+General scripts that are of interest, meant to be "notebook" style
+
+* analyses/...
+Analyses associated with preprint/publication
+
+
+---
+
+## Details
 Deep brain stimulation (DBS) is proving to be an effective treatment for severe, treatment resistant depression (TRD).
 One of the most well-studied targets for DBS is the subcallosal cingulate cortex (SCC), and demonstrations of SCC-DBS have yielded positive \cite{} but equivocal \cite{} results.
 
@@ -15,25 +36,46 @@ This repository contains all the code needed to regenerate the figures from Chap
 This chapter is focused on characterized the direct effects of SCCwm-DBS across whole-brain networks - its *network action*.
 
 ### Requirements
-This repository requires the custom library ```DBSpace``` 
+This repository requires the custom library ```dbspace```
 * Repository: [link](https://github.com/virati/DBSpace)
 * PyPI: [link](https://pypi.org/project/dbspace/)
 
+other dependencies are handled by `uv sync`
 
 ## Publications
 
-### Spatial Modes
-Preprint: [Network Action of...](https://www.medrxiv.org/content/10.1101/2022.07.27.22278130v1)
+### Spatial Response Modes
+The first study of the *spatial* modes of SCCwm-DBS is focused on "Network Response" (formerly called Network Action).
 
-First, I wanted to understand *where* in the brain we would see changes - locally around the SCCwm target, remotely in scalp-measurable cortex, some combination of both, or neither.
-This gives us the spatial modes of the network action.
+Latest Preprint: [Network Action of...](https://www.medrxiv.org/content/10.1101/2022.07.27.22278130v1)
+
 
 ### Temporal Modes
-Pub: [Dynamic Oscillations...](https://www.frontiersin.org/articles/10.3389/fnins.2022.768355/full)
+The first study of the *temporal* modes of SCCwm-DBS was the characterization of "Dynamic Oscillations" observed in SCC-LFP.
 
-With an eye towards temporal changes, we studied the immediate effects of SCCwm-DBS on the trajectory of wide-brain oscillatory activity.
+Publication: [Dynamic Oscillations...](https://www.frontiersin.org/articles/10.3389/fnins.2022.768355/full)
 
 The code for this publication is in the ```analysis/DOs``` folder.
 
 ## References
 * ...
+
+
+## Repo Rationale
+
+This md will talk through the rationale of this repository.
+Mostly because I keep forgetting, over the course of the ~15 years I've been working on it, why the hell I do half the things in this repo.
+
+### Folder Structure
+Scripts should contain "one-click reproductions" of all published figures.
+This is where you should start if you're interested in tracing back results you may have seen out-there.
+
+Notebooks should provide what the scripts do, with the added benefit of *clean presentation*.
+Ideally, these notebooks would just call the scripts specifically, and there'd be a 1-1 between Notebooks and Scripts, but that's ambitious.
+
+### AI
+I want a clean separation between the human work and the AI work.
+
+My current thinking is that LLM-AI layer will operate mainly on the *Notebooks* $\pm$ *Scripts* items in order to package draft LaTeX templates.
+That is, any LLM-AI inclusion in this repo is just to help address the perfectionist in me and output the most bland, matter-of-fact communication possible for those that constantly demand that.
+I have no interest in learning how to write in a dry way, and I think LLM-AI can be useful in that last layer.

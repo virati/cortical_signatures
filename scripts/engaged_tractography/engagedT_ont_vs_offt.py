@@ -18,7 +18,11 @@ all_DTI = DTI.engaged_tractography(
 all_DTI.load_dti(hide_progress=False)
 
 #%%
-all_DTI.plot_engaged_tractography(condits = ["OnT"])
+all_DTI.plot_dti_voltage(pt="908", condit="OnT")
+#%%
+for condit in ["OnT", "OffT"]:
+    all_DTI.plot_engaged_tractography(condits=[condit])
+    all_DTI.plot_engaged_tractography(condits=[condit], mean_op="median")
 #%%
 
 for condition in [["OnT"], ["OffT"]]:
@@ -39,3 +43,6 @@ all_DTI.calculate_preference_mask(
 all_DTI.plot_preference_diff(
     condits=["OnT", "OffT"]
 )
+
+#%%
+all_DTI.plot_preference_level(condits=["OnT", "OffT"])
