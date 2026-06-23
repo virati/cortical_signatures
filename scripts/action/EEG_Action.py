@@ -22,73 +22,61 @@ sns.set(font_scale=2)
 sns.set_style("white")
 # %%
 pt_list = ["906", "907", "908"]
-do_condits = ["OnT", "OffT"]
 
-## Basic initialization methods, need to suppress figures from these and clean these up
+configurations = {
+    "Bilateral": ("BONT", "BOFFT"),
+    "Left":      ("LONT", "LOFFT"),
+    "Right":     ("RONT", "ROFFT"),
+}
+do_condits = [c for pair in configurations.values() for c in pair]
+stim_on_condits = [ont for ont, _ in configurations.values()]
+
 eFrame = proc_dEEG.proc_dEEG(pts=pt_list, procsteps="liberal", condits=do_condits)
 eFrame.standard_pipeline(blank_out_gamma=False)
 
-# %% PSD plotting
-#eFrame.plot_psd(pt="907", condit="OnT", epoch="BONT")  #'Off_3')
-
 # %%
-# Channel-marginalized Response Histogram
+# Channel-marginalized Response Histogram — all conditions
 for pt in pt_list:
     eFrame.pop_meds(response=True, pt=pt)
     eFrame.plot_band_distr(do_moment="mads")
     plt.suptitle(pt)
 
-eFrame.pop_meds(response=True,pt='POOL', seg_lim=(0,10))
+eFrame.pop_meds(response=True, pt='POOL', seg_lim=(0, 10))
 eFrame.band_distr(do_moment="mads")
 
 # %%%
+# Sliding-window topographic animation — one GIF per stimulation configuration
+for active_condit in stim_on_condits:
+    max_segments = np.min([len(eFrame.osc_bl_norm_timeidx[pt][active_condit]) for pt in pt_list])
+    window_size = 3
+    sliding_windows = [(i, i + window_size) for i in range(0, max_segments - window_size + 1)]
 
-max_segments = np.min([len(eFrame.osc_bl_norm_timeidx[pt]['OnT']) for pt in pt_list])
-#sliding_windows = [(0,5),(2,7),(4,9),(6,11),(8,13),(10,15),(12,17),(14,19),(16,21),(18,23),(20,25),(22,27),(24,29),(26,31),(28,33),(30,35),(32,37),(34,39),(36,41),(38,43),(40,45),(42,47),(44,49),(46,51),(48,53),(50,55)]
-window_size = 3
-sliding_windows = [(i, i + window_size) for i in range(0, max_segments - window_size + 1)]
+    temp_dir = tempfile.mkdtemp()
+    frame_files = []
 
-# Create a temporary directory to store individual frames
-temp_dir = tempfile.mkdtemp()
-frame_files = []
+    for idx, seg_lim in enumerate(sliding_windows):
+        eFrame.topo_median_response(
+            do_condits=[active_condit], pt="POOL", band="Alpha", use_maya=False, seg_lim=seg_lim
+        )
+        plt.suptitle(f"{active_condit} — Segment Window: {seg_lim[0]}-{seg_lim[1]}")
 
-# Loop through the sliding windows and save each plot as a frame
-for idx, seg_lim in enumerate(sliding_windows):
-    eFrame.topo_median_response(
-        do_condits=['OnT'], pt="POOL", band="Alpha", use_maya=False, seg_lim=seg_lim
+        frame_path = os.path.join(temp_dir, f"frame_{idx:03d}.png")
+        plt.savefig(frame_path, dpi=100, bbox_inches='tight')
+        frame_files.append(frame_path)
+        plt.close()
+
+    frames = [Image.open(frame) for frame in frame_files]
+    output_path = f"topo_median_response_{active_condit}.gif"
+    frames[0].save(
+        output_path,
+        save_all=True,
+        append_images=frames[1:],
+        duration=500,
+        loop=0
     )
-    plt.suptitle(f"Segment Window: {seg_lim[0]}-{seg_lim[1]}")
 
-    # Save the current figure as a PNG
-    frame_path = os.path.join(temp_dir, f"frame_{idx:03d}.png")
-    plt.savefig(frame_path, dpi=100, bbox_inches='tight')
-    frame_files.append(frame_path)
-    plt.close()  # Close the figure to free memory
+    for frame_file in frame_files:
+        os.remove(frame_file)
+    os.rmdir(temp_dir)
 
-#%%
-# save all frames as individual images inside a directory
-for idx,frame in enumerate(frame_files):
-    # Save each frame as an individual image
-    output_image_path = f"/tmp/frame_{os.path.basename(frame)}_{idx}.png"
-    Image.open(frame).save(output_image_path)
-
-#%%
-# Load all frames and create the GIF
-frames = [Image.open(frame) for frame in frame_files]
-
-# Save as GIF
-output_path = "topo_median_response.gif"
-frames[0].save(
-    output_path,
-    save_all=True,
-    append_images=frames[1:],
-    duration=500,  # Duration per frame in milliseconds
-    loop=0  # Loop forever
-)
-
-# Clean up temporary files
-for frame_file in frame_files:
-    os.remove(frame_file)
-os.rmdir(temp_dir)
-
-print(f"GIF saved to: {output_path}")
+    print(f"GIF saved to: {output_path}")
