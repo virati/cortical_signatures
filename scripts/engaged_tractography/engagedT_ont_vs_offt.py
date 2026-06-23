@@ -19,30 +19,34 @@ all_DTI.load_dti(hide_progress=False)
 
 #%%
 all_DTI.plot_dti_voltage(pt="908", condit="OnT")
+
 #%%
-for condit in ["OnT", "OffT"]:
+# Engaged tractography for each stimulation condition vs OffT
+for condit in ["OnT", "LeftT", "RightT", "OffT"]:
     all_DTI.plot_engaged_tractography(condits=[condit])
     all_DTI.plot_engaged_tractography(condits=[condit], mean_op="median")
-#%%
 
-for condition in [["OnT"], ["OffT"]]:
-    all_DTI.plot_engaged_tractography(condits=condition, export_files = True)#%%
+#%%
+for condition in [["OnT"], ["LeftT"], ["RightT"], ["OffT"]]:
+    all_DTI.plot_engaged_tractography(condits=condition, export_files=True)
 
 #%%
 preference_threshold = 0.9
+
+# Bilateral vs off
 all_DTI.plot_preference_mask(threshold=preference_threshold)
 
-#%%
-all_DTI.calculate_preference_mask(
-    condits=["OnT", "OffT"],
-    threshold=preference_threshold,
-    export_file=True,
-)
+# Lateralized preference comparisons
+for active_condits in [["OnT", "OffT"], ["LeftT", "OffT"], ["RightT", "OffT"]]:
+    all_DTI.calculate_preference_mask(
+        condits=active_condits,
+        threshold=preference_threshold,
+        export_file=True,
+    )
+    all_DTI.plot_preference_diff(condits=active_condits)
+    all_DTI.plot_preference_level(condits=active_condits)
 
 #%%
-all_DTI.plot_preference_diff(
-    condits=["OnT", "OffT"]
-)
-
-#%%
-all_DTI.plot_preference_level(condits=["OnT", "OffT"])
+# Left vs Right direct comparison
+all_DTI.plot_preference_diff(condits=["LeftT", "RightT"])
+all_DTI.plot_preference_level(condits=["LeftT", "RightT"])
